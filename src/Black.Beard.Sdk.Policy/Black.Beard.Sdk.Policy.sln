@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policies", "Black.Beard.Sdk.Policy\Black.Beard.Policies.csproj", "{91454BBD-EE65-4BB4-A4CE-24604A33B893}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policy.XUnit", "Black.Beard.Policy.XUnit\Black.Beard.Policy.XUnit.csproj", "{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Release|Any CPU.Build.0 = Release|Any CPU
+		{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BD019719-E87D-4D5D-A65A-63342AB22811}
+	EndGlobalSection
+EndGlobal
