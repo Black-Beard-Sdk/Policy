@@ -58,7 +58,7 @@ operationContains :
    ;
 
 expression
-   : item QUESTION_MARK? (operationEqual item)?
+   : source? item QUESTION_MARK? (operationEqual item)?
    | NOT expression
    | PARENT_LEFT expression PARENT_RIGHT
    | expression operationBoolean expression
@@ -70,5 +70,7 @@ item
    | IDQUOTED
    | ID
    ;
+
+source : ID DOT;
 
 string : STRING;

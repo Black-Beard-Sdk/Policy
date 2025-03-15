@@ -181,10 +181,14 @@ namespace Bb.Policies
 
             if (p != null && p.Length > 0)
             {
+                string source = string.Empty;
+                var l = context.source();
+                if (l != null)
+                    source = l.ID().GetText();
 
                 left = (Policy)p[0].Accept(this);
                 var optional = context.QUESTION_MARK() != null;
-                left = new PolicyIdExpression((PolicyConstant)left, optional) { Location = context.ToLocation() };
+                left = new PolicyIdExpression((PolicyConstant)left, optional) { Location = context.ToLocation(), Source = source };
 
                 var @operator = context.operationEqual();
                 if (@operator == null)

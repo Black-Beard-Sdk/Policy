@@ -2,12 +2,16 @@
 
 
 using Bb.Policies.Asts;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Black.Beard.Policies.XUnit
 {
 
 
-    public class UnitTest1
+    public class UnitTestParser
     {
 
         [Fact]
@@ -174,9 +178,27 @@ policy p1 : role = admin & role? != guest
             var p = Policy.Evaluate(txt);
 
             var o = p.ToString().Trim();
-            Assert.Equal("policy p1 : role = admin & role? != guest", o);
+            Assert.Equal("policy p1 : source.name = test", o);
 
         }
 
+        [Fact]
+        public void TestPolicy12()
+        {
+
+            string txt = @"
+policy p1 : source.name = test
+";
+            var p = Policy.Evaluate(txt);
+
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : source.name = test", o);
+
+        }
+
+
+
     }
+
+
 }

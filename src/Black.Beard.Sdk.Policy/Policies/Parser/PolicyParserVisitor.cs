@@ -93,6 +93,12 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitItem([NotNull] PolicyParser.ItemContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.source"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSource([NotNull] PolicyParser.SourceContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.string"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

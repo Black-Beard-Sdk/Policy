@@ -32,11 +32,23 @@ namespace Bb.Policies.Asts
 
         public bool Optional { get; }
 
+        public string Source { get; set; }
+
         public override bool ToString(Writer writer)
         {
+
+            if (!string.IsNullOrEmpty(Source))
+            {
+                writer.Append(Source);
+                writer.Append(".");
+                return true;
+            }
+
             base.ToString(writer);
+            
             if (Optional)
                 writer.Append("?");
+
             return true;
         }
 
@@ -69,6 +81,7 @@ namespace Bb.Policies.Asts
 
         public override bool ToString(Writer writer)
         {
+         
             switch (Type)
             {
                 case ConstantType.String:
