@@ -7,9 +7,11 @@ using Bb.Policies.Asts;
 using Bb.Policies.Parser;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using static System.Collections.Specialized.BitVector32;
 
 #pragma warning disable CS3001
 #pragma warning disable CS3003
@@ -28,6 +30,25 @@ namespace Bb.Policies
         {
 
         }
+
+        /// <summary>
+        /// Create a new instance of <see cref="ScriptBuilderVisitor"/>
+        /// </summary>
+        /// <param name="culture"></param>
+        public ScriptBuilderVisitor(PolicyParser parser, ScriptDiagnostics diagnostics, PolicyContainer container, Action<PolicyRule> action, string path)
+        {
+            _parser = parser;
+            _diagnostics = diagnostics;
+            _scriptPath = path;
+            _container = container;
+            _action = action;
+            if (!string.IsNullOrEmpty(path))
+                _scriptPathDirectory = new FileInfo(path).Directory.FullName;
+            else
+                _scriptPathDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+        }
+
 
         /// <summary>
         /// Create a new instance of <see cref="ScriptBuilderVisitor"/>
@@ -57,13 +78,19 @@ namespace Bb.Policies
 
             var pair = context.pair();
 
-            var result = new PolicyContainer() { Diagnostics = _diagnostics };
+            if (_container == null)
+                _container = new PolicyContainer() { Diagnostics = _diagnostics };
+
             foreach (var item in pair)
             {
                 var o = (Policy)item.Accept(this);
                 if (o != null)
                 {
-                    if (!result.Add(o))
+
+                    if (_action != null && o is PolicyRule r1)
+                        _action(r1);
+
+                    if (!_container.Add(o))
                     {
 
                         string name = o.ToString();
@@ -80,7 +107,7 @@ namespace Bb.Policies
                 }
             }
 
-            return result;
+            return _container;
 
         }
 
@@ -201,6 +228,7 @@ namespace Bb.Policies
                 var s = (string)str.Accept(this);
                 return new PolicyVariable(_id)
                 {
+                    Origin = _scriptPath,
                     Value = new PolicyConstant(s, ConstantType.String)
                     {
                         Location = str.ToLocation()
@@ -237,6 +265,7 @@ namespace Bb.Policies
                     Value = (Policy)e,
                     Location = context.ToLocation(),
                     InheritFrom = inheritFrom,
+                    Origin = _scriptPath
                 };
 
             }
@@ -458,6 +487,8 @@ namespace Bb.Policies
         private readonly PolicyParser _parser;
         private ScriptDiagnostics _diagnostics;
         private readonly string _scriptPath;
+        private PolicyContainer _container;
+        private readonly Action<PolicyRule> _action;
         private readonly string _scriptPathDirectory;
 
         private CultureInfo _currentCulture;

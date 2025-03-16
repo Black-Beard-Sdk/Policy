@@ -55,7 +55,7 @@ namespace Bb.Policies.Asts
         public string Name { get; }
 
         public PolicyConstant Value { get; set; }
-
+        public string Origin { get; internal set; }
     }
 
 }

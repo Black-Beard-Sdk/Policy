@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿using System.Collections.Generic;
+
+namespace Bb.Policies.Asts
 {
     /// <summary>
     /// Represents a policy rule
@@ -15,6 +17,7 @@
         {
             Kind = PolicyKind.Rule;
             this.Name = name;
+            this._categories = new HashSet<string>();
         }
 
         /// <summary>
@@ -49,10 +52,21 @@
 
         }
 
+        public void AddCategory(string category)
+        {
+            this._categories.Add(category);
+        }
+
+        public IEnumerable<string> Categories => this._categories;
+
         public string Name { get; }
 
+        private readonly HashSet<string> _categories;
+
         public Policy Value { get; set; }
+
         public string InheritFrom { get; internal set; }
+        public string Origin { get; internal set; }
     }
 
 }

@@ -97,6 +97,11 @@ namespace Bb.Policies.Asts
 
         }
 
+        public PolicyRule GetRule(string v)
+        {
+            return _dicRule[v];
+        }
+
         public IEnumerable<PolicyRule> Rules => _dicRule.Values;
 
         private Dictionary<string, PolicyVariable> _dicVariable;

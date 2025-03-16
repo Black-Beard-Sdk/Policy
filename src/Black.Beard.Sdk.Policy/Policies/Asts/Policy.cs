@@ -1,5 +1,4 @@
 ﻿using Bb.Analysis.DiagTraces;
-using System;
 
 
 namespace Bb.Policies.Asts
@@ -103,12 +102,12 @@ namespace Bb.Policies.Asts
         /// </summary>
         /// <param name="path">path of the file</param>
         /// <returns></returns>
-        public static Policy ParsePath(string path)
+        public static PolicyContainer ParsePath(string path)
         {
             var _errors = new ScriptDiagnostics();
             var parser = ScriptParser.ParsePath(path);
             var visitor = new ScriptBuilderVisitor(parser.Parser, _errors, string.Empty);
-            var tree = (Policy)parser.Visit(visitor);
+            var tree = (PolicyContainer)parser.Visit(visitor);
             return tree;
         }
 

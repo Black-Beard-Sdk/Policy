@@ -18,6 +18,22 @@ namespace Black.Beard.Policies.XUnit
 
 
         [Fact]
+        public void TestPolicy0()
+        {
+
+            string policyPayload = @"
+alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
+policy p1 : role has [Admin]
+";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal(new Claim("role", "Admin"));
+
+            var result = e.Evaluate("p1", principal, out var ctx);
+            Assert.True(result);
+
+        }
+
+        [Fact]
         public void TestPolicy1()
         {
 
@@ -230,7 +246,7 @@ policy p1 : role = admin & role = guest
             var e = GetEvaluator(policyPayload);
             var principal = GetPrincipal(new Claim("role", "guest"));
 
-            var result = e.Evaluate("p1", new { Principal = principal, Source = new {  Name = "test" } }, out var ctx);
+            var result = e.Evaluate("p1", new { Principal = principal, Source = new { Name = "test" } }, out var ctx);
             Assert.True(result);
 
         }

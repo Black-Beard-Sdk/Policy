@@ -60,7 +60,7 @@ namespace Bb.Policies
                 _dic.Add("identity", p1.Identity);
             }
 
-            if (datas is IDictionary<string, object> d)
+            else if (datas is IDictionary<string, object> d)
             {
                 foreach (var item in d)
                 {
