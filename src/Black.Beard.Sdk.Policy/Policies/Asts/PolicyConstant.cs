@@ -4,56 +4,6 @@ using System.Net.Mime;
 namespace Bb.Policies.Asts
 {
 
-    [System.Diagnostics.DebuggerDisplay("{ToString()}")]
-    public class PolicyIdExpression : PolicyConstant
-    {
-
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PolicyVariable"/> class.
-        /// </summary>
-        /// <param name="name">name of the variable</param>
-        public PolicyIdExpression(PolicyConstant constant, bool optional)
-            : this(constant.Value, constant.Type, optional)
-        {
-            Location = constant.Location;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PolicyVariable"/> class.
-        /// </summary>
-        /// <param name="name">name of the variable</param>
-        public PolicyIdExpression(string value, ConstantType type, bool optional)
-            : base(value, type)
-        {
-            this.Kind = PolicyKind.IdExpression;
-            this.Optional = optional;
-        }
-
-        public bool Optional { get; }
-
-        public string Source { get; set; }
-
-        public override bool ToString(Writer writer)
-        {
-
-            if (!string.IsNullOrEmpty(Source))
-            {
-                writer.Append(Source);
-                writer.Append(".");
-                return true;
-            }
-
-            base.ToString(writer);
-            
-            if (Optional)
-                writer.Append("?");
-
-            return true;
-        }
-
-    }
-
 
     [System.Diagnostics.DebuggerDisplay("{Value}")]
     public class PolicyConstant : PolicyExpression
@@ -62,7 +12,15 @@ namespace Bb.Policies.Asts
         public PolicyConstant(string value, ConstantType type)
         {
             this.Kind = PolicyKind.Constant;
-            this.Value = value;
+
+            var o = value.Trim();
+            if (o.StartsWith("\"") && o.EndsWith("\""))
+                o = o.Trim('"');
+
+            else if (o.StartsWith("'") && o.EndsWith("'"))
+                o = o.Trim('\'');
+
+            this.Value = o;
             this.Type = type;
         }
 

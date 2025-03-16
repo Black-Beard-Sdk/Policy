@@ -57,6 +57,12 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitPair_policy([NotNull] PolicyParser.Pair_policyContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.inherit"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitInherit([NotNull] PolicyParser.InheritContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.array"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -87,11 +93,11 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitExpression([NotNull] PolicyParser.ExpressionContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="PolicyParser.item"/>.
+	/// Visit a parse tree produced by <see cref="PolicyParser.value_ref"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitItem([NotNull] PolicyParser.ItemContext context);
+	Result VisitValue_ref([NotNull] PolicyParser.Value_refContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.source"/>.
 	/// </summary>
@@ -104,5 +110,29 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitString([NotNull] PolicyParser.StringContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.alias_id"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAlias_id([NotNull] PolicyParser.Alias_idContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.policy_id"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPolicy_id([NotNull] PolicyParser.Policy_idContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.policy_ref"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPolicy_ref([NotNull] PolicyParser.Policy_refContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.key_ref"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitKey_ref([NotNull] PolicyParser.Key_refContext context);
 }
 } // namespace Bb.Policies.Parser

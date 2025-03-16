@@ -1,4 +1,6 @@
 ﻿using Antlr4.Runtime;
+using Bb.Analysis.DiagTraces;
+using Bb.Policies.Asts;
 using Bb.Policies.Parser;
 using System;
 using System.Diagnostics;
@@ -10,6 +12,36 @@ namespace Bb.Policies
 
     public class ScriptParser
     {
+
+
+        /// <summary>
+        /// Evaluate text value
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static IntellisenseAst EvaluateString(string text)
+        {
+            var _errors = new ScriptDiagnostics();
+            var parser = ParseString(text);
+            var ctx = new IntellisenseContext(parser.Parser, _errors, string.Empty);
+            var tree = new IntellisenseAst(ctx, parser.Tree);
+            return tree;
+        }
+
+        /// <summary>
+        /// Evaluate text value
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static IntellisenseAst EvaluatePath(string text)
+        {
+            var _errors = new ScriptDiagnostics();
+            var parser = ParsePath(text);
+            var ctx = new IntellisenseContext(parser.Parser, _errors, string.Empty);
+            var tree = new IntellisenseAst(ctx, parser.Tree);
+            return tree;
+        }
+
 
         public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParseString(string source)
         {

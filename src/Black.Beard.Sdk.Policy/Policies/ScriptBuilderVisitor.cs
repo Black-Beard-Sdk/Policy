@@ -17,6 +17,7 @@ using System.Text;
 namespace Bb.Policies
 {
 
+
     /// <summary>
     /// Generate tree of script from a Policy script text
     /// </summary>
@@ -63,7 +64,19 @@ namespace Bb.Policies
                 if (o != null)
                 {
                     if (!result.Add(o))
-                        this.AddError(o.Location, item.GetText(), "duplicated name", _scriptPath);
+                    {
+
+                        string name = o.ToString();
+
+                        if (o is PolicyRule r)
+                            name = "policy " + r.Name;
+
+                        else if (o is PolicyVariable s)
+                            name = "alias " + s.Name;
+
+                        this.AddError(o.Location, name, "duplicated name", _scriptPath);
+
+                    }
                 }
             }
 
@@ -71,15 +84,122 @@ namespace Bb.Policies
 
         }
 
+        public override object VisitPolicy_id([NotNull] PolicyParser.Policy_idContext context)
+        {
+
+            var id = context.ID();
+            if (id != null)
+                return id.GetText();
+
+            id = context.IDQUOTED();
+            if (id != null)
+                return id.GetText().Trim('\'');
+
+            return null;
+        }
+
+        public override object VisitAlias_id([NotNull] PolicyParser.Alias_idContext context)
+        {
+            var id = context.ID();
+            if (id != null)
+                return id.GetText();
+
+            id = context.IDQUOTED();
+            if (id != null)
+                return id.GetText().Trim('\'');
+
+            return null;
+        }
+
+        public override object VisitPolicy_ref([NotNull] PolicyParser.Policy_refContext context)
+        {
+            var id = context.ID();
+            if (id != null)
+                return id.GetText();
+
+            id = context.IDQUOTED();
+            if (id != null)
+                return id.GetText().Trim('\'');
+
+            return null;
+        }
+
+        public override object VisitString([NotNull] PolicyParser.StringContext context)
+        {
+
+            ITerminalNode str = context.STRING();
+            if (str != null)
+            {
+                var txt = str.GetText()?.Trim() ?? string.Empty;
+                return txt.Trim('"');
+            }
+
+            return string.Empty;
+
+        }
+
+        public override object VisitKey_ref([NotNull] PolicyParser.Key_refContext context)
+        {
+
+            var id = context.ID();
+            if ( id != null)
+                return id.GetText();
+
+            id = context.IDQUOTED();
+            if (id != null)
+                return id.GetText().Trim('\'');
+
+            return null;
+
+        }
+
+        public override object VisitValue_ref([NotNull] PolicyParser.Value_refContext context)
+        {
+         
+            var str = context.@string();
+            if (str != null)
+                return new PolicyConstant((string)str.Accept(this), ConstantType.String) { Location = context.ToLocation() };
+            
+            var id = context.ID();
+            if (id != null)
+                return new PolicyConstant(id.GetText(), ConstantType.Id) { Location = context.ToLocation() };
+
+            var id2 = context.IDQUOTED();
+            if (id2 != null)
+                return new PolicyConstant(id2.GetText().Trim('\''), ConstantType.QuotedId) { Location = context.ToLocation() };
+
+            throw new NotImplementedException(context.GetText());
+
+        }
+
+        public override object VisitSource([NotNull] PolicyParser.SourceContext context)
+        {
+
+            var id = context.ID();
+            if (id != null)
+                return id.GetText();
+
+            id = context.IDQUOTED();
+            if (id != null)
+                return id.GetText().Trim('\'');
+
+            return null;
+            
+        }
+
         public override object VisitPair_alias([NotNull] PolicyParser.Pair_aliasContext context)
         {
 
-            var id = context.ID().GetText();
+            var alias_id = context.alias_id();
+            if (alias_id == null)
+                return null;
+
+            var _id = (string)context.alias_id().Accept(this);
             var str = context.@string();
             if (str != null)
             {
                 var s = (string)str.Accept(this);
-                return new PolicyVariable(id)
+                return new PolicyVariable(_id)
                 {
                     Value = new PolicyConstant(s, ConstantType.String)
                     {
@@ -96,17 +216,27 @@ namespace Bb.Policies
         public override object VisitPair_policy([NotNull] PolicyParser.Pair_policyContext context)
         {
 
-            var id = context.ID().GetText();
+            var policy_id = context.policy_id();
+            if (policy_id == null)
+                return null;
+
+            string inheritFrom = string.Empty;
+            var inherit = context.inherit();
+            if (inherit != null)            
+                inheritFrom = (string)inherit.policy_ref().Accept(this);
+            
             var expr = context.expression();
             if (expr != null)
             {
 
+                var _id = (string)policy_id.Accept(this);
                 var e = expr.Accept(this);
 
-                return new PolicyRule(id)
+                return new PolicyRule(_id)
                 {
                     Value = (Policy)e,
-                    Location = context.ToLocation()
+                    Location = context.ToLocation(),
+                    InheritFrom = inheritFrom,
                 };
 
             }
@@ -116,6 +246,7 @@ namespace Bb.Policies
 
         public override object VisitOperationBoolean([NotNull] PolicyParser.OperationBooleanContext context)
         {
+
             if (context.AND() != null)
                 return PolicyOperator.And;
 
@@ -154,86 +285,72 @@ namespace Bb.Policies
 
             throw new NotImplementedException(context.GetText());
 
-        }
-
-        public override object VisitString([NotNull] PolicyParser.StringContext context)
-        {
-
-            ITerminalNode str = context.STRING();
-            if (str != null)
-            {
-                var txt = str.GetText()?.Trim() ?? string.Empty;
-                return txt;
-            }
-
-            return string.Empty;
-
-        }
+        }       
 
         public override object VisitExpression([NotNull] PolicyParser.ExpressionContext context)
         {
 
             var t = context.GetText();
 
-            PolicyOperator opera;
-            var p = context.item();
+            PolicyOperator _operator;
+            var key_ref = context.key_ref();
             Policy left;
 
-            if (p != null && p.Length > 0)
+            if (key_ref != null)
             {
                 string source = string.Empty;
                 var l = context.source();
                 if (l != null)
                     source = l.ID().GetText();
 
-                left = (Policy)p[0].Accept(this);
+                left = (Policy)key_ref.Accept(this);
                 var optional = context.QUESTION_MARK() != null;
                 left = new PolicyIdExpression((PolicyConstant)left, optional) { Location = context.ToLocation(), Source = source };
 
                 var @operator = context.operationEqual();
                 if (@operator == null)
                     return left;
-                
-                if (p.Length > 1)
+
+                var value_ref = context.key_ref();
+
+                if (value_ref != null)
                 {
-                    opera = (PolicyOperator)@operator.Accept(this);
-                    var right = (Policy)p[1].Accept(this);
-                    return new PolicyOperationBinary(left, opera, right) { Location = context.ToLocation() };
+                    _operator = (PolicyOperator)@operator.Accept(this);
+                    var right = (Policy)value_ref.Accept(this);
+                    return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
                 }
 
-                opera = (PolicyOperator)context.operationBoolean().Accept(this);
-                return new PolicyOperationUnary(left, opera) { Location = context.ToLocation() };
+                _operator = (PolicyOperator)context.operationBoolean().Accept(this);
+                return new PolicyOperationUnary(left, _operator) { Location = context.ToLocation() };
 
             }
-
 
             var e = context.expression();
             left = (Policy)e[0].Accept(this);
 
             if (context.PARENT_LEFT() != null)
-            {
                 return new PolicySubExpression((PolicyExpression)left) { Location = context.ToLocation() };
-            }
+            
             else if (context.NOT() != null)
             {
-                opera = PolicyOperator.Not;
-                return new PolicyOperationUnary((PolicyExpression)left, opera) { Location = context.ToLocation() };
+                _operator = PolicyOperator.Not;
+                return new PolicyOperationUnary((PolicyExpression)left, _operator) { Location = context.ToLocation() };
             }
 
             var operaC = context.operationContains();
             if (operaC != null)
             {
-                opera = (PolicyOperator)operaC.Accept(this);
+                _operator = (PolicyOperator)operaC.Accept(this);
                 var right = (Policy)context.array().Accept(this);
-                return new PolicyOperationBinary(left, opera, right) { Location = context.ToLocation() };
+                return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
             }
 
             var o2 = context.operationBoolean();
             if (o2 != null)
             {
-                opera = (PolicyOperator)o2.Accept(this);
+                _operator = (PolicyOperator)o2.Accept(this);
                 var right = (Policy)e[1].Accept(this);
-                return new PolicyOperationBinary(left, opera, right) { Location = context.ToLocation() };
+                return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
             }
 
             throw new NotImplementedException(context.GetText());
@@ -243,36 +360,20 @@ namespace Bb.Policies
         public override object VisitArray([NotNull] PolicyParser.ArrayContext context)
         {
 
-            context.item();
+            var values = context.value_ref();
+            if (values == null)
+                return null;
+
             List<PolicyConstant> items = new List<PolicyConstant>();
 
-            foreach (var item in context.item())
+            foreach (var item in values)
             {
                 var o = (PolicyConstant)item.Accept(this);
                 items.Add(o);
             }
 
             return new PolicyArray(items) { Location = context.ToLocation() };
-        }
-
-        public override object VisitItem([NotNull] PolicyParser.ItemContext context)
-        {
-
-            var str = context.@string();
-            if (str != null)
-                return new PolicyConstant((string)str.Accept(this), ConstantType.String) { Location = context.ToLocation() };
-
-            var id = context.ID();
-            if (id != null)
-                return  new PolicyConstant(id.GetText(), ConstantType.Id) { Location = context.ToLocation() };
-
-            var id2 = context.IDQUOTED();
-            if (id2 != null)
-                return new PolicyConstant(id2.GetText(), ConstantType.QuotedId) { Location = context.ToLocation() };
-
-            throw new NotImplementedException(context.GetText());
-        
-        }
+        }        
 
 
         public void EvaluateErrors(IParseTree item)

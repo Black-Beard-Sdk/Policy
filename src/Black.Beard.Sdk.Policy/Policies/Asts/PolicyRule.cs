@@ -47,7 +47,7 @@
         public string Name { get; }
 
         public Policy Value { get; set; }
-
+        public string InheritFrom { get; internal set; }
     }
 
 }

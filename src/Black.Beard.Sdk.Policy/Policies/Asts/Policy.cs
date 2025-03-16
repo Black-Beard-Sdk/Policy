@@ -1,9 +1,9 @@
 ﻿using Bb.Analysis.DiagTraces;
-using System.Collections.Generic;
-using Ude.Core;
+
 
 namespace Bb.Policies.Asts
 {
+
 
     [System.Diagnostics.DebuggerDisplay("{ToString()}")]
     public abstract class Policy : IWriter
@@ -60,26 +60,52 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Evaluate text value
         /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        public static PolicyContainer Evaluate(string text)
+        /// <param name="text">text to evaluate</param>
+        /// <returns><see href="IntellisenseAst"></returns>
+        public static IntellisenseAst EvaluateTextForIntellisense(string text)
         {
             var _errors = new ScriptDiagnostics();
-            var parser = ScriptParser.ParseString(text);
-            var visitor = new ScriptBuilderVisitor(parser.Parser, _errors, string.Empty);
-            var tree = (PolicyContainer)parser.Visit(visitor);            
+            var tree = ScriptParser.EvaluateString(text);
+            tree.ParseTree(); 
+            return tree;
+        }
+
+        /// <summary>
+        /// Evaluate text of path value
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns><see href="IntellisenseAst"></returns>
+        public static IntellisenseAst EvaluatePathForIntellisense(string text)
+        {
+            var _errors = new ScriptDiagnostics();
+            var tree = ScriptParser.EvaluatePath(text);
+            tree.ParseTree();
             return tree;
         }
 
         /// <summary>
         /// Evaluate text value
         /// </summary>
-        /// <param name="text"></param>
+        /// <param name="text">text to evaluate</param>
         /// <returns></returns>
-        public static Policy EvaluatePath(string text)
+        public static PolicyContainer ParseText(string text)
         {
             var _errors = new ScriptDiagnostics();
-            var parser = ScriptParser.ParsePath(text);
+            var parser = ScriptParser.ParseString(text);
+            var visitor = new ScriptBuilderVisitor(parser.Parser, _errors, string.Empty);
+            var tree = (PolicyContainer)parser.Visit(visitor);            
+            return tree;
+        }       
+
+        /// <summary>
+        /// Evaluate text of path value
+        /// </summary>
+        /// <param name="path">path of the file</param>
+        /// <returns></returns>
+        public static Policy ParsePath(string path)
+        {
+            var _errors = new ScriptDiagnostics();
+            var parser = ScriptParser.ParsePath(path);
             var visitor = new ScriptBuilderVisitor(parser.Parser, _errors, string.Empty);
             var tree = (Policy)parser.Visit(visitor);
             return tree;

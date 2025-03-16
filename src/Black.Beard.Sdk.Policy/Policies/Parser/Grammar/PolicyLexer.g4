@@ -40,6 +40,7 @@ ALIAS 			: 'alias';
 
 POLICY 			: 'policy';
 
+INHERIT        : 'inherit';
 fragment ESC
    : '\\' (["\\/bfnrt] | UNICODE)
    ;

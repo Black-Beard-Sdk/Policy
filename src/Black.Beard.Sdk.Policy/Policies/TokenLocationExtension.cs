@@ -9,31 +9,17 @@ namespace Bb.Policies
     {
 
         /// <summary>
-        /// return the location of the parserRuleContext 
+        /// return the location of the parserRuleContext
         /// </summary>
         /// <param name="self"><see cref="ITerminalNode"></param>
         /// <returns></returns>
         public static TextLocation ToLocation(this ITerminalNode self)
         {
+            var d = self.Symbol;
             var s = self.SourceInterval;
             var start = s.a;
             var stop = s.b;
-            return new SpanLocation<LocationIndex, LocationIndex>(start, stop);
-        }
-
-        /// <summary>
-        /// return the location of the parserRuleContext
-        /// </summary>
-        /// <param name="self"><see cref="ITerminalNode"></param>
-        /// <param name="line">line position</param>
-        /// <param name="column">column position</param>
-        /// <returns></returns>
-        public static TextLocation ToLocation(this ITerminalNode self, int line, int column)
-        {
-            var s = self.SourceInterval;
-            var start = s.a;
-            var stop = s.b;
-            return new SpanLocation<LocationLineAndIndex, LocationLineAndIndex>((line, column, start), (line, column + s.Length, stop));
+            return new SpanLocation<LocationLineAndIndex, LocationLineAndIndex>((d.Line, d.Column, start), (d.Line, d.Column + s.Length, stop));
         }
 
         /// <summary>

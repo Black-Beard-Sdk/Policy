@@ -59,7 +59,6 @@ namespace Bb.Policies.Asts
 
         }
 
-
         public bool Add(PolicyRule rule)
         {
 
@@ -72,6 +71,30 @@ namespace Bb.Policies.Asts
 
         }
 
+        /// <summary>
+        /// Try to resolve variable
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="alias"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public bool ResolveVariable(string name, out string alias)
+        {
+            
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            alias = null;
+
+            if (_dicVariable.TryGetValue(name, out var a))
+                if (a.Value != null)
+                alias = a.Value.Value;
+
+            return !string.IsNullOrEmpty( alias);
+
+        }
+
+        public IEnumerable<PolicyRule> Rules => _dicRule.Values;
 
         private Dictionary<string, PolicyVariable> _dicVariable;
         private Dictionary<string, PolicyRule> _dicRule;

@@ -34,15 +34,17 @@ pair :
    ;
 
 pair_alias : 
-   ALIAS ID COLON string
+   ALIAS alias_id COLON string
    ;
 
 pair_policy : 
-   POLICY ID COLON expression
+   POLICY policy_id inherit? COLON expression
    ;
 
+inherit : INHERIT policy_ref;
+
 array :
-     BRACKET_LEFT item (COMMA item)* BRACKET_RIGHT
+     BRACKET_LEFT value_ref (COMMA value_ref)* BRACKET_RIGHT
    ;
 
 operationBoolean : 
@@ -58,19 +60,24 @@ operationContains :
    ;
 
 expression
-   : source? item QUESTION_MARK? (operationEqual item)?
+   : source? key_ref QUESTION_MARK? (operationEqual value_ref)?
    | NOT expression
    | PARENT_LEFT expression PARENT_RIGHT
    | expression operationBoolean expression
    | expression operationContains array
    ;
 
-item
+
+
+value_ref
    : string
    | IDQUOTED
    | ID
    ;
 
-source : ID DOT;
-
+source : (ID | IDQUOTED) DOT;
 string : STRING;
+alias_id : ID | IDQUOTED;
+policy_id : ID | IDQUOTED;
+policy_ref : ID | IDQUOTED;
+key_ref : ID | IDQUOTED;
