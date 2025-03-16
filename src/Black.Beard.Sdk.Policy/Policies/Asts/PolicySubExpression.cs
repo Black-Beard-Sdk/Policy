@@ -16,6 +16,11 @@
             this.Sub = sub;
         }
 
+        public override bool HasSource()
+        {
+            return Sub.HasSource();
+        }
+
         public PolicyExpression Sub { get; }
 
         public override T Accept<T>(IPolicyVisitor<T> visitor)

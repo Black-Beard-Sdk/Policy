@@ -49,11 +49,11 @@ namespace Bb.Policies.Asts
                     writer.Append(" !has ");
                     break;
 
-                case PolicyOperator.And:
+                case PolicyOperator.AndExclusive:
                     writer.Append(" & ");
                     break;
 
-                case PolicyOperator.Or:
+                case PolicyOperator.OrExclusive:
                     writer.Append(" | ");
                     break;
 

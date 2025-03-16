@@ -25,6 +25,11 @@
             Kind = PolicyKind.Rule;
         }
 
+        public override bool HasSource()
+        {
+            return Value.HasSource();
+        }
+
         public override T Accept<T>(IPolicyVisitor<T> visitor)
         {
             return visitor.VisitRule(this);

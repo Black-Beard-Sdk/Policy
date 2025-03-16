@@ -19,7 +19,6 @@
 lexer grammar PolicyLexer;
 
 DOT            : '.';
-QUESTION_MARK 	: '?';
 COLON          : ':';
 NOT 			   : '!';
 PARENT_LEFT  	: '(';

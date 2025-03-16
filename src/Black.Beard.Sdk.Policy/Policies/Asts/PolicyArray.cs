@@ -61,6 +61,11 @@ namespace Bb.Policies.Asts
             return _items.GetEnumerator();
         }
 
+        public override bool HasSource()
+        {
+            return false;
+        }
+
         private readonly List<PolicyConstant> _items;
 
     }

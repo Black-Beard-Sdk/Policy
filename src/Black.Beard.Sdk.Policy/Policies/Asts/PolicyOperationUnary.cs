@@ -22,6 +22,11 @@ namespace Bb.Policies.Asts
             Operator = @operator;
         }
 
+        public override bool HasSource()
+        {
+            return this.Left.HasSource();
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PolicyVariable"/> class.
         /// </summary>

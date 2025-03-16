@@ -76,43 +76,35 @@ namespace Bb.Policies
 
                 PrepareToBuild();
 
-
                 var s = _stack.Peek();
-                //var s1 = Expression.Assign(Expression.Property(s.Context, RuntimeContext._ScriptProperty), Expression.Constant(ScriptPath ?? string.Empty));
 
-                //_compiler.Add(s1);
-
-                //using (CurrentContext ctx = NewContext()) { }
-
-                //using (var store = NewStore())
-                //{
-
-                //}
-
-
-                // Start parsing
-
-                var rule = item.Value.Accept(this) as Expression;
-
-                if (!string.IsNullOrEmpty(item.InheritFrom))
+                using (CurrentContext current_ctx = NewContext())
                 {
-                    var ctx = BuildCtx;
-                    var p = e.Location.AsConstant();
-                    var r = Expression.Call(ctx.Context, RuntimeContext._evaluateFrom, item.InheritFrom.AsConstant(), p);
 
-                }
-                else
+                    // Start parsing
+
+                    var rule = item.Value.Accept(this) as Expression;
+
+                    if (!string.IsNullOrEmpty(item.InheritFrom))
+                    {
+                        var ctx = BuildCtx;
+                        var p = item.Location.AsConstant();
+                        var r = Expression.Call(ctx.Context, RuntimeContext._evaluateFrom, item.InheritFrom.AsConstant(), p);
+                        rule = Expression.AndAlso(rule, r);
+                    }
+
                     _compiler.Add(rule);
+                    var result = _compiler.Compile<Func<RuntimeContext, bool>>();
 
-                var result = _compiler.Compile<Func<RuntimeContext, bool>>();
+                    if (rule != null)
+                    {
+                        _evaluator.Add(item.Name, result);
 
-                if (rule != null)
-                {
-                    _evaluator.Add(item.Name, result);
+                    }
+                    else
+                    {
 
-                }
-                else
-                {
+                    }
 
                 }
             }
@@ -158,6 +150,9 @@ namespace Bb.Policies
 
             var p = e.Location.AsConstant();
 
+            if (e.Left.HasSource())
+                return Expression.Call(ctx.Context, RuntimeContext._evaluate, left, e.Operator.AsConstant(), right, p);
+
             switch (e.Operator)
             {
 
@@ -174,10 +169,11 @@ namespace Bb.Policies
                 case PolicyOperator.HasNot:
                     return Expression.Call(ctx.Context, RuntimeContext._evaluateHasNot, left, right, p);
 
-                case PolicyOperator.And:
-                    break;
-                case PolicyOperator.Or:
-                    break;
+                case PolicyOperator.AndExclusive:
+                    return Expression.AndAlso(left, right);
+                case PolicyOperator.OrExclusive:
+                    return Expression.OrElse(left, right);
+
 
                 case PolicyOperator.Undefined:
                 case PolicyOperator.Not:
@@ -186,19 +182,25 @@ namespace Bb.Policies
             }
 
             throw new NotImplementedException();
+
         }
 
 
         public object VisitId(PolicyIdExpression e)
         {
 
+            var result = (Expression)VisitConstant(e);
+
             if (!string.IsNullOrEmpty(e.Source))
             {
+                var ctx = BuildCtx;
+                var p = e.Location.AsConstant();
+                result = Expression.Call(ctx.Context, RuntimeContext._evaluateValue, e.Source.AsConstant(), result, p);
 
             }
 
-            return VisitConstant(e);
 
+            return result;
         }
 
         public object VisitConstant(PolicyConstant e)
@@ -216,22 +218,30 @@ namespace Bb.Policies
             return Expression.NewArrayInit(typeof(string), items.ToArray());
         }
 
+        public object VisitSubExpression(PolicySubExpression e)
+        {
+            return e.Sub.Accept(this);
+        }
+
+        public object VisitUnaryOperation(PolicyOperationUnary e)
+        {
+
+            var result = (Expression)e.Left.Accept(this);
+
+            if (e.Operator == PolicyOperator.Not)
+                return Expression.Not(result);
+
+            throw new NotImplementedException(e.Operator.ToString());
+
+        }
+
+
         public object VisitComment(PolicyComment e)
         {
             return null;
         }
 
         public object VisitRule(PolicyRule e)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object VisitSubExpression(PolicySubExpression e)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object VisitUnaryOperation(PolicyOperationUnary e)
         {
             throw new NotImplementedException();
         }
@@ -243,10 +253,7 @@ namespace Bb.Policies
 
         private bool ResolveVariable(string name, TextLocation location, out string alias)
         {
-            var result = _container.ResolveVariable(name, out alias);
-            //if (!result)
-            //    _container.Diagnostics.AddError(location, name, $"failed to resolve variable {name}");
-            return result;
+            return _container.ResolveVariable(name, out alias);
         }
 
         private LocalMethodCompiler _compiler;

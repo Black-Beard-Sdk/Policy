@@ -1,20 +1,16 @@
-﻿using Antlr4.Runtime;
-using Bb.Analysis.DiagTraces;
+﻿using Bb.Analysis.DiagTraces;
 using Bb.ComponentModel.Accessors;
+using Bb.Expressions;
 using Bb.Policies.Asts;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
-using ZstdSharp.Unsafe;
-using static Refs.System;
+
 
 namespace Bb.Policies
 {
@@ -31,7 +27,8 @@ namespace Bb.Policies
             _evaluateNotIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotIn), new Type[] { typeof(string), typeof(string[]), typeof(TextLocation) });
             _evaluateEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateEquality), new Type[] { typeof(string), typeof(string), typeof(TextLocation) });
             _evaluateNotEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotEquality), new Type[] { typeof(string), typeof(string), typeof(TextLocation) });
-            
+            _evaluate = typeof(RuntimeContext).GetMethod(nameof(Evaluate), new Type[] { typeof(object), typeof(PolicyOperator), typeof(string), typeof(TextLocation) });
+
             _evaluateFrom = typeof(RuntimeContext).GetMethod(nameof(EvaluateFrom), new Type[] { typeof(string), typeof(TextLocation) });
             _evaluateValue = typeof(RuntimeContext).GetMethod(nameof(EvaluateValue), new Type[] { typeof(string), typeof(string), typeof(TextLocation) });
 
@@ -105,6 +102,21 @@ namespace Bb.Policies
         public object EvaluateValue(string pathSource, string property, TextLocation textLocation)
         {
 
+            if (!this._dic.TryGetValue(pathSource, out var source))
+                _diagnostics.AddError(textLocation, pathSource, $"source {pathSource}, can't be resolved");
+
+            else
+            {
+
+                var accessor = source.GetType().GetAccessors(MemberStrategy.Instance);
+                if (!accessor.TryGetValue(property, out var acc))
+                    _diagnostics.AddError(textLocation, property, $"failed to resolve {property} in {pathSource.GetType()}");
+
+                else
+                    return acc.GetValue(source);
+
+            }
+
             return null;
 
         }
@@ -127,6 +139,7 @@ namespace Bb.Policies
             bool result = true;
 
             if (IsInRole(key))
+            {
                 foreach (var item in values)
                 {
                     var test = _principal.IsInRole(item);
@@ -136,7 +149,7 @@ namespace Bb.Policies
                         _diagnostics.AddError(textLocation, item, $"user hasn't role {item}");
                     }
                 }
-
+            }
             else if (_principal is ClaimsPrincipal p)
             {
                 var pp = p.Claims.Where(c => c.Type == key).ToList();
@@ -160,19 +173,20 @@ namespace Bb.Policies
         public bool EvaluateHasNot(string key, string[] values, TextLocation textLocation)
         {
 
-            bool result = false;
+            bool result = true;
 
             if (IsInRole(key))
+            {
                 foreach (var item in values)
                 {
                     var test = _principal.IsInRole(item);
                     if (test)
                     {
-                        result = true;
+                        result = false;
                         _diagnostics.AddError(textLocation, item, $"user has role {item}");
                     }
                 }
-
+            }
             else if (_principal is ClaimsPrincipal p)
             {
                 var pp = p.Claims.Where(c => c.Type == key).ToList();
@@ -181,7 +195,7 @@ namespace Bb.Policies
                     var test = pp.Any(c => c.Value == item);
                     if (test)
                     {
-                        result = true;
+                        result = false;
                         _diagnostics.AddError(textLocation, item, $"user has claim {key} = {item}");
                     }
                 }
@@ -230,7 +244,7 @@ namespace Bb.Policies
             if (IsInRole(key))
             {
                 foreach (var item in values)
-                    if (!_principal.IsInRole(item))
+                    if (_principal.IsInRole(item))
                     {
                         _diagnostics.AddError(textLocation, item, $"user can't have role {item}");
                         result = false;
@@ -258,21 +272,22 @@ namespace Bb.Policies
             bool result = true;
 
             if (IsInRole(key))
+            {
                 if (!_principal.IsInRole(value))
                 {
                     result = false;
                     _diagnostics.AddError(textLocation, value, $"user must have role {value}");
                 }
-
-                else if (_principal is ClaimsPrincipal p)
+            }
+            else if (_principal is ClaimsPrincipal p)
+            {
+                var pp = p.Claims.Where(c => c.Type == key).ToList();
+                if (!pp.Any(c => c.Value == value))
                 {
-                    var pp = p.Claims.Where(c => c.Type == key).ToList();
-                        if (!pp.Any(c => c.Value == value))
-                        {
-                            result = false;
-                            _diagnostics.AddError(textLocation, value, $"user must have claim {key} = {value}");
-                        }
+                    result = false;
+                    _diagnostics.AddError(textLocation, value, $"user must have claim {key} = {value}");
                 }
+            }
 
             return result;
 
@@ -284,23 +299,84 @@ namespace Bb.Policies
             bool result = true;
 
             if (IsInRole(key))
+            {
                 if (_principal.IsInRole(value))
                 {
                     result = false;
                     _diagnostics.AddError(textLocation, value, $"user can't have role {value}");
                 }
-
-                else if (_principal is ClaimsPrincipal p)
+            }
+            else if (_principal is ClaimsPrincipal p)
+            {
+                var pp = p.Claims.Where(c => c.Type == key).ToList();
+                if (pp.Any(c => c.Value == value))
                 {
-                    var pp = p.Claims.Where(c => c.Type == key).ToList();
-                    if (pp.Any(c => c.Value == value))
-                    {
-                        result = false;
-                        _diagnostics.AddError(textLocation, value, $"user can't have claim {key} = {value}");
-                    }
+                    result = false;
+                    _diagnostics.AddError(textLocation, value, $"user can't have claim {key} = {value}");
                 }
+            }
 
             return result;
+
+        }
+
+        public bool Evaluate(object left, PolicyOperator @operator, string right, TextLocation textLocation)
+        {
+
+            if (left == null)
+                switch (@operator)
+                {
+
+                    case PolicyOperator.Equal:
+                        return right == null;
+                    case PolicyOperator.NotEqual:
+                        return right != null;
+
+                    case PolicyOperator.Has:
+                    case PolicyOperator.HasNot:
+                    case PolicyOperator.AndExclusive:
+                    case PolicyOperator.OrExclusive:
+                    case PolicyOperator.Not:
+                    case PolicyOperator.In:
+                    case PolicyOperator.NotIn:
+                    case PolicyOperator.Undefined:
+                    default:
+                        return false;
+
+                }
+
+
+            var type = left.GetType();
+            var r = right.ConvertTo(type, CultureInfo.CurrentCulture);
+
+            switch (@operator)
+            {
+
+                case PolicyOperator.Equal:
+                    return object.Equals(left, r);
+
+                case PolicyOperator.NotEqual:
+                    return !object.Equals(left, r);
+
+                case PolicyOperator.In:
+                    break;
+                case PolicyOperator.NotIn:
+                    break;
+                case PolicyOperator.Has:
+                    break;
+                case PolicyOperator.HasNot:
+                    break;
+                case PolicyOperator.AndExclusive:
+                    break;
+                case PolicyOperator.OrExclusive:
+                    break;
+                case PolicyOperator.Not:
+                case PolicyOperator.Undefined:
+                default:
+                    break;
+            }
+
+            return false;
 
         }
 
@@ -419,6 +495,7 @@ namespace Bb.Policies
 
         }
 
+        internal static readonly MethodInfo? _evaluate;
         internal static readonly MethodInfo? _evaluateEquality;
         internal static readonly MethodInfo? _evaluateNotEquality;
         internal static readonly MethodInfo? _evaluateFrom;

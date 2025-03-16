@@ -9,8 +9,8 @@
         /// Initializes a new instance of the <see cref="PolicyVariable"/> class.
         /// </summary>
         /// <param name="name">name of the variable</param>
-        public PolicyIdExpression(PolicyConstant constant, bool optional)
-            : this(constant.Value, constant.Type, optional)
+        public PolicyIdExpression(PolicyConstant constant)
+            : this(constant.Value, constant.Type)
         {
             Location = constant.Location;
         }
@@ -24,14 +24,16 @@
         /// Initializes a new instance of the <see cref="PolicyVariable"/> class.
         /// </summary>
         /// <param name="name">name of the variable</param>
-        public PolicyIdExpression(string value, ConstantType type, bool optional)
+        public PolicyIdExpression(string value, ConstantType type)
             : base(value, type)
         {
             this.Kind = PolicyKind.IdExpression;
-            this.Optional = optional;
         }
 
-        public bool Optional { get; }
+        public override bool HasSource()
+        {
+            return !string.IsNullOrEmpty(Source);
+        }
 
         public string Source { get; set; }
 
@@ -46,10 +48,8 @@
 
             base.ToString(writer);
             
-            if (Optional)
-                writer.Append("?");
-
             return true;
+
         }
 
     }

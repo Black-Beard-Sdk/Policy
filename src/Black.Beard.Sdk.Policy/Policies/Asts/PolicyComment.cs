@@ -15,6 +15,11 @@
 
         }
 
+        public override bool HasSource()
+        {
+            return false;
+        }
+
         public override T Accept<T>(IPolicyVisitor<T> visitor)
         {
             return visitor.VisitComment(this);

@@ -142,14 +142,14 @@ namespace Bb.Policies
         {
 
             var id = context.ID();
-            if ( id != null)
-                return id.GetText();
-
-            id = context.IDQUOTED();
             if (id != null)
-                return id.GetText().Trim('\'');
+                return new PolicyConstant(id.GetText(), ConstantType.Id) { Location = context.ToLocation() };
 
-            return null;
+            var id2 = context.IDQUOTED();
+            if (id2 != null)
+                return new PolicyConstant(id2.GetText().Trim('\''), ConstantType.QuotedId) { Location = context.ToLocation() };
+
+            throw new NotImplementedException(context.GetText());
 
         }
 
@@ -248,10 +248,10 @@ namespace Bb.Policies
         {
 
             if (context.AND() != null)
-                return PolicyOperator.And;
+                return PolicyOperator.AndExclusive;
 
             if (context.OR() != null)
-                return PolicyOperator.Or;
+                return PolicyOperator.OrExclusive;
 
             throw new NotImplementedException(context.GetText());
         }
@@ -290,8 +290,6 @@ namespace Bb.Policies
         public override object VisitExpression([NotNull] PolicyParser.ExpressionContext context)
         {
 
-            var t = context.GetText();
-
             PolicyOperator _operator;
             var key_ref = context.key_ref();
             Policy left;
@@ -303,15 +301,14 @@ namespace Bb.Policies
                 if (l != null)
                     source = l.ID().GetText();
 
-                left = (Policy)key_ref.Accept(this);
-                var optional = context.QUESTION_MARK() != null;
-                left = new PolicyIdExpression((PolicyConstant)left, optional) { Location = context.ToLocation(), Source = source };
+                left = (Policy)key_ref.Accept(this);                
+                left = new PolicyIdExpression((PolicyConstant)left) { Location = context.ToLocation(), Source = source };
 
                 var @operator = context.operationEqual();
                 if (@operator == null)
                     return left;
 
-                var value_ref = context.key_ref();
+                var value_ref = context.value_ref();
 
                 if (value_ref != null)
                 {

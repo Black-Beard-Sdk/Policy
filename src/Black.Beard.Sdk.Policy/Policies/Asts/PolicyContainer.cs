@@ -32,7 +32,10 @@ namespace Bb.Policies.Asts
 
         }
 
-
+        public override bool HasSource()
+        {
+            return false;
+        }
 
         public bool Add(Policy o)
         {

@@ -47,6 +47,11 @@ namespace Bb.Policies.Asts
 
         }
 
+        public override bool HasSource()
+        {
+            return false;
+        }
+
         public string Name { get; }
 
         public PolicyConstant Value { get; set; }

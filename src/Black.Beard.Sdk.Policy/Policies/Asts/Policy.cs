@@ -1,4 +1,5 @@
 ﻿using Bb.Analysis.DiagTraces;
+using System;
 
 
 namespace Bb.Policies.Asts
@@ -132,6 +133,8 @@ namespace Bb.Policies.Asts
         /// <returns></returns>
         public abstract bool ToString(Writer writer);
 
+        public abstract bool HasSource();
+
         ///// <summary>
         ///// Adds the specified comments.
         ///// </summary>
@@ -165,8 +168,8 @@ namespace Bb.Policies.Asts
         NotIn,
         Has,
         HasNot,
-        And,
-        Or,
+        AndExclusive,
+        OrExclusive,
         Not
     }
 

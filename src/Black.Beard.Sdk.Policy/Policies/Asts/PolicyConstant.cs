@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net.Mime;
-
+﻿
 namespace Bb.Policies.Asts
 {
 
@@ -13,14 +11,13 @@ namespace Bb.Policies.Asts
         {
             this.Kind = PolicyKind.Constant;
 
-            var o = value.Trim();
-            if (o.StartsWith("\"") && o.EndsWith("\""))
-                o = o.Trim('"');
+            //var o = value.Trim();
+            //if (o.StartsWith("\"") && o.EndsWith("\""))
+            //    o = o.Trim('"');
+            //else if (o.StartsWith("'") && o.EndsWith("'"))
+            //    o = o.Trim('\'');
 
-            else if (o.StartsWith("'") && o.EndsWith("'"))
-                o = o.Trim('\'');
-
-            this.Value = o;
+            this.Value = value;
             this.Type = type;
         }
 
@@ -30,6 +27,11 @@ namespace Bb.Policies.Asts
         public string Value { get; }
 
         public ConstantType Type { get; }
+
+        public override bool HasSource()
+        {
+            return false;
+        }
 
         public override T Accept<T>(IPolicyVisitor<T> visitor)
         {
@@ -59,8 +61,6 @@ namespace Bb.Policies.Asts
             return true;
         }
 
-
-
     }
 
     public enum ConstantType
@@ -70,4 +70,5 @@ namespace Bb.Policies.Asts
         QuotedId,
     }
 
+ 
 }
