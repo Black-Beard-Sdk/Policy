@@ -13,7 +13,7 @@ namespace Bb.Expressions.CsharpGenerators
         protected abstract string[] Names { get; }
         protected abstract object DefaultValue { get; }
 
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) =>
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType) =>
             sourceType == typeof(string) ? true : base.CanConvertFrom(context, sourceType);
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
@@ -34,7 +34,7 @@ namespace Bb.Expressions.CsharpGenerators
             return DefaultValue;
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        public override object ConvertTo(ITypeDescriptorContext? context, CultureInfo culture, object value, Type destinationType)
         {
             if (destinationType == null)
             {

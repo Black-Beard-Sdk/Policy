@@ -35,18 +35,11 @@ namespace Bb.Policies
         /// Create a new instance of <see cref="ScriptBuilderVisitor"/>
         /// </summary>
         /// <param name="culture"></param>
-        public ScriptBuilderVisitor(PolicyParser parser, ScriptDiagnostics diagnostics, PolicyContainer container, Action<PolicyRule> action, string path)
+        public ScriptBuilderVisitor(PolicyParser parser, ScriptDiagnostics diagnostics, PolicyContainer container, Action<PolicyRule> action, string path) 
+            : this(parser, diagnostics, path)
         {
-            _parser = parser;
-            _diagnostics = diagnostics;
-            _scriptPath = path;
             _container = container;
             _action = action;
-            if (!string.IsNullOrEmpty(path))
-                _scriptPathDirectory = new FileInfo(path).Directory.FullName;
-            else
-                _scriptPathDirectory = AppDomain.CurrentDomain.BaseDirectory;
-
         }
 
 
@@ -56,13 +49,19 @@ namespace Bb.Policies
         /// <param name="culture"></param>
         public ScriptBuilderVisitor(PolicyParser parser, ScriptDiagnostics diagnostics, string path)
         {
+            _currentCulture = CultureInfo.InvariantCulture;
             _parser = parser;
             _diagnostics = diagnostics;
             _scriptPath = path;
 
             if (!string.IsNullOrEmpty(path))
-                _scriptPathDirectory = new FileInfo(path).Directory.FullName;
-            else
+            {
+                var dir = new FileInfo(path).Directory;
+                if (dir != null)
+                    _scriptPathDirectory = dir.FullName;
+            }
+
+            if (string.IsNullOrEmpty(_scriptPathDirectory))
                 _scriptPathDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
         }
@@ -74,6 +73,7 @@ namespace Bb.Policies
         /// <returns></returns>
         public override object VisitScript([NotNull] PolicyParser.ScriptContext context)
         {
+
             _initialSource = new StringBuilder(context.Start.InputStream.ToString());
 
             var pair = context.pair();
@@ -264,9 +264,9 @@ namespace Bb.Policies
 
             string inheritFrom = string.Empty;
             var inherit = context.inherit();
-            if (inherit != null)            
+            if (inherit != null)
                 inheritFrom = (string)inherit.policy_ref().Accept(this);
-            
+
 
             var expr = context.expression();
             if (expr != null)
@@ -275,10 +275,10 @@ namespace Bb.Policies
                 var _id = (string)policy_id.Accept(this);
 
                 if (inheritFrom == _id)
-                    AddError(inherit.ToLocation(), inheritFrom, "recursive rule detected");
+                    AddError(inherit?.ToLocation() ?? TextLocation.Empty, inheritFrom, "recursive rule detected");
 
 
-                    var e = expr.Accept(this);
+                var e = expr.Accept(this);
 
                 var result = new PolicyRule(_id)
                 {
@@ -491,19 +491,31 @@ namespace Bb.Policies
 
         public IEnumerable<ScriptDiagnostic> Errors { get => _diagnostics; }
 
-        public string Filename { get; set; }
+        public string? Filename { get; set; }
 
         public CultureInfo Culture { get => _currentCulture; }
 
 
-        void AddError(TextLocation start, string txt, string message, string path = null)
+        void AddError(TextLocation? start, string txt, string message, string path)
         {
-            _diagnostics.AddError(start.InDocument(path ?? Filename), txt, message);
+            if (start == null)
+                start = TextLocation.Empty;
+            _diagnostics.AddError(start.InDocument(path ?? Filename ?? string.Empty), txt, message);
         }
 
-        void AddWarning(TextLocation start, string txt, string message, string path = null)
+        void AddError(TextLocation start, string txt, string message)
         {
-            _diagnostics.AddWarning(start.InDocument(path ?? Filename), txt, message);
+            _diagnostics.AddError(start.InDocument(Filename ?? string.Empty), txt, message);
+        }
+
+        void AddWarning(TextLocation start, string txt, string message)
+        {
+            _diagnostics.AddWarning(start.InDocument(Filename ?? string.Empty), txt, message);
+        }
+
+        void AddWarning(TextLocation start, string txt, string message, string path)
+        {
+            _diagnostics.AddWarning(start.InDocument(path ?? Filename ?? string.Empty), txt, message);
         }
 
         void AddError(ParserRuleContext r)
@@ -518,23 +530,23 @@ namespace Bb.Policies
             string o0 = _parser.RuleNames[state.ruleIndex];
             string o1 = _parser.RuleNames[r.RuleIndex];
 
-            _diagnostics.AddError(r.Start.ToLocation(Filename), r.Start.Text, $"Failed to parse script. '{o0}' expect '{o1}'");
+            _diagnostics.AddError(r.Start.ToLocation(Filename ?? string.Empty), r.Start.Text, $"Failed to parse script. '{o0}' expect '{o1}'");
 
         }
 
         void AddError(ErrorNodeImpl e)
         {
-            _diagnostics.AddError(e.Symbol.ToLocation(Filename), e.Symbol.Text,
+            _diagnostics.AddError(e.Symbol.ToLocation(Filename ?? string.Empty), e.Symbol.Text,
                     $"Failed to parse script at position {e.Symbol.StartIndex}, line {e.Symbol.Line}, col {e.Symbol.Column} '{e.Symbol.Text}'"
             );
         }
 
-        private StringBuilder _initialSource;
+        private StringBuilder? _initialSource;
         private readonly PolicyParser _parser;
         private ScriptDiagnostics _diagnostics;
         private readonly string _scriptPath;
-        private PolicyContainer _container;
-        private readonly Action<PolicyRule> _action;
+        private PolicyContainer? _container;
+        private readonly Action<PolicyRule>? _action;
         private readonly string _scriptPathDirectory;
 
         private CultureInfo _currentCulture;
