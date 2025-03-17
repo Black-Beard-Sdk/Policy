@@ -9,14 +9,6 @@ namespace Bb
     public static class PolicyExtension
     {
 
-        static PolicyExtension()
-        {
-
-            WebApplicationBuilder builder = null;
-            builder.AddPolicy("file path", c => true );
-
-        }
-
         /// <summary>
         /// Append policies form specified file
         /// </summary>
