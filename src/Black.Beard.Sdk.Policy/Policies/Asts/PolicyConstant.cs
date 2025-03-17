@@ -44,6 +44,12 @@ namespace Bb.Policies.Asts
          
             switch (Type)
             {
+                case ConstantType.Boolean:
+                    if (Value == "true")
+                        writer.Append("true");
+                    else
+                        writer.Append("false");
+                    break;
                 case ConstantType.String:
                     writer.Append($"\"{Value}\"");
                     break;
@@ -68,6 +74,7 @@ namespace Bb.Policies.Asts
         String,
         Id,
         QuotedId,
+        Boolean
     }
 
  

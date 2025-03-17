@@ -15,8 +15,6 @@ namespace Bb.Policies.Asts
     {
 
 
-        //public static readonly IntellisenseAst Default = new IntellisenseAst(IntellisenseContext.Default, null);
-
         public IntellisenseAst(IntellisenseContext context, IParseTree item)
         {
             this._context = context;

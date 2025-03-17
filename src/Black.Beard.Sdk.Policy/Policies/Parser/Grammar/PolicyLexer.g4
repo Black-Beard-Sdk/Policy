@@ -18,6 +18,10 @@
 
 lexer grammar PolicyLexer;
 
+
+TRUE           : 'true';
+FALSE          : 'false';
+
 DOT            : '.';
 COLON          : ':';
 NOT 			   : '!';

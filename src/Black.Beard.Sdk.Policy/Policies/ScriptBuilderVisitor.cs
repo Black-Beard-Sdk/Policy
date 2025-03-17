@@ -205,6 +205,10 @@ namespace Bb.Policies
             if (id2 != null)
                 return new PolicyConstant(id2.GetText().Trim('\''), ConstantType.QuotedId) { Location = context.ToLocation() };
 
+            var boolean = context.boolean();
+            if (boolean != null)
+                return new PolicyConstant(boolean.GetText(), ConstantType.Boolean) { Location = context.ToLocation() };
+
             throw new NotImplementedException(context.GetText());
 
         }
@@ -260,15 +264,21 @@ namespace Bb.Policies
 
             string inheritFrom = string.Empty;
             var inherit = context.inherit();
-            if (inherit != null)
+            if (inherit != null)            
                 inheritFrom = (string)inherit.policy_ref().Accept(this);
+            
 
             var expr = context.expression();
             if (expr != null)
             {
 
                 var _id = (string)policy_id.Accept(this);
-                var e = expr.Accept(this);
+
+                if (inheritFrom == _id)
+                    AddError(inherit.ToLocation(), inheritFrom, "recursive rule detected");
+
+
+                    var e = expr.Accept(this);
 
                 var result = new PolicyRule(_id)
                 {

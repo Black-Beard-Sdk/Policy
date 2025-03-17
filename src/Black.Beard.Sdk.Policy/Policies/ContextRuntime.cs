@@ -37,7 +37,7 @@ namespace Bb.Policies
         }
 
 
-        public RuntimeContext(ScriptDiagnostics diagnostic, Dictionary<string, Func<RuntimeContext, bool>> rules, object datas)
+        public RuntimeContext(ScriptDiagnostics? diagnostic, Dictionary<string, Func<RuntimeContext, bool>> rules, object datas)
         {
             this._rules = rules;
             _watch = new Stopwatch();

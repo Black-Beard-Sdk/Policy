@@ -71,12 +71,11 @@ expression
    | expression operationContains array
    ;
 
-
-
 value_ref
    : string
    | IDQUOTED
    | ID
+   | boolean
    ;
 
 source : (ID | IDQUOTED) DOT;
@@ -86,3 +85,5 @@ policy_id : ID | IDQUOTED;
 policy_ref : ID | IDQUOTED;
 key_ref : ID | IDQUOTED;
 category : ID;
+
+boolean : TRUE | FALSE;

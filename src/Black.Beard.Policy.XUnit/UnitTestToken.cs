@@ -325,6 +325,19 @@ policy p2 inherit p1 : Source.Name = test
 
         }
 
+        [Fact]
+        public void TestPolicy140()
+        {
+
+            string policyPayload = @"policy p1 inherit p1 : Identity.IsAuthenticated = true";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal();
+
+            var result = e.Evaluate("p1", principal, out var ctx);
+            Assert.True(result);
+
+        }
+
         public static PolicyEvaluator GetEvaluator(string policyPayload)
         {
 

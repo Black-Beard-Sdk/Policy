@@ -146,5 +146,11 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitCategory([NotNull] PolicyParser.CategoryContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.boolean"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBoolean([NotNull] PolicyParser.BooleanContext context);
 }
 } // namespace Bb.Policies.Parser

@@ -50,29 +50,19 @@ create a policy like a role must to have admin and guest
 policy p1 : role has [admin, guest]
 ```
 
-create a policy like a role should to have admin and guest
-```batch
-policy p1 : role? has [admin, guest]
-```
-
 create a policy like the value to evaluate is in another object with a property name equal to "property" and value equal to "1"
 ```batch
-policy p1 : source2.property? = "1"
+policy p1 : source2.property = "1"
 ```
 
-Ensure is authenticated
+Must be authenticated
 ```batch
-policy p1 : Identity.IsAuthenticated
-```
-
-Can be anonymous
-```batch
-policy p1 : Identity.IsAuthenticated?
+policy p1 : Identity.IsAuthenticated = true
 ```
 
 Add category on a rule
 ```batch
-policy p1 (web) : Identity.IsAuthenticated?
+policy p1 (web) : Identity.IsAuthenticated = true
 ```
 
 ## How to use library

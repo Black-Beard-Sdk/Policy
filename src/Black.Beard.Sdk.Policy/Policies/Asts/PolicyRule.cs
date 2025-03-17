@@ -64,16 +64,46 @@ namespace Bb.Policies.Asts
                         this._categories.Add(category);
         }
 
+        /// <summary>
+        /// Return true if the rule has all required categories
+        /// </summary>
+        /// <param name="categories">list of category to required</param>
+        /// <returns></returns>
+        public bool WithCategories(params string[] categories)
+        {
+            foreach (string category in categories)
+                if (!string.IsNullOrEmpty(category))
+                    return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Categories of the rule
+        /// </summary>
         public IEnumerable<string> Categories => this._categories;
 
+        /// <summary>
+        /// Name of the rule
+        /// </summary>
         public string Name { get; }
 
         private readonly HashSet<string> _categories;
 
+        /// <summary>
+        /// Rule expression
+        /// </summary>
         public Policy Value { get; set; }
 
-        public string InheritFrom { get; internal set; }
+        /// <summary>
+        /// Specify the category inherit of another one category
+        /// </summary>
+        public string InheritFrom { get; set; }
+
+        /// <summary>
+        /// Return the origin source of the path where the rule was loaded
+        /// </summary>
         public string Origin { get; internal set; }
+
     }
 
 }

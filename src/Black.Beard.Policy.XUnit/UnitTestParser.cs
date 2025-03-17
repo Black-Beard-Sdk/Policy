@@ -192,6 +192,30 @@ policy p1 inherit p1 : source.name = test
             Assert.True(p.Diagnostics.InError);
         }
 
+        [Fact]
+        public void TestPolicy14()
+        {
+
+            string txt = @"policy p1 : Identity.IsAuthenticated = true";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : Identity.IsAuthenticated = true", o);
+
+            txt = @"policy p1 : Identity.IsAuthenticated = false";
+            p = Policy.ParseText(txt);
+            o = p.ToString().Trim();
+            Assert.Equal("policy p1 : Identity.IsAuthenticated = false", o);
+
+        }
+
+        [Fact]
+        public void TestPolicy15()
+        {
+            string txt = @"policy p1 inherit p1 : Identity.IsAuthenticated = true";
+            var p = Policy.ParseText(txt);
+            Assert.True(p.Diagnostics.InError);
+        }
+
     }
 
 
