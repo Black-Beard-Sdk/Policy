@@ -4,6 +4,12 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <RootNamespace>Bb</RootNamespace>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/Black-Beard-Sdk/Policy</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,12 +18,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
     <PackageReference Include="Black.Beard.Analysis" Version="1.0.133" />
     <PackageReference Include="Black.Beard.Roslyn" Version="1.0.133" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.1" />
     <PackageReference Include="System.CodeDom" Version="9.0.1" />
-
   </ItemGroup>
 
 </Project>

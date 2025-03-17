@@ -9,6 +9,13 @@ namespace Bb
     public static class PolicyExtension
     {
 
+        static PolicyExtension()
+        {
+
+            WebApplicationBuilder builder = null;
+            builder.AddPolicy("file path", c => true );
+
+        }
 
         /// <summary>
         /// Append policies form specified file
@@ -21,7 +28,7 @@ namespace Bb
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="FileNotFoundException"></exception>
         /// <exception cref="Exception"></exception>
-        public static WebApplicationBuilder AddPolicy(WebApplicationBuilder builder, string filePath, Func<PolicyRule, bool>? filter = null, Action<AuthorizationOptions>? configureAction = null)
+        public static WebApplicationBuilder AddPolicy(this WebApplicationBuilder builder, string filePath, Func<PolicyRule, bool>? filter = null, Action<AuthorizationOptions>? configureAction = null)
         {
 
             if (filePath == null)
@@ -35,7 +42,7 @@ namespace Bb
             PolicyContainer policies = Policy.ParsePath(filePath);
             if (!policies.Diagnostics.Success)
                 throw new Exception("Failed to evaluate file policies");
-            var e = new PolicyEvaluator(policies);
+            var evaluator = new PolicyEvaluator(policies);
 
             services.AddAuthorization(options =>
             {
@@ -47,7 +54,7 @@ namespace Bb
 
                             policy.RequireAssertion(c =>
                             {
-                                if (e.Evaluate(policyRule.Name, c.User, out RuntimeContext context))
+                                if (evaluator.Evaluate(policyRule.Name, c.User, out RuntimeContext context))
                                     return true;
                                 return false;
                             });

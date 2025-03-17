@@ -73,11 +73,22 @@ policy p1 : Identity.IsAuthenticated?
 ## How to use library
 
 ```csharp
-string policyPayload = @"
-alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
-";
+
+string policyPayload = @"// your rules";
 
 var policies = Policy.Evaluate(policyPayload);
+if (!policies.Diagnostics.Success)
+    throw new Exception("Failed to evaluate file policies");
+var evaluator = new PolicyEvaluator(policies);
+if (evaluator.Evaluate(policyRule.Name, c.User, out RuntimeContext context))
+{
+    // access granted
+}
+```
 
 
+If you have a web site, reference nuget package **Black.Beard.Policy.Web**
+```csharp
+WebApplicationBuilder builder;
+builder.AddPolicy("file path", c => true );
 ```
