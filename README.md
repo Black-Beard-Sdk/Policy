@@ -1,7 +1,7 @@
 # Policy
 Manage the policy rules
 
-
+[![Build status](https://ci.appveyor.com/api/projects/status/n3hxq342l2lywhlr/branch/main?svg=true)](https://ci.appveyor.com/project/gaelgael5/policy/branch/main)
 
 ## any samples for create policy
 
