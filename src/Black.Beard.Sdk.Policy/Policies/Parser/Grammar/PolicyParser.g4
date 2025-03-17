@@ -38,10 +38,14 @@ pair_alias :
    ;
 
 pair_policy : 
-   POLICY policy_id inherit? COLON expression
+   POLICY categories? policy_id inherit? COLON expression
    ;
 
 inherit : INHERIT policy_ref;
+
+categories :
+     PARENT_LEFT category (COMMA category)* PARENT_RIGHT
+   ;
 
 array :
      BRACKET_LEFT value_ref (COMMA value_ref)* BRACKET_RIGHT
@@ -81,3 +85,4 @@ alias_id : ID | IDQUOTED;
 policy_id : ID | IDQUOTED;
 policy_ref : ID | IDQUOTED;
 key_ref : ID | IDQUOTED;
+category : ID;

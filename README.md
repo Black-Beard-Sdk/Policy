@@ -65,9 +65,14 @@ Ensure is authenticated
 policy p1 : Identity.IsAuthenticated
 ```
 
-Can ben anonymous
+Can be anonymous
 ```batch
 policy p1 : Identity.IsAuthenticated?
+```
+
+Add category on a rule
+```batch
+policy p1 (web) : Identity.IsAuthenticated?
 ```
 
 ## How to use library

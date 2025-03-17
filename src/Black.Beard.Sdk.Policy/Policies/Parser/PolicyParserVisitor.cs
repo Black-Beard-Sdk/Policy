@@ -63,6 +63,12 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitInherit([NotNull] PolicyParser.InheritContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.categories"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCategories([NotNull] PolicyParser.CategoriesContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.array"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -134,5 +140,11 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitKey_ref([NotNull] PolicyParser.Key_refContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.category"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCategory([NotNull] PolicyParser.CategoryContext context);
 }
 } // namespace Bb.Policies.Parser

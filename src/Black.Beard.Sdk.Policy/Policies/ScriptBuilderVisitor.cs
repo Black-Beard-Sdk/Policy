@@ -111,6 +111,16 @@ namespace Bb.Policies
 
         }
 
+        public override object VisitCategory([NotNull] PolicyParser.CategoryContext context)
+        {
+
+            var id = context.ID();
+            if (id != null)
+                return id.GetText();
+
+            return null;
+        }
+
         public override object VisitPolicy_id([NotNull] PolicyParser.Policy_idContext context)
         {
 
@@ -182,11 +192,11 @@ namespace Bb.Policies
 
         public override object VisitValue_ref([NotNull] PolicyParser.Value_refContext context)
         {
-         
+
             var str = context.@string();
             if (str != null)
                 return new PolicyConstant((string)str.Accept(this), ConstantType.String) { Location = context.ToLocation() };
-            
+
             var id = context.ID();
             if (id != null)
                 return new PolicyConstant(id.GetText(), ConstantType.Id) { Location = context.ToLocation() };
@@ -211,7 +221,7 @@ namespace Bb.Policies
                 return id.GetText().Trim('\'');
 
             return null;
-            
+
         }
 
         public override object VisitPair_alias([NotNull] PolicyParser.Pair_aliasContext context)
@@ -250,9 +260,9 @@ namespace Bb.Policies
 
             string inheritFrom = string.Empty;
             var inherit = context.inherit();
-            if (inherit != null)            
+            if (inherit != null)
                 inheritFrom = (string)inherit.policy_ref().Accept(this);
-            
+
             var expr = context.expression();
             if (expr != null)
             {
@@ -260,13 +270,22 @@ namespace Bb.Policies
                 var _id = (string)policy_id.Accept(this);
                 var e = expr.Accept(this);
 
-                return new PolicyRule(_id)
+                var result = new PolicyRule(_id)
                 {
                     Value = (Policy)e,
                     Location = context.ToLocation(),
                     InheritFrom = inheritFrom,
                     Origin = _scriptPath
                 };
+
+                var categories = context.categories();
+                if (categories != null)
+                {
+                    var c = (List<string>)categories.Accept(this);
+                    result.AddCategories(c);
+                }
+
+                return result;
 
             }
 
@@ -314,7 +333,7 @@ namespace Bb.Policies
 
             throw new NotImplementedException(context.GetText());
 
-        }       
+        }
 
         public override object VisitExpression([NotNull] PolicyParser.ExpressionContext context)
         {
@@ -330,7 +349,7 @@ namespace Bb.Policies
                 if (l != null)
                     source = l.ID().GetText();
 
-                left = (Policy)key_ref.Accept(this);                
+                left = (Policy)key_ref.Accept(this);
                 left = new PolicyIdExpression((PolicyConstant)left) { Location = context.ToLocation(), Source = source };
 
                 var @operator = context.operationEqual();
@@ -356,7 +375,7 @@ namespace Bb.Policies
 
             if (context.PARENT_LEFT() != null)
                 return new PolicySubExpression((PolicyExpression)left) { Location = context.ToLocation() };
-            
+
             else if (context.NOT() != null)
             {
                 _operator = PolicyOperator.Not;
@@ -390,8 +409,7 @@ namespace Bb.Policies
             if (values == null)
                 return null;
 
-            List<PolicyConstant> items = new List<PolicyConstant>();
-
+            List<PolicyConstant> items = new List<PolicyConstant>(values.Length);
             foreach (var item in values)
             {
                 var o = (PolicyConstant)item.Accept(this);
@@ -399,8 +417,26 @@ namespace Bb.Policies
             }
 
             return new PolicyArray(items) { Location = context.ToLocation() };
-        }        
+        }
 
+        public override object VisitCategories([NotNull] PolicyParser.CategoriesContext context)
+        {
+
+            var values = context.category();
+            if (values == null)
+                return null;
+
+            List<string> items = new List<string>(values.Length);
+            foreach (var item in values)
+            {
+                var o = (string)item.Accept(this);
+                if (!string.IsNullOrEmpty(o))
+                    items.Add(o);
+            }
+
+            return items;
+
+        }
 
         public void EvaluateErrors(IParseTree item)
         {

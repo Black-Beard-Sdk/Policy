@@ -52,9 +52,16 @@ namespace Bb.Policies.Asts
 
         }
 
-        public void AddCategory(string category)
+        /// <summary>
+        /// Add categories on the rule
+        /// </summary>
+        /// <param name="categories"></param>
+        public void AddCategories(IEnumerable<string> categories)
         {
-            this._categories.Add(category);
+            if (categories != null)
+                foreach (string category in categories) 
+                    if (!string.IsNullOrEmpty(category))
+                        this._categories.Add(category);
         }
 
         public IEnumerable<string> Categories => this._categories;
