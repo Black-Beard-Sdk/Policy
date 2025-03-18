@@ -22,6 +22,8 @@ lexer grammar PolicyLexer;
 TRUE           : 'true';
 FALSE          : 'false';
 
+PLUS           : '+';
+
 DOT            : '.';
 COLON          : ':';
 NOT 			   : '!';

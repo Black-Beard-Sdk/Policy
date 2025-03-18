@@ -30,45 +30,54 @@ namespace Bb.Policies
             if (e.Diagnostics.InError)
                 throw new InvalidOperationException("rules are in error");
 
+            if (_container.DefaultRule != null)
+                Build(_container.DefaultRule);
+
+            if (_container.FallbackRule != null)
+                Build(_container.FallbackRule);
+
             foreach (var item in _container.Rules)
-            {
-
-                PrepareToBuild();
-
-                var s = _stack.Peek();
-
-                using (CurrentContext current_ctx = NewContext())
-                {
-
-                    // Start parsing
-                    var rule = item.Value.Accept(this) as Expression;
-
-                    if (!string.IsNullOrEmpty(item.InheritFrom))
-                    {
-                        var ctx = BuildCtx;
-                        var p = item.Location.AsConstant();
-                        var r = Expression.Call(ctx.Context, RuntimeContext._evaluateFrom, item.InheritFrom.AsConstant(), p);
-                        rule = Expression.AndAlso(rule, r);
-                    }
-
-                    _compiler.Add(rule);
-                    var result = _compiler.Compile<Func<RuntimeContext, bool>>();
-
-                    if (rule != null)
-                    {
-                        _evaluator.Add(item.Name, result);
-
-                    }
-                    else
-                    {
-
-                    }
-
-                }
-            }
+                Build(item);
 
             return null;
 
+        }
+
+        private void Build(PolicyRule item)
+        {
+
+            PrepareToBuild();
+
+            var s = _stack.Peek();
+
+            using (CurrentContext current_ctx = NewContext())
+            {
+
+                // Start parsing
+                var rule = item.Value.Accept(this) as Expression;
+
+                if (!string.IsNullOrEmpty(item.InheritFrom))
+                {
+                    var ctx = BuildCtx;
+                    var p = item.Location.AsConstant();
+                    var r = Expression.Call(ctx.Context, RuntimeContext._evaluateFrom, item.InheritFrom.AsConstant(), p);
+                    rule = Expression.AndAlso(rule, r);
+                }
+
+                _compiler.Add(rule);
+                var result = _compiler.Compile<Func<RuntimeContext, bool>>();
+
+                if (rule != null)
+                {
+                    _evaluator.Add(item.Name, result);
+
+                }
+                else
+                {
+
+                }
+
+            }
         }
 
         private void PrepareToBuild()
@@ -204,6 +213,12 @@ namespace Bb.Policies
             if (e.Operator == PolicyOperator.Not)
                 return Expression.Not(result);
 
+            else if (e.Operator == PolicyOperator.Required)
+            {
+                var ctx = BuildCtx;
+                var p = e.Location.AsConstant();
+                return Expression.Call(ctx.Context, RuntimeContext._evaluateUnary, result, e.Operator.AsConstant(), p);
+            }
             throw new NotImplementedException(e.Operator.ToString());
 
         }

@@ -326,6 +326,16 @@ policy p2 inherit p1 : Source.Name = test
         }
 
         [Fact]
+        public void TestPolicy160()
+        {
+            string policyPayload = @"policy p1 : carr+ | ope+ | pkt+";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal(new Claim("pkt", "cc1"));
+            var result = e.Evaluate("p1", principal, out var ctx);
+            Assert.True(result);
+        }
+
+        [Fact]
         public void TestPolicy140()
         {
 

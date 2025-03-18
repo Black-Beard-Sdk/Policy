@@ -64,7 +64,7 @@ operationContains :
    ;
 
 expression
-   : source? key_ref (operationEqual value_ref)?
+   : source? key_ref (PLUS | operationEqual value_ref)?
    | NOT expression
    | PARENT_LEFT expression PARENT_RIGHT
    | expression operationBoolean expression

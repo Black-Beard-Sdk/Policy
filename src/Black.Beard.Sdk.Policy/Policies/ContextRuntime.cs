@@ -2,6 +2,7 @@
 using Bb.ComponentModel.Accessors;
 using Bb.Expressions;
 using Bb.Policies.Asts;
+using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,28 +16,53 @@ using System.Security.Principal;
 namespace Bb.Policies
 {
 
+    /// <summary>
+    /// Provides a runtime context for policy evaluation.
+    /// </summary>
+    /// <remarks>
+    /// RuntimeContext manages the state during policy evaluation, including access to data objects,
+    /// rule functions, and diagnostic information. It also provides methods for evaluating
+    /// different types of policy operations.
+    /// </remarks>
     public class RuntimeContext
     {
 
-
+        /// <summary>
+        /// Initializes static members of the <see cref="RuntimeContext"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This static constructor caches reflection references to the evaluation methods to improve performance
+        /// when these methods are called dynamically during policy execution.
+        /// </remarks>
         static RuntimeContext()
         {
-            _evaluateHas = typeof(RuntimeContext).GetMethod(nameof(EvaluateHas), new Type[] { typeof(string), typeof(string[]), typeof(TextLocation) });
-            _evaluateHasNot = typeof(RuntimeContext).GetMethod(nameof(EvaluateHasNot), new Type[] { typeof(string), typeof(string[]), typeof(TextLocation) });
-            _evaluateIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateIn), new Type[] { typeof(string), typeof(string[]), typeof(TextLocation) });
-            _evaluateNotIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotIn), new Type[] { typeof(string), typeof(string[]), typeof(TextLocation) });
-            _evaluateEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateEquality), new Type[] { typeof(string), typeof(string), typeof(TextLocation) });
-            _evaluateNotEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotEquality), new Type[] { typeof(string), typeof(string), typeof(TextLocation) });
-            _evaluate = typeof(RuntimeContext).GetMethod(nameof(Evaluate), new Type[] { typeof(object), typeof(PolicyOperator), typeof(string), typeof(TextLocation) });
+            _evaluateHas = typeof(RuntimeContext).GetMethod(nameof(EvaluateHas), [typeof(string), typeof(string[]), typeof(TextLocation)]);
+            _evaluateHasNot = typeof(RuntimeContext).GetMethod(nameof(EvaluateHasNot), [typeof(string), typeof(string[]), typeof(TextLocation)]);
+            _evaluateIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateIn), [typeof(string), typeof(string[]), typeof(TextLocation)]);
+            _evaluateNotIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotIn), [typeof(string), typeof(string[]), typeof(TextLocation)]);
+            _evaluateEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateEquality), [typeof(string), typeof(string), typeof(TextLocation)]);
+            _evaluateNotEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotEquality), [typeof(string), typeof(string), typeof(TextLocation)]);
+            _evaluate = typeof(RuntimeContext).GetMethod(nameof(Evaluate), [typeof(object), typeof(PolicyOperator), typeof(string), typeof(TextLocation)]);
+            _evaluateUnary = typeof(RuntimeContext).GetMethod(nameof(EvaluateUnary), [typeof(object), typeof(PolicyOperator), typeof(TextLocation)]);
 
-            _evaluateFrom = typeof(RuntimeContext).GetMethod(nameof(EvaluateFrom), new Type[] { typeof(string), typeof(TextLocation) });
-            _evaluateValue = typeof(RuntimeContext).GetMethod(nameof(EvaluateValue), new Type[] { typeof(string), typeof(string), typeof(TextLocation) });
+            _evaluateFrom = typeof(RuntimeContext).GetMethod(nameof(EvaluateFrom), [typeof(string), typeof(TextLocation)]);
+            _evaluateValue = typeof(RuntimeContext).GetMethod(nameof(EvaluateValue), [typeof(string), typeof(string), typeof(TextLocation)]);
 
-            _TraceLocation = typeof(RuntimeContext).GetMethod(nameof(TraceLocation), new Type[] { typeof(RuntimeContext), typeof(string), typeof(int), typeof(int), typeof(int), typeof(int) });
-            _ExitLocation = typeof(RuntimeContext).GetMethod(nameof(ExitLocation), new Type[] { typeof(RuntimeContext), typeof(object) });
+            _TraceLocation = typeof(RuntimeContext).GetMethod(nameof(TraceLocation), [typeof(RuntimeContext), typeof(string), typeof(int), typeof(int), typeof(int), typeof(int)]);
+            _ExitLocation = typeof(RuntimeContext).GetMethod(nameof(ExitLocation), [typeof(RuntimeContext), typeof(object)]);
         }
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RuntimeContext"/> class.
+        /// </summary>
+        /// <param name="diagnostic">The diagnostic collector for recording errors and information during rule evaluation. If null, a new instance is created.</param>
+        /// <param name="rules">A dictionary of named policy rules that can be referenced during evaluation.</param>
+        /// <param name="datas">The data object that provides context values for policy evaluation.</param>
+        /// <remarks>
+        /// This constructor initializes the runtime context with the specified diagnostics, rules, and data.
+        /// The data object is stored in a dictionary for access during policy evaluation.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when datas is null during the Store operation.</exception>        
         public RuntimeContext(ScriptDiagnostics? diagnostic, Dictionary<string, Func<RuntimeContext, bool>> rules, object datas)
         {
             this._rules = rules;
@@ -47,6 +73,19 @@ namespace Bb.Policies
             Store(datas);
         }
 
+        /// <summary>
+        /// Stores the data object in the context's dictionary.
+        /// </summary>
+        /// <param name="datas">The data object to store.</param>
+        /// <remarks>
+        /// This method processes the data object and stores its properties in the context's dictionary
+        /// for access during policy evaluation. It handles different types of data objects:
+        /// - IPrincipal objects are stored as the context's principal
+        /// - Dictionaries have their key-value pairs added directly
+        /// - Other objects have their properties extracted and added
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when datas is null.</exception>
+        /// <exception cref="Exception">Thrown when datas cannot be evaluated.</exception>
         private void Store(object datas)
         {
 
@@ -97,20 +136,43 @@ namespace Bb.Policies
                 throw new Exception($"{nameof(datas)} can't be evaluated");
         }
 
-
-
+        /// <summary>
+        /// Evaluates a property value from a specified source object.
+        /// </summary>
+        /// <param name="pathSource">The name of the source object in the context dictionary.</param>
+        /// <param name="property">The name of the property to evaluate.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns>The value of the specified property, or null if either the source or property cannot be resolved.</returns>
+        /// <remarks>
+        /// This method retrieves a source object from the context dictionary and then accesses
+        /// a specified property on that object. It adds diagnostic errors if either the source
+        /// or property cannot be resolved.
+        /// </remarks>
+        /// <exception cref="KeyNotFoundException">Not thrown directly, but may occur during dictionary access.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), 
+        ///     new { user = new { name = "John", age = 25 } });
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// object age = context.EvaluateValue("user", "age", location);
+        /// // age will be 25
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// The value of the specified property, or null if the source or property cannot be resolved.
+        /// </returns>
         public object EvaluateValue(string pathSource, string property, TextLocation textLocation)
         {
 
             if (!this._dic.TryGetValue(pathSource, out var source))
-                _diagnostics.AddError(textLocation, pathSource, $"source {pathSource}, can't be resolved");
+                _diagnostics.AddInformation(textLocation, pathSource, $"source {pathSource}, can't be resolved");
 
             else
             {
 
                 var accessor = source.GetType().GetAccessors(MemberStrategy.Instance);
                 if (!accessor.TryGetValue(property, out var acc))
-                    _diagnostics.AddError(textLocation, property, $"failed to resolve {property} in {pathSource.GetType()}");
+                    _diagnostics.AddInformation(textLocation, property, $"failed to resolve {property} in {pathSource.GetType()}");
 
                 else
                     return acc.GetValue(source);
@@ -121,18 +183,58 @@ namespace Bb.Policies
 
         }
 
+        /// <summary>
+        /// Evaluates a rule by its name.
+        /// </summary>
+        /// <param name="formKey">The name of the rule to evaluate.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the rule evaluates to true; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method looks up a rule by name in the rules dictionary and executes it.
+        /// If the rule is not found, it adds an error to the diagnostics.
+        /// </remarks>
+        /// <returns>
+        /// <c>true</c> if the rule evaluates to true; <c>false</c> if the rule evaluates to false or cannot be found.
+        /// </returns>
         public bool EvaluateFrom(string formKey, TextLocation textLocation)
         {
 
             if (_rules.TryGetValue(formKey, out var rule))
                 return rule(this);
 
-            _diagnostics.AddError(textLocation, formKey, $"reference to {formKey} can't be resolved");
+            _diagnostics.AddInformation(textLocation, formKey, $"reference to {formKey} can't be resolved");
 
             return false;
 
         }
 
+        /// <summary>
+        /// Evaluates whether the principal has all the specified roles or claims.
+        /// </summary>
+        /// <param name="key">The role key or claim type to check.</param>
+        /// <param name="values">The values to check for.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the principal has all the specified roles or claims; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method checks if the principal has all the specified roles (if key is "role")
+        /// or claims of the specified type. It adds diagnostic errors for any missing roles or claims.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var principal = new GenericPrincipal(
+        ///     new GenericIdentity("user"), 
+        ///     new[] { "Admin", "User" }
+        /// );
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), 
+        ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// bool result = context.EvaluateHas("role", new[] { "Admin", "User" }, location);
+        /// // result will be true
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// <c>true</c> if the principal has all the specified roles or claims; otherwise, <c>false</c>.
+        /// </returns>
         public bool EvaluateHas(string key, string[] values, TextLocation textLocation)
         {
 
@@ -146,7 +248,7 @@ namespace Bb.Policies
                     if (!test)
                     {
                         result = false;
-                        _diagnostics.AddError(textLocation, item, $"user hasn't role {item}");
+                        _diagnostics.AddInformation(textLocation, item, $"user hasn't role {item}");
                     }
                 }
             }
@@ -159,7 +261,7 @@ namespace Bb.Policies
                     if (!test)
                     {
                         result = false;
-                        _diagnostics.AddError(textLocation, item, $"user hasn't claim {key} = {item}");
+                        _diagnostics.AddInformation(textLocation, item, $"user hasn't claim {key} = {item}");
                     }
                 }
 
@@ -170,6 +272,33 @@ namespace Bb.Policies
 
         }
 
+        /// <summary>
+        /// Evaluates whether the principal does not have any of the specified roles or claims.
+        /// </summary>
+        /// <param name="key">The role key or claim type to check.</param>
+        /// <param name="values">The values to check for absence.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the principal does not have any of the specified roles or claims; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method checks if the principal does not have any of the specified roles (if key is "role")
+        /// or claims of the specified type. It adds diagnostic errors for any found roles or claims.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var principal = new GenericPrincipal(
+        ///     new GenericIdentity("user"), 
+        ///     new[] { "User" }
+        /// );
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), 
+        ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// bool result = context.EvaluateHasNot("role", new[] { "Admin" }, location);
+        /// // result will be true
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// <c>true</c> if the principal does not have any of the specified roles or claims; otherwise, <c>false</c>.
+        /// </returns>
         public bool EvaluateHasNot(string key, string[] values, TextLocation textLocation)
         {
 
@@ -183,7 +312,7 @@ namespace Bb.Policies
                     if (test)
                     {
                         result = false;
-                        _diagnostics.AddError(textLocation, item, $"user has role {item}");
+                        _diagnostics.AddInformation(textLocation, item, $"user has role {item}");
                     }
                 }
             }
@@ -196,7 +325,7 @@ namespace Bb.Policies
                     if (test)
                     {
                         result = false;
-                        _diagnostics.AddError(textLocation, item, $"user has claim {key} = {item}");
+                        _diagnostics.AddInformation(textLocation, item, $"user has claim {key} = {item}");
                     }
                 }
 
@@ -207,6 +336,33 @@ namespace Bb.Policies
 
         }
 
+        /// <summary>
+        /// Evaluates whether the principal has any of the specified roles or claims.
+        /// </summary>
+        /// <param name="key">The role key or claim type to check.</param>
+        /// <param name="values">The values to check for.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the principal has any of the specified roles or claims; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method checks if the principal has any of the specified roles (if key is "role")
+        /// or claims of the specified type. It adds diagnostic errors if none of the roles or claims are found.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var principal = new GenericPrincipal(
+        ///     new GenericIdentity("user"), 
+        ///     new[] { "User" }
+        /// );
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), 
+        ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// bool result = context.EvaluateIn("role", new[] { "Admin", "User" }, location);
+        /// // result will be true
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// <c>true</c> if the principal has any of the specified roles or claims; otherwise, <c>false</c>.
+        /// </returns>
         public bool EvaluateIn(string key, string[] values, TextLocation textLocation)
         {
 
@@ -218,7 +374,7 @@ namespace Bb.Policies
                     if (_principal.IsInRole(item))
                         return true;
 
-                _diagnostics.AddError(textLocation, string.Join(", ", values), $"user hasn't role");
+                _diagnostics.AddInformation(textLocation, string.Join(", ", values), $"user hasn't role");
 
             }
             else if (_principal is ClaimsPrincipal p)
@@ -228,7 +384,7 @@ namespace Bb.Policies
                     if (pp.Any(c => c.Value == item))
                         result = true;
 
-                _diagnostics.AddError(textLocation, string.Join(", ", values), $"user hasn't necessary claim {key}");
+                _diagnostics.AddInformation(textLocation, string.Join(", ", values), $"user hasn't necessary claim {key}");
 
             }
 
@@ -236,6 +392,33 @@ namespace Bb.Policies
 
         }
 
+        /// <summary>
+        /// Evaluates whether the principal does not have any of the specified roles or claims.
+        /// </summary>
+        /// <param name="key">The role key or claim type to check.</param>
+        /// <param name="values">The values to check for absence.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the principal does not have any of the specified roles or claims; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method checks if the principal does not have any of the specified roles (if key is "role")
+        /// or claims of the specified type. It adds diagnostic errors for any found roles or claims.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var principal = new GenericPrincipal(
+        ///     new GenericIdentity("user"), 
+        ///     new[] { "User" }
+        /// );
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), 
+        ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// bool result = context.EvaluateNotIn("role", new[] { "Admin" }, location);
+        /// // result will be true
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// <c>true</c> if the principal does not have any of the specified roles or claims; otherwise, <c>false</c>.
+        /// </returns>
         public bool EvaluateNotIn(string key, string[] values, TextLocation textLocation)
         {
 
@@ -246,7 +429,7 @@ namespace Bb.Policies
                 foreach (var item in values)
                     if (_principal.IsInRole(item))
                     {
-                        _diagnostics.AddError(textLocation, item, $"user can't have role {item}");
+                        _diagnostics.AddInformation(textLocation, item, $"user can't have role {item}");
                         result = false;
                     }
             }
@@ -258,7 +441,7 @@ namespace Bb.Policies
                     if (pp.Any(c => c.Value == item))
                     {
                         result = false;
-                        _diagnostics.AddError(textLocation, string.Join(", ", values), $"user hasn't necessary claim {key}");
+                        _diagnostics.AddInformation(textLocation, string.Join(", ", values), $"user hasn't necessary claim {key}");
                     }
             }
 
@@ -266,6 +449,33 @@ namespace Bb.Policies
 
         }
 
+        /// <summary>
+        /// Evaluates whether the principal has a specific role or claim.
+        /// </summary>
+        /// <param name="key">The role key or claim type to check.</param>
+        /// <param name="value">The value to check for.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the principal has the specified role or claim; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method checks if the principal has the specified role (if key is "role")
+        /// or claim of the specified type. It adds diagnostic errors if the role or claim is not found.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var principal = new GenericPrincipal(
+        ///     new GenericIdentity("user"), 
+        ///     new[] { "Admin" }
+        /// );
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), 
+        ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// bool result = context.EvaluateEquality("role", "Admin", location);
+        /// // result will be true
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// <c>true</c> if the principal has the specified role or claim; otherwise, <c>false</c>.
+        /// </returns>
         public bool EvaluateEquality(string key, string value, TextLocation textLocation)
         {
 
@@ -276,7 +486,7 @@ namespace Bb.Policies
                 if (!_principal.IsInRole(value))
                 {
                     result = false;
-                    _diagnostics.AddError(textLocation, value, $"user must have role {value}");
+                    _diagnostics.AddInformation(textLocation, value, $"user must have role {value}");
                 }
             }
             else if (_principal is ClaimsPrincipal p)
@@ -285,7 +495,7 @@ namespace Bb.Policies
                 if (!pp.Any(c => c.Value == value))
                 {
                     result = false;
-                    _diagnostics.AddError(textLocation, value, $"user must have claim {key} = {value}");
+                    _diagnostics.AddInformation(textLocation, value, $"user must have claim {key} = {value}");
                 }
             }
 
@@ -293,6 +503,33 @@ namespace Bb.Policies
 
         }
 
+        /// <summary>
+        /// Evaluates whether the principal does not have a specific role or claim.
+        /// </summary>
+        /// <param name="key">The role key or claim type to check.</param>
+        /// <param name="value">The value to check for absence.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the principal does not have the specified role or claim; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method checks if the principal does not have the specified role (if key is "role")
+        /// or claim of the specified type. It adds diagnostic errors if the role or claim is found.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var principal = new GenericPrincipal(
+        ///     new GenericIdentity("user"), 
+        ///     new[] { "User" }
+        /// );
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), 
+        ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// bool result = context.EvaluateNotEquality("role", "Admin", location);
+        /// // result will be true
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// <c>true</c> if the principal does not have the specified role or claim; otherwise, <c>false</c>.
+        /// </returns>
         public bool EvaluateNotEquality(string key, string value, TextLocation textLocation)
         {
 
@@ -303,7 +540,7 @@ namespace Bb.Policies
                 if (_principal.IsInRole(value))
                 {
                     result = false;
-                    _diagnostics.AddError(textLocation, value, $"user can't have role {value}");
+                    _diagnostics.AddInformation(textLocation, value, $"user can't have role {value}");
                 }
             }
             else if (_principal is ClaimsPrincipal p)
@@ -312,7 +549,7 @@ namespace Bb.Policies
                 if (pp.Any(c => c.Value == value))
                 {
                     result = false;
-                    _diagnostics.AddError(textLocation, value, $"user can't have claim {key} = {value}");
+                    _diagnostics.AddInformation(textLocation, value, $"user can't have claim {key} = {value}");
                 }
             }
 
@@ -320,6 +557,30 @@ namespace Bb.Policies
 
         }
 
+        /// <summary>
+        /// Evaluates a policy operation.
+        /// </summary>
+        /// <param name="left">The left operand of the operation.</param>
+        /// <param name="operator">The policy operator to apply.</param>
+        /// <param name="right">The right operand of the operation.</param>
+        /// <param name="textLocation">The location in the source text for error reporting.</param>
+        /// <returns><c>true</c> if the operation evaluates to true; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method evaluates a policy operation based on the specified operator and operands.
+        /// It supports equality, inequality, and other policy-specific operations.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var context = new RuntimeContext(new ScriptDiagnostics(), 
+        ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), new { });
+        /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
+        /// bool result = context.Evaluate(5, PolicyOperator.Equal, "5", location);
+        /// // result will be true
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// <c>true</c> if the operation evaluates to true; otherwise, <c>false</c>.
+        /// </returns>
         public bool Evaluate(object left, PolicyOperator @operator, string right, TextLocation textLocation)
         {
 
@@ -379,6 +640,45 @@ namespace Bb.Policies
             return false;
 
         }
+
+        public bool EvaluateUnary(object left, PolicyOperator @operator, TextLocation textLocation)
+        {
+
+            if (left == null)
+                return false;
+
+            switch (@operator)
+            {
+
+                case PolicyOperator.Required:
+                    bool result = true;
+                    var key = (string)left.ConvertTo(typeof(string), CultureInfo.CurrentCulture);
+                    if (_principal is ClaimsPrincipal p)
+                        if (!p.Claims.Any(c => c.Type == key))
+                        {
+                            result = false;
+                            _diagnostics.AddInformation(textLocation, key, $"user must have claim {key}");
+                        }
+                    return result;
+
+                case PolicyOperator.Equal:
+                case PolicyOperator.NotEqual:
+                case PolicyOperator.In:
+                case PolicyOperator.NotIn:
+                case PolicyOperator.Has:
+                case PolicyOperator.HasNot:
+                case PolicyOperator.AndExclusive:
+                case PolicyOperator.OrExclusive:
+                case PolicyOperator.Undefined:
+                default:
+                    break;
+
+            }
+
+            return false;
+
+        }
+
 
         private bool IsInRole(string key)
         {
@@ -496,6 +796,7 @@ namespace Bb.Policies
         }
 
         internal static readonly MethodInfo? _evaluate;
+        internal static readonly MethodInfo? _evaluateUnary;
         internal static readonly MethodInfo? _evaluateEquality;
         internal static readonly MethodInfo? _evaluateNotEquality;
         internal static readonly MethodInfo? _evaluateFrom;

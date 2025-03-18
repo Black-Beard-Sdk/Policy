@@ -11,6 +11,9 @@ namespace Black.Beard.Policies.XUnit
 {
 
 
+    /// <summary>
+    /// // génère la documentation
+    /// </summary>
     public class JwtHelper
     {
 
@@ -156,6 +159,13 @@ namespace Black.Beard.Policies.XUnit
 
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentNullException(nameof(value));
+
+            
+
+            //System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames
+            // JwtTypes
+            // JwtClaimTypes 
+
 
             this._claims.Add(new Claim(JwtRegisteredClaimNames.Sub, value));
             return this;

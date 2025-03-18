@@ -4,7 +4,13 @@
 namespace Bb.Policies.Asts
 {
 
-
+    /// <summary>
+    /// Abstract base class for all policy AST nodes.
+    /// </summary>
+    /// <remarks>
+    /// This class provides common functionality for all policy nodes in the abstract syntax tree,
+    /// including location tracking, visitor pattern support, and string serialization.
+    /// </remarks>
     [System.Diagnostics.DebuggerDisplay("{ToString()}")]
     public abstract class Policy : IWriter
     {
@@ -28,8 +34,22 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Accepts the specified visitor for parsing the tree.
         /// </summary>
-        /// <param name="visitor">The visitor.</param>
-        /// <returns></returns>
+        /// <param name="visitor">The visitor that will traverse this node. Must not be null.</param>
+        /// <returns>The result of the visitor's visit.</returns>
+        /// <remarks>
+        /// Implements the visitor design pattern for traversing the AST structure.
+        /// Each concrete policy node type must override this method to provide specific visiting behavior.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">Thrown when visitor is null.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// // Create a visitor
+        /// var visitor = new MyPolicyVisitor&lt;string&gt;();
+        /// 
+        /// // Visit a policy node
+        /// string result = policyNode.Accept(visitor);
+        /// </code>
+        /// </example>
         public abstract T Accept<T>(IPolicyVisitor<T> visitor);
 
         /// <summary>
@@ -41,9 +61,18 @@ namespace Bb.Policies.Asts
         public TextLocation? Location { get; set; }
 
         /// <summary>
-        /// Gets the comment's list.
+        /// Gets a copy of the location of the code source.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A copy of the current location or null if no location is set.</returns>
+        /// <remarks>
+        /// This method returns a copy of the Location property to prevent unintended modifications.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var policy = new ConcretePolicy();
+        /// TextLocation? location = policy.GetLocation();
+        /// </code>
+        /// </example>
         public TextLocation? GetLocation()
         {
             return Location?.Copy();
@@ -58,10 +87,21 @@ namespace Bb.Policies.Asts
         //public IEnumerable<PolicyComment> Comments { get => this._comments; }
 
         /// <summary>
-        /// Evaluate text value
+        /// Evaluates text for intellisense purposes.
         /// </summary>
-        /// <param name="text">text to evaluate</param>
-        /// <returns><see href="IntellisenseAst"></returns>
+        /// <param name="text">The text to evaluate. Must not be null.</param>
+        /// <returns>An <see cref="IntellisenseAst"/> representing the parsed text.</returns>
+        /// <remarks>
+        /// This method parses the provided text and builds an abstract syntax tree
+        /// for use with intellisense features.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">Thrown when text is null.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// string code = "variable x = 10;";
+        /// IntellisenseAst ast = Policy.EvaluateTextForIntellisense(code);
+        /// </code>
+        /// </example>
         public static IntellisenseAst EvaluateTextForIntellisense(string text)
         {
             var _errors = new ScriptDiagnostics();
@@ -71,10 +111,22 @@ namespace Bb.Policies.Asts
         }
 
         /// <summary>
-        /// Evaluate text of path value
+        /// Evaluates a file at the given path for intellisense purposes.
         /// </summary>
-        /// <param name="text"></param>
-        /// <returns><see href="IntellisenseAst"></returns>
+        /// <param name="text">The file path to evaluate. Must not be null or empty.</param>
+        /// <returns>An <see cref="IntellisenseAst"/> representing the parsed file.</returns>
+        /// <remarks>
+        /// This method reads and parses the file at the specified path and builds
+        /// an abstract syntax tree for use with intellisense features.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">Thrown when text is null.</exception>
+        /// <exception cref="System.IO.FileNotFoundException">Thrown when the specified file does not exist.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// string filePath = @"C:\policies\example.policy";
+        /// IntellisenseAst ast = Policy.EvaluatePathForIntellisense(filePath);
+        /// </code>
+        /// </example>
         public static IntellisenseAst EvaluatePathForIntellisense(string text)
         {
             var _errors = new ScriptDiagnostics();
@@ -84,10 +136,22 @@ namespace Bb.Policies.Asts
         }
 
         /// <summary>
-        /// Evaluate text value
+        /// Parses the specified text into a policy container.
         /// </summary>
-        /// <param name="text">text to evaluate</param>
-        /// <returns></returns>
+        /// <param name="text">The text to parse. Must not be null.</param>
+        /// <returns>A <see cref="PolicyContainer"/> representing the parsed policy.</returns>
+        /// <remarks>
+        /// This method parses the provided text and builds a complete policy container
+        /// that contains all the rules and expressions defined in the text.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">Thrown when text is null.</exception>
+        /// <exception cref="Bb.Policies.PolicyParserException">Thrown when parsing errors occur.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// string policyText = "rule MyRule { condition: true; }";
+        /// PolicyContainer container = Policy.ParseText(policyText);
+        /// </code>
+        /// </example>
         public static PolicyContainer ParseText(string text)
         {
             var _errors = new ScriptDiagnostics();
@@ -98,10 +162,23 @@ namespace Bb.Policies.Asts
         }       
 
         /// <summary>
-        /// Evaluate text of path value
+        /// Parses the policy file at the specified path into a policy container.
         /// </summary>
-        /// <param name="path">path of the file</param>
-        /// <returns></returns>
+        /// <param name="path">The path of the file to parse. Must not be null or empty.</param>
+        /// <returns>A <see cref="PolicyContainer"/> representing the parsed policy.</returns>
+        /// <remarks>
+        /// This method reads and parses the file at the specified path and builds a complete
+        /// policy container that contains all the rules and expressions defined in the file.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">Thrown when path is null.</exception>
+        /// <exception cref="System.IO.FileNotFoundException">Thrown when the specified file does not exist.</exception>
+        /// <exception cref="Bb.Policies.PolicyParserException">Thrown when parsing errors occur.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// string filePath = @"C:\policies\example.policy";
+        /// PolicyContainer container = Policy.ParsePath(filePath);
+        /// </code>
+        /// </example>
         public static PolicyContainer ParsePath(string path)
         {
             var _errors = new ScriptDiagnostics();
@@ -125,13 +202,39 @@ namespace Bb.Policies.Asts
         }
 
         /// <summary>
-        /// Converts the tree to json string source code.
+        /// Writes this policy node to the specified writer.
         /// </summary>
-        /// <param name="writer">The writer.</param>
-        /// <param name="strategy">The strategy.</param>
-        /// <returns></returns>
+        /// <param name="writer">The writer to which the node should be written. Must not be null.</param>
+        /// <returns><c>true</c> if the writing operation was successful; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method is responsible for formatting and writing the policy node's content
+        /// to the specified writer. Each concrete policy node must implement this method.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">Thrown when writer is null.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// var policy = new ConcretePolicy();
+        /// var writer = new Writer();
+        /// bool success = policy.ToString(writer);
+        /// string result = writer.ToString();
+        /// </code>
+        /// </example>
         public abstract bool ToString(Writer writer);
 
+        /// <summary>
+        /// Determines whether this policy node has source information.
+        /// </summary>
+        /// <returns><c>true</c> if this policy node has source information; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This method checks whether the policy node has valid source code information,
+        /// which is useful for error reporting and debugging purposes.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var policy = new ConcretePolicy();
+        /// bool hasSource = policy.HasSource();
+        /// </code>
+        /// </example>
         public abstract bool HasSource();
 
         ///// <summary>
@@ -148,28 +251,106 @@ namespace Bb.Policies.Asts
 
     }
 
+    /// <summary>
+    /// Defines the different kinds of policy nodes in the abstract syntax tree.
+    /// </summary>
+    /// <remarks>
+    /// This enumeration is used to identify and categorize different types of nodes
+    /// in the policy AST, which helps with visitor pattern implementations and type checking.
+    /// </remarks>
     public enum PolicyKind
     {
+        /// <summary>
+        /// Represents a variable declaration in the policy.
+        /// </summary>
         Variable,
+
+        /// <summary>
+        /// Represents a constant declaration in the policy.
+        /// </summary>
         Constant,
+
+        /// <summary>
+        /// Represents a container that holds multiple policy elements.
+        /// </summary>
         Container,
+
+        /// <summary>
+        /// Represents a rule definition in the policy.
+        /// </summary>
         Rule,
+
+        /// <summary>
+        /// Represents an operation or expression in the policy.
+        /// </summary>
         Operation,
+
+        /// <summary>
+        /// Represents an identifier expression in the policy.
+        /// </summary>
         IdExpression
     }
 
+    /// <summary>
+    /// Defines the operators that can be used in policy expressions.
+    /// </summary>
+    /// <remarks>
+    /// This enumeration contains all the supported operators for building
+    /// expressions and conditions in policy rules.
+    /// </remarks>
     public enum PolicyOperator
     {
+        /// <summary>
+        /// Represents an undefined or invalid operator.
+        /// </summary>
         Undefined,
-        Equal,
-        NotEqual,
-        In,
-        NotIn,
-        Has,
-        HasNot,
-        AndExclusive,
-        OrExclusive,
-        Not
-    }
 
+        /// <summary>
+        /// Represents the equality operator (==).
+        /// </summary>
+        Equal,
+
+        /// <summary>
+        /// Represents the inequality operator (!=).
+        /// </summary>
+        NotEqual,
+
+        /// <summary>
+        /// Represents the containment operator (in).
+        /// </summary>
+        In,
+
+        /// <summary>
+        /// Represents the negated containment operator (not in).
+        /// </summary>
+        NotIn,
+
+        /// <summary>
+        /// Represents the has operator, which checks if a collection contains an element.
+        /// </summary>
+        Has,
+
+        /// <summary>
+        /// Represents the negated has operator (has not).
+        /// </summary>
+        HasNot,
+
+        /// <summary>
+        /// Represents the exclusive AND logical operator.
+        /// </summary>
+        AndExclusive,
+
+        /// <summary>
+        /// Represents the exclusive OR logical operator.
+        /// </summary>
+        OrExclusive,
+
+        /// <summary>
+        /// Represents the logical NOT operator.
+        /// </summary>
+        Not,
+
+        Required,
+
+    }
 }

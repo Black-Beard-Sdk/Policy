@@ -37,11 +37,11 @@ public partial class PolicyParser : Parser {
 	protected static DFA[] decisionToDFA;
 	protected static PredictionContextCache sharedContextCache = new PredictionContextCache();
 	public const int
-		TRUE=1, FALSE=2, DOT=3, COLON=4, NOT=5, PARENT_LEFT=6, PARENT_RIGHT=7, 
-		BRACKET_LEFT=8, BRACKET_RIGHT=9, EQUAL=10, INEQUAL=11, OR=12, AND=13, 
-		COMMA=14, HAS=15, HAS_NOT=16, IN=17, NOT_IN=18, ALIAS=19, POLICY=20, INHERIT=21, 
-		STRING=22, MULTI_LINE_COMMENT=23, SINGLE_QUOTE_CODE_STRING=24, ID=25, 
-		IDQUOTED=26, VARIABLE_NAME=27, IDLOWCASE=28;
+		TRUE=1, FALSE=2, PLUS=3, DOT=4, COLON=5, NOT=6, PARENT_LEFT=7, PARENT_RIGHT=8, 
+		BRACKET_LEFT=9, BRACKET_RIGHT=10, EQUAL=11, INEQUAL=12, OR=13, AND=14, 
+		COMMA=15, HAS=16, HAS_NOT=17, IN=18, NOT_IN=19, ALIAS=20, POLICY=21, INHERIT=22, 
+		STRING=23, MULTI_LINE_COMMENT=24, SINGLE_QUOTE_CODE_STRING=25, ID=26, 
+		IDQUOTED=27, VARIABLE_NAME=28, IDLOWCASE=29;
 	public const int
 		RULE_script = 0, RULE_pair = 1, RULE_pair_alias = 2, RULE_pair_policy = 3, 
 		RULE_inherit = 4, RULE_categories = 5, RULE_array = 6, RULE_operationBoolean = 7, 
@@ -57,12 +57,12 @@ public partial class PolicyParser : Parser {
 	};
 
 	private static readonly string[] _LiteralNames = {
-		null, "'true'", "'false'", "'.'", "':'", "'!'", "'('", "')'", "'['", "']'", 
-		"'='", "'!='", "'|'", "'&'", "','", "'has'", "'!has'", "'in'", "'!in'", 
-		"'alias'", "'policy'", "'inherit'", null, null, "'''"
+		null, "'true'", "'false'", "'+'", "'.'", "':'", "'!'", "'('", "')'", "'['", 
+		"']'", "'='", "'!='", "'|'", "'&'", "','", "'has'", "'!has'", "'in'", 
+		"'!in'", "'alias'", "'policy'", "'inherit'", null, null, "'''"
 	};
 	private static readonly string[] _SymbolicNames = {
-		null, "TRUE", "FALSE", "DOT", "COLON", "NOT", "PARENT_LEFT", "PARENT_RIGHT", 
+		null, "TRUE", "FALSE", "PLUS", "DOT", "COLON", "NOT", "PARENT_LEFT", "PARENT_RIGHT", 
 		"BRACKET_LEFT", "BRACKET_RIGHT", "EQUAL", "INEQUAL", "OR", "AND", "COMMA", 
 		"HAS", "HAS_NOT", "IN", "NOT_IN", "ALIAS", "POLICY", "INHERIT", "STRING", 
 		"MULTI_LINE_COMMENT", "SINGLE_QUOTE_CODE_STRING", "ID", "IDQUOTED", "VARIABLE_NAME", 
@@ -642,7 +642,7 @@ public partial class PolicyParser : Parser {
 			{
 			State = 97;
 			_la = TokenStream.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 491520L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 983040L) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
 			}
 			else {
@@ -669,6 +669,7 @@ public partial class PolicyParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public SourceContext source() {
 			return GetRuleContext<SourceContext>(0);
 		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode PLUS() { return GetToken(PolicyParser.PLUS, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public OperationEqualContext operationEqual() {
 			return GetRuleContext<OperationEqualContext>(0);
 		}
@@ -722,7 +723,7 @@ public partial class PolicyParser : Parser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 115;
+			State = 116;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case ID:
@@ -740,14 +741,20 @@ public partial class PolicyParser : Parser {
 				}
 				State = 103;
 				key_ref();
-				State = 107;
+				State = 108;
 				ErrorHandler.Sync(this);
 				switch ( Interpreter.AdaptivePredict(TokenStream,7,Context) ) {
 				case 1:
 					{
 					State = 104;
-					operationEqual();
+					Match(PLUS);
+					}
+					break;
+				case 2:
+					{
 					State = 105;
+					operationEqual();
+					State = 106;
 					value_ref();
 					}
 					break;
@@ -756,19 +763,19 @@ public partial class PolicyParser : Parser {
 				break;
 			case NOT:
 				{
-				State = 109;
-				Match(NOT);
 				State = 110;
+				Match(NOT);
+				State = 111;
 				expression(4);
 				}
 				break;
 			case PARENT_LEFT:
 				{
-				State = 111;
-				Match(PARENT_LEFT);
 				State = 112;
-				expression(0);
+				Match(PARENT_LEFT);
 				State = 113;
+				expression(0);
+				State = 114;
 				Match(PARENT_RIGHT);
 				}
 				break;
@@ -776,7 +783,7 @@ public partial class PolicyParser : Parser {
 				throw new NoViableAltException(this);
 			}
 			Context.Stop = TokenStream.LT(-1);
-			State = 127;
+			State = 128;
 			ErrorHandler.Sync(this);
 			_alt = Interpreter.AdaptivePredict(TokenStream,10,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
@@ -785,18 +792,18 @@ public partial class PolicyParser : Parser {
 						TriggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					State = 125;
+					State = 126;
 					ErrorHandler.Sync(this);
 					switch ( Interpreter.AdaptivePredict(TokenStream,9,Context) ) {
 					case 1:
 						{
 						_localctx = new ExpressionContext(_parentctx, _parentState);
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 117;
-						if (!(Precpred(Context, 2))) throw new FailedPredicateException(this, "Precpred(Context, 2)");
 						State = 118;
-						operationBoolean();
+						if (!(Precpred(Context, 2))) throw new FailedPredicateException(this, "Precpred(Context, 2)");
 						State = 119;
+						operationBoolean();
+						State = 120;
 						expression(3);
 						}
 						break;
@@ -804,18 +811,18 @@ public partial class PolicyParser : Parser {
 						{
 						_localctx = new ExpressionContext(_parentctx, _parentState);
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 121;
-						if (!(Precpred(Context, 1))) throw new FailedPredicateException(this, "Precpred(Context, 1)");
 						State = 122;
-						operationContains();
+						if (!(Precpred(Context, 1))) throw new FailedPredicateException(this, "Precpred(Context, 1)");
 						State = 123;
+						operationContains();
+						State = 124;
 						array();
 						}
 						break;
 					}
 					} 
 				}
-				State = 129;
+				State = 130;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,10,Context);
 			}
@@ -859,27 +866,27 @@ public partial class PolicyParser : Parser {
 		Value_refContext _localctx = new Value_refContext(Context, State);
 		EnterRule(_localctx, 22, RULE_value_ref);
 		try {
-			State = 134;
+			State = 135;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case STRING:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 130;
+				State = 131;
 				@string();
 				}
 				break;
 			case IDQUOTED:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 131;
+				State = 132;
 				Match(IDQUOTED);
 				}
 				break;
 			case ID:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 132;
+				State = 133;
 				Match(ID);
 				}
 				break;
@@ -887,7 +894,7 @@ public partial class PolicyParser : Parser {
 			case FALSE:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 133;
+				State = 134;
 				boolean();
 				}
 				break;
@@ -931,7 +938,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 136;
+			State = 137;
 			_la = TokenStream.LA(1);
 			if ( !(_la==ID || _la==IDQUOTED) ) {
 			ErrorHandler.RecoverInline(this);
@@ -940,7 +947,7 @@ public partial class PolicyParser : Parser {
 				ErrorHandler.ReportMatch(this);
 			    Consume();
 			}
-			State = 137;
+			State = 138;
 			Match(DOT);
 			}
 		}
@@ -977,7 +984,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 139;
+			State = 140;
 			Match(STRING);
 			}
 		}
@@ -1016,7 +1023,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 141;
+			State = 142;
 			_la = TokenStream.LA(1);
 			if ( !(_la==ID || _la==IDQUOTED) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1062,7 +1069,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 143;
+			State = 144;
 			_la = TokenStream.LA(1);
 			if ( !(_la==ID || _la==IDQUOTED) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1108,7 +1115,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 145;
+			State = 146;
 			_la = TokenStream.LA(1);
 			if ( !(_la==ID || _la==IDQUOTED) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1154,7 +1161,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 147;
+			State = 148;
 			_la = TokenStream.LA(1);
 			if ( !(_la==ID || _la==IDQUOTED) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1198,7 +1205,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 149;
+			State = 150;
 			Match(ID);
 			}
 		}
@@ -1237,7 +1244,7 @@ public partial class PolicyParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 151;
+			State = 152;
 			_la = TokenStream.LA(1);
 			if ( !(_la==TRUE || _la==FALSE) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1274,51 +1281,52 @@ public partial class PolicyParser : Parser {
 	}
 
 	private static int[] _serializedATN = {
-		4,1,28,154,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+		4,1,29,155,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
 		7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
 		2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,1,0,5,0,42,8,0,10,0,
 		12,0,45,9,0,1,0,1,0,1,1,1,1,3,1,51,8,1,1,2,1,2,1,2,1,2,1,2,1,3,1,3,3,3,
 		60,8,3,1,3,1,3,3,3,64,8,3,1,3,1,3,1,3,1,4,1,4,1,4,1,5,1,5,1,5,1,5,5,5,
 		76,8,5,10,5,12,5,79,9,5,1,5,1,5,1,6,1,6,1,6,1,6,5,6,87,8,6,10,6,12,6,90,
 		9,6,1,6,1,6,1,7,1,7,1,8,1,8,1,9,1,9,1,10,1,10,3,10,102,8,10,1,10,1,10,
-		1,10,1,10,3,10,108,8,10,1,10,1,10,1,10,1,10,1,10,1,10,3,10,116,8,10,1,
-		10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,5,10,126,8,10,10,10,12,10,129,9,
-		10,1,11,1,11,1,11,1,11,3,11,135,8,11,1,12,1,12,1,12,1,13,1,13,1,14,1,14,
-		1,15,1,15,1,16,1,16,1,17,1,17,1,18,1,18,1,19,1,19,1,19,0,1,20,20,0,2,4,
-		6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,0,5,1,0,12,13,1,0,10,
-		11,1,0,15,18,1,0,25,26,1,0,1,2,148,0,43,1,0,0,0,2,50,1,0,0,0,4,52,1,0,
-		0,0,6,57,1,0,0,0,8,68,1,0,0,0,10,71,1,0,0,0,12,82,1,0,0,0,14,93,1,0,0,
-		0,16,95,1,0,0,0,18,97,1,0,0,0,20,115,1,0,0,0,22,134,1,0,0,0,24,136,1,0,
-		0,0,26,139,1,0,0,0,28,141,1,0,0,0,30,143,1,0,0,0,32,145,1,0,0,0,34,147,
-		1,0,0,0,36,149,1,0,0,0,38,151,1,0,0,0,40,42,3,2,1,0,41,40,1,0,0,0,42,45,
+		1,10,1,10,1,10,3,10,109,8,10,1,10,1,10,1,10,1,10,1,10,1,10,3,10,117,8,
+		10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,5,10,127,8,10,10,10,12,10,130,
+		9,10,1,11,1,11,1,11,1,11,3,11,136,8,11,1,12,1,12,1,12,1,13,1,13,1,14,1,
+		14,1,15,1,15,1,16,1,16,1,17,1,17,1,18,1,18,1,19,1,19,1,19,0,1,20,20,0,
+		2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,0,5,1,0,13,14,1,0,
+		11,12,1,0,16,19,1,0,26,27,1,0,1,2,150,0,43,1,0,0,0,2,50,1,0,0,0,4,52,1,
+		0,0,0,6,57,1,0,0,0,8,68,1,0,0,0,10,71,1,0,0,0,12,82,1,0,0,0,14,93,1,0,
+		0,0,16,95,1,0,0,0,18,97,1,0,0,0,20,116,1,0,0,0,22,135,1,0,0,0,24,137,1,
+		0,0,0,26,140,1,0,0,0,28,142,1,0,0,0,30,144,1,0,0,0,32,146,1,0,0,0,34,148,
+		1,0,0,0,36,150,1,0,0,0,38,152,1,0,0,0,40,42,3,2,1,0,41,40,1,0,0,0,42,45,
 		1,0,0,0,43,41,1,0,0,0,43,44,1,0,0,0,44,46,1,0,0,0,45,43,1,0,0,0,46,47,
 		5,0,0,1,47,1,1,0,0,0,48,51,3,4,2,0,49,51,3,6,3,0,50,48,1,0,0,0,50,49,1,
-		0,0,0,51,3,1,0,0,0,52,53,5,19,0,0,53,54,3,28,14,0,54,55,5,4,0,0,55,56,
-		3,26,13,0,56,5,1,0,0,0,57,59,5,20,0,0,58,60,3,10,5,0,59,58,1,0,0,0,59,
+		0,0,0,51,3,1,0,0,0,52,53,5,20,0,0,53,54,3,28,14,0,54,55,5,5,0,0,55,56,
+		3,26,13,0,56,5,1,0,0,0,57,59,5,21,0,0,58,60,3,10,5,0,59,58,1,0,0,0,59,
 		60,1,0,0,0,60,61,1,0,0,0,61,63,3,30,15,0,62,64,3,8,4,0,63,62,1,0,0,0,63,
-		64,1,0,0,0,64,65,1,0,0,0,65,66,5,4,0,0,66,67,3,20,10,0,67,7,1,0,0,0,68,
-		69,5,21,0,0,69,70,3,32,16,0,70,9,1,0,0,0,71,72,5,6,0,0,72,77,3,36,18,0,
-		73,74,5,14,0,0,74,76,3,36,18,0,75,73,1,0,0,0,76,79,1,0,0,0,77,75,1,0,0,
-		0,77,78,1,0,0,0,78,80,1,0,0,0,79,77,1,0,0,0,80,81,5,7,0,0,81,11,1,0,0,
-		0,82,83,5,8,0,0,83,88,3,22,11,0,84,85,5,14,0,0,85,87,3,22,11,0,86,84,1,
+		64,1,0,0,0,64,65,1,0,0,0,65,66,5,5,0,0,66,67,3,20,10,0,67,7,1,0,0,0,68,
+		69,5,22,0,0,69,70,3,32,16,0,70,9,1,0,0,0,71,72,5,7,0,0,72,77,3,36,18,0,
+		73,74,5,15,0,0,74,76,3,36,18,0,75,73,1,0,0,0,76,79,1,0,0,0,77,75,1,0,0,
+		0,77,78,1,0,0,0,78,80,1,0,0,0,79,77,1,0,0,0,80,81,5,8,0,0,81,11,1,0,0,
+		0,82,83,5,9,0,0,83,88,3,22,11,0,84,85,5,15,0,0,85,87,3,22,11,0,86,84,1,
 		0,0,0,87,90,1,0,0,0,88,86,1,0,0,0,88,89,1,0,0,0,89,91,1,0,0,0,90,88,1,
-		0,0,0,91,92,5,9,0,0,92,13,1,0,0,0,93,94,7,0,0,0,94,15,1,0,0,0,95,96,7,
+		0,0,0,91,92,5,10,0,0,92,13,1,0,0,0,93,94,7,0,0,0,94,15,1,0,0,0,95,96,7,
 		1,0,0,96,17,1,0,0,0,97,98,7,2,0,0,98,19,1,0,0,0,99,101,6,10,-1,0,100,102,
-		3,24,12,0,101,100,1,0,0,0,101,102,1,0,0,0,102,103,1,0,0,0,103,107,3,34,
-		17,0,104,105,3,16,8,0,105,106,3,22,11,0,106,108,1,0,0,0,107,104,1,0,0,
-		0,107,108,1,0,0,0,108,116,1,0,0,0,109,110,5,5,0,0,110,116,3,20,10,4,111,
-		112,5,6,0,0,112,113,3,20,10,0,113,114,5,7,0,0,114,116,1,0,0,0,115,99,1,
-		0,0,0,115,109,1,0,0,0,115,111,1,0,0,0,116,127,1,0,0,0,117,118,10,2,0,0,
-		118,119,3,14,7,0,119,120,3,20,10,3,120,126,1,0,0,0,121,122,10,1,0,0,122,
-		123,3,18,9,0,123,124,3,12,6,0,124,126,1,0,0,0,125,117,1,0,0,0,125,121,
-		1,0,0,0,126,129,1,0,0,0,127,125,1,0,0,0,127,128,1,0,0,0,128,21,1,0,0,0,
-		129,127,1,0,0,0,130,135,3,26,13,0,131,135,5,26,0,0,132,135,5,25,0,0,133,
-		135,3,38,19,0,134,130,1,0,0,0,134,131,1,0,0,0,134,132,1,0,0,0,134,133,
-		1,0,0,0,135,23,1,0,0,0,136,137,7,3,0,0,137,138,5,3,0,0,138,25,1,0,0,0,
-		139,140,5,22,0,0,140,27,1,0,0,0,141,142,7,3,0,0,142,29,1,0,0,0,143,144,
-		7,3,0,0,144,31,1,0,0,0,145,146,7,3,0,0,146,33,1,0,0,0,147,148,7,3,0,0,
-		148,35,1,0,0,0,149,150,5,25,0,0,150,37,1,0,0,0,151,152,7,4,0,0,152,39,
-		1,0,0,0,12,43,50,59,63,77,88,101,107,115,125,127,134
+		3,24,12,0,101,100,1,0,0,0,101,102,1,0,0,0,102,103,1,0,0,0,103,108,3,34,
+		17,0,104,109,5,3,0,0,105,106,3,16,8,0,106,107,3,22,11,0,107,109,1,0,0,
+		0,108,104,1,0,0,0,108,105,1,0,0,0,108,109,1,0,0,0,109,117,1,0,0,0,110,
+		111,5,6,0,0,111,117,3,20,10,4,112,113,5,7,0,0,113,114,3,20,10,0,114,115,
+		5,8,0,0,115,117,1,0,0,0,116,99,1,0,0,0,116,110,1,0,0,0,116,112,1,0,0,0,
+		117,128,1,0,0,0,118,119,10,2,0,0,119,120,3,14,7,0,120,121,3,20,10,3,121,
+		127,1,0,0,0,122,123,10,1,0,0,123,124,3,18,9,0,124,125,3,12,6,0,125,127,
+		1,0,0,0,126,118,1,0,0,0,126,122,1,0,0,0,127,130,1,0,0,0,128,126,1,0,0,
+		0,128,129,1,0,0,0,129,21,1,0,0,0,130,128,1,0,0,0,131,136,3,26,13,0,132,
+		136,5,27,0,0,133,136,5,26,0,0,134,136,3,38,19,0,135,131,1,0,0,0,135,132,
+		1,0,0,0,135,133,1,0,0,0,135,134,1,0,0,0,136,23,1,0,0,0,137,138,7,3,0,0,
+		138,139,5,4,0,0,139,25,1,0,0,0,140,141,5,23,0,0,141,27,1,0,0,0,142,143,
+		7,3,0,0,143,29,1,0,0,0,144,145,7,3,0,0,145,31,1,0,0,0,146,147,7,3,0,0,
+		147,33,1,0,0,0,148,149,7,3,0,0,149,35,1,0,0,0,150,151,5,26,0,0,151,37,
+		1,0,0,0,152,153,7,4,0,0,153,39,1,0,0,0,12,43,50,59,63,77,88,101,108,116,
+		126,128,135
 	};
 
 	public static readonly ATN _ATN =

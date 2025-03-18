@@ -1,11 +1,4 @@
-
-
-
 using Bb.Policies.Asts;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Black.Beard.Policies.XUnit
 {
@@ -214,6 +207,26 @@ policy p1 inherit p1 : source.name = test
             string txt = @"policy p1 inherit p1 : Identity.IsAuthenticated = true";
             var p = Policy.ParseText(txt);
             Assert.True(p.Diagnostics.InError);
+        }
+
+        [Fact]
+        public void TestPolicy16()
+        {
+            string txt = @"policy p1 : carr+";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : carr+", o);
+
+        }
+
+        [Fact]
+        public void TestPolicy17()
+        {
+            string txt = @"policy p1 : carr+ | ope+ | pkt+";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : carr+ | ope+ | pkt+", o);
+
         }
 
     }

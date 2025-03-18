@@ -14,7 +14,11 @@ namespace Bb.Policies.Asts
     public struct IntellisenseAst
     {
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IntellisenseAst"/> struct.
+        /// </summary>
+        /// <param name="context">The context for intellisense.</param>
+        /// <param name="item">The parse tree item.</param>
         public IntellisenseAst(IntellisenseContext context, IParseTree item)
         {
             this._context = context;
@@ -25,7 +29,9 @@ namespace Bb.Policies.Asts
             _item = item;
         }
 
-
+        /// <summary>
+        /// Gets the children of the current AST node.
+        /// </summary>
         public IEnumerable<IntellisenseAst> Children
         {
             get
@@ -36,7 +42,9 @@ namespace Bb.Policies.Asts
             }
         }
 
-
+        /// <summary>
+        /// Parses the tree and populates the children of the current AST node.
+        /// </summary>
         internal void ParseTree()
         {
 
@@ -75,6 +83,9 @@ namespace Bb.Policies.Asts
             }
         }
 
+        /// <summary>
+        /// Gets the location of the current AST node.
+        /// </summary>
         public TextLocation? Location
         {
             get
@@ -102,6 +113,9 @@ namespace Bb.Policies.Asts
             }
         }
 
+        /// <summary>
+        /// Gets the type of the current AST node.
+        /// </summary>
         public int Type
         {
             get
@@ -114,6 +128,9 @@ namespace Bb.Policies.Asts
             }
         }
 
+        /// <summary>
+        /// Gets the rule index of the current AST node.
+        /// </summary>
         public int RuleIndex
         {
             get
@@ -124,6 +141,9 @@ namespace Bb.Policies.Asts
             }
         }
 
+        /// <summary>
+        /// Gets the state of the current AST node.
+        /// </summary>
         public ATNState? State
         {
             get
@@ -139,6 +159,9 @@ namespace Bb.Policies.Asts
             }
         }
 
+        /// <summary>
+        /// Gets the text of the current AST node.
+        /// </summary>
         public string Text
         {
             get
@@ -154,7 +177,9 @@ namespace Bb.Policies.Asts
             }
         }
 
-
+        /// <summary>
+        /// Gets the name of the current AST node.
+        /// </summary>
         public string Name
         {
             get
@@ -183,22 +208,58 @@ namespace Bb.Policies.Asts
             }
         }
 
+                /// <summary>
+        /// Gets a value indicating whether the current AST node is not null.
+        /// </summary>
         public bool NotNull { get; }
 
+        /// <summary>
+        /// Gets a value indicating whether the current AST node is in error.
+        /// </summary>
         public bool InError { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether the current AST node is a terminal node.
+        /// </summary>
         public bool IsTerminal { get; private set; }
 
+        /// <summary>
+        /// Returns a string that represents the current AST node.
+        /// </summary>
+        /// <returns>A string that represents the current AST node.</returns>
         public override string ToString()
         {
             return Name;
         }
 
+        /// <summary>
+        /// Selects the AST nodes that match the specified name.
+        /// </summary>
+        /// <param name="name">The name to match.</param>
+        /// <returns>A collection of matching AST nodes.</returns>
+        /// <example>
+        /// <code lang="C#">
+        /// var ast = new IntellisenseAst(context, item);
+        /// var selectedNodes = ast.Select("nodeName");
+        /// </code>
+        /// </example>
         public IEnumerable<IntellisenseAst> Select(string name)
         {
             var nn = name.ToLower();
             return this.Select(c => c.Name.ToLower() == nn);
         }
 
+        /// <summary>
+        /// Selects the AST nodes that match the specified predicate.
+        /// </summary>
+        /// <param name="predicate">The predicate to match.</param>
+        /// <returns>A collection of matching AST nodes.</returns>
+        /// <example>
+        /// <code lang="C#">
+        /// var ast = new IntellisenseAst(context, item);
+        /// var selectedNodes = ast.Select(node => node.Name == "nodeName");
+        /// </code>
+        /// </example>
         public IEnumerable<IntellisenseAst> Select(Predicate<IntellisenseAst> predicate)
         {
 
@@ -211,7 +272,14 @@ namespace Bb.Policies.Asts
 
         }
 
-
+        /// <summary>
+        /// Adds an error to the diagnostics for the specified error node.
+        /// </summary>
+        /// <param name="e">The error node.</param>
+        /// <remarks>
+        /// This method adds an error to the diagnostics for the specified error node.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when the error node is null.</exception>
         void AddError(ErrorNodeImpl e)
         {
             InError = true;
@@ -220,6 +288,14 @@ namespace Bb.Policies.Asts
             );
         }
 
+        /// <summary>
+        /// Adds an error to the diagnostics for the specified parser rule context.
+        /// </summary>
+        /// <param name="r">The parser rule context.</param>
+        /// <remarks>
+        /// This method adds an error to the diagnostics for the specified parser rule context.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when the parser rule context is null.</exception>
         void AddError(ParserRuleContext r)
         {
             InError = true;
