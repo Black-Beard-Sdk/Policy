@@ -13,9 +13,9 @@ namespace Bb.Exceptions
         
         public InvalidArgumentNameException(string message, Exception inner) : base(message, inner) { }
         
-        protected InvalidArgumentNameException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        //protected InvalidArgumentNameException(
+        //  System.Runtime.Serialization.SerializationInfo info,
+        //  System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 
     }
 

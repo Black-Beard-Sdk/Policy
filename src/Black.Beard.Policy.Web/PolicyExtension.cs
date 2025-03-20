@@ -1,12 +1,10 @@
 ﻿using Bb.Policies;
 using Bb.Policies.Asts;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 using System.Reflection;
 
 namespace Bb
 {
-
 
     public static class PolicyExtension
     {
@@ -17,18 +15,6 @@ namespace Bb
 
             _logger = new Logger<WebApplication>(new LoggerFactory());
 
-        }
-
-        /// <summary>
-        /// Configures the policy evaluator service.
-        /// </summary>
-        /// <param name="web"></param>
-        /// <returns></returns>
-        public static WebApplication ConfigurePolicy(this WebApplication web)
-        {
-            var evaluator = web.Services.GetRequiredService<PolicyEvaluator>();
-            evaluator.ServiceProvider = web.Services.GetRequiredService<IServiceProvider>();
-            return web;
         }
 
         /// <summary>
@@ -64,6 +50,7 @@ namespace Bb
 
             services.AddAuthorization(options =>
             {
+
                 ManageDefaults(options, policies, evaluator);
 
                 foreach (var policyRule in policies.Rules)
@@ -88,6 +75,18 @@ namespace Bb
 
             return builder;
 
+        }
+
+        /// <summary>
+        /// Configures the policy evaluator service.
+        /// </summary>
+        /// <param name="web"></param>
+        /// <returns></returns>
+        public static WebApplication ConfigurePolicy(this WebApplication web)
+        {
+            var evaluator = web.Services.GetRequiredService<PolicyEvaluator>();
+            evaluator.ServiceProvider = web.Services.GetRequiredService<IServiceProvider>();
+            return web;
         }
 
         private static void ManageDefaults(AuthorizationOptions options, PolicyContainer policies, PolicyEvaluator evaluator)

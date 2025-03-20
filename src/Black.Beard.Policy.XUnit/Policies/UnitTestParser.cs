@@ -1,8 +1,7 @@
-using Bb.Policies.Asts;
-
-namespace Black.Beard.Policies.XUnit
+namespace Black.Beard.Policy.XUnit.Policies
 {
 
+    using Bb.Policies.Asts;
 
     public class UnitTestParser
     {

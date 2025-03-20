@@ -1,14 +1,12 @@
-
-
-
-using Bb.Policies;
-using Bb.Policies.Asts;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Security.Principal;
-
-namespace Black.Beard.Policies.XUnit
+namespace Black.Beard.Policy.XUnit.Policies
 {
+
+    using Bb.Policies;
+    using Bb.Policies.Asts;
+    using Black.Beard.Policies.XUnit;
+    using Microsoft.IdentityModel.Tokens;
+    using System.Security.Claims;
+    using System.Security.Principal;
 
     public class UnitTestToken
     {

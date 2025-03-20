@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "�
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policy.Web", "Black.Beard.Policy.Web\Black.Beard.Policy.Web.csproj", "{A1BB94A0-9B8F-43E9-B930-12C799917350}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Adfs", "Black.Beard.Adfs\Black.Beard.Adfs.csproj", "{C776A669-6A85-4969-A437-9181C6B11308}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{A1BB94A0-9B8F-43E9-B930-12C799917350}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1BB94A0-9B8F-43E9-B930-12C799917350}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1BB94A0-9B8F-43E9-B930-12C799917350}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C776A669-6A85-4969-A437-9181C6B11308}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C776A669-6A85-4969-A437-9181C6B11308}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C776A669-6A85-4969-A437-9181C6B11308}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C776A669-6A85-4969-A437-9181C6B11308}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

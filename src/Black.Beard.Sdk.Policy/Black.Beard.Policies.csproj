@@ -34,4 +34,8 @@
     <PackageReference Include="System.CodeDom" Version="9.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Black.Beard.Adfs\Black.Beard.Adfs.csproj" />
+  </ItemGroup>
+
 </Project>
