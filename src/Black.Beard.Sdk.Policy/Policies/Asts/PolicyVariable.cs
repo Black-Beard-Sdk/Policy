@@ -11,7 +11,7 @@ namespace Bb.Policies.Asts
     /// They are typically defined using an "alias" syntax in the policy language.
     /// </remarks>
     [System.Diagnostics.DebuggerDisplay("alias {Name} : {Value}")]
-    public class PolicyVariable : Policy
+    public class PolicyVariable : PolicyNamed
     {
 
         /// <summary>
@@ -30,29 +30,10 @@ namespace Bb.Policies.Asts
         /// variable.Value = new PolicyConstant("3", ConstantType.String);
         /// </code>
         /// </example>
-        public PolicyVariable(string name, bool cache)
+        public PolicyVariable(string name, bool cache) : base(name)
         {
             Kind = PolicyKind.Variable;
-            this.Name = name;
             this._cache = cache;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PolicyVariable"/> class with default values.
-        /// </summary>
-        /// <remarks>
-        /// This constructor creates a new variable with no name or value.
-        /// The name and value must be set separately after creation.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// // Create a new policy variable with default values
-        /// var variable = new PolicyVariable();
-        /// </code>
-        /// </example>
-        public PolicyVariable()
-        {
-            Kind = PolicyKind.Variable;
         }
 
         /// <summary>
@@ -100,56 +81,16 @@ namespace Bb.Policies.Asts
         {
 
             if (_cache)
-                return true;
+                return false;
 
             writer.Append($"alias {Name} : ");
 
             if (Value != null)
-                writer.ToString(Value);
-
-            writer.AppendEndLine();
+                writer.ToString(Value);            
 
             return true;
 
         }
-
-        /// <summary>
-        /// Determines whether this variable has source information.
-        /// </summary>
-        /// <returns><c>false</c>, as policy variables do not have source information.</returns>
-        /// <remarks>
-        /// This method always returns false because variables are typically static declarations
-        /// and do not reference external sources.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var variable = new PolicyVariable("MaxRetries");
-        /// bool hasSource = variable.HasSource(); // Returns false
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Gets the name of this variable.
-        /// </summary>
-        /// <remarks>
-        /// The name uniquely identifies the variable within its container.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var variable = new PolicyVariable("MaxRetries");
-        /// string name = variable.Name; // Returns "MaxRetries"
-        /// </code>
-        /// </example>
-        /// <returns>
-        /// A <see cref="System.String"/> representing the variable's name.
-        /// </returns>
-        public string Name { get; }
-
-        private readonly bool _cache;
 
         /// <summary>
         /// Gets or sets the constant value of this variable.
@@ -186,6 +127,8 @@ namespace Bb.Policies.Asts
         /// A <see cref="System.String"/> representing the origin path of this variable.
         /// </returns>
         public string Origin { get; internal set; }
+        private readonly bool _cache;
+
     }
 
 }

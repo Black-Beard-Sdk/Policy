@@ -32,26 +32,6 @@
         }
 
         /// <summary>
-        /// Determines whether this subexpression has source information.
-        /// </summary>
-        /// <returns><c>true</c> if the inner expression has source information; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// This method delegates to the inner expression's HasSource method, as a subexpression's
-        /// source information is determined by its inner expression.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var innerExpr = new PolicyIdExpression("propertyName", ConstantType.Id) { Source = "context" };
-        /// var subExpr = new PolicySubExpression(innerExpr);
-        /// bool hasSource = subExpr.HasSource(); // Returns true because the inner expression has a source
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return Sub.HasSource();
-        }
-
-        /// <summary>
         /// Gets the inner expression of this subexpression.
         /// </summary>
         /// <remarks>

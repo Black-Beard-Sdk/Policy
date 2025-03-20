@@ -176,6 +176,7 @@ namespace Bb.Policies
         /// </code>
         /// </example>
         T VisitId(PolicyIdExpression e);
+
     }
 
 }

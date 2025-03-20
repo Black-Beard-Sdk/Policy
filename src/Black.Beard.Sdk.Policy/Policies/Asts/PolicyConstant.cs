@@ -1,6 +1,7 @@
 ﻿namespace Bb.Policies.Asts
 {
 
+
     /// <summary>
     /// Represents a constant value in a policy expression.
     /// </summary>
@@ -8,7 +9,7 @@
     /// Policy constants can represent different types of values like strings, identifiers, 
     /// and booleans. They are immutable and store both the value and its type.
     /// </remarks>
-    [System.Diagnostics.DebuggerDisplay("{Value}")]
+    //[System.Diagnostics.DebuggerDisplay("{Value}")]
     public class PolicyConstant : PolicyExpression
     {
         /// <summary>
@@ -72,25 +73,6 @@
         public ConstantType Type { get; }
 
         /// <summary>
-        /// Determines whether this policy constant has source information.
-        /// </summary>
-        /// <returns><c>false</c> as policy constants do not have associated source information.</returns>
-        /// <remarks>
-        /// This method always returns false because constants are typically created programmatically
-        /// rather than parsed from source code with location information.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var constant = new PolicyConstant("example", ConstantType.String);
-        /// bool hasSource = constant.HasSource(); // Returns false
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return false;
-        }
-
-        /// <summary>
         /// Accepts a visitor to process this policy constant.
         /// </summary>
         /// <typeparam name="T">The return type of the visitor processing.</typeparam>
@@ -152,12 +134,17 @@
                     writer.Append($"'{Value}'");
                     break;
 
+                case ConstantType.Integer:
+                    writer.Append(Value);
+                    break;
+
                 case ConstantType.Id:
                 default:
                     writer.Append(Value);
                     break;
 
             }
+
             return true;
         }
 
@@ -190,7 +177,13 @@
         /// <summary>
         /// Represents a boolean constant (true or false).
         /// </summary>
-        Boolean
+        Boolean,
+
+        /// <summary>
+        /// Represents an positive integer constant
+        /// </summary>
+        Integer
+    
     }
 
  

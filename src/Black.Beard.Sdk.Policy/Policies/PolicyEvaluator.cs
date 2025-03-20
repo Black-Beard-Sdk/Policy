@@ -1,7 +1,5 @@
 ﻿using Bb.Analysis.DiagTraces;
 using Bb.Policies.Asts;
-using System;
-using System.Collections.Generic;
 
 namespace Bb.Policies
 {
@@ -15,6 +13,7 @@ namespace Bb.Policies
     /// </remarks>
     public class PolicyEvaluator
     {
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PolicyEvaluator"/> class.
         /// </summary>
@@ -66,13 +65,13 @@ namespace Bb.Policies
         /// var evaluator = new PolicyEvaluator(new PolicyContainer());
         /// 
         /// // Add a custom rule function
-        /// evaluator.Add("HasPermission", context => {
+        /// evaluator.AddPolicyRule("HasPermission", context => {
         ///     var user = context.GetSource() as UserProfile;
         ///     return user != null && user.Permissions.Contains("admin");
         /// });
         /// </code>
         /// </example>
-        public void Add(string policyName, Func<RuntimeContext, bool> rule)
+        public void AddPolicyRule(string policyName, Func<RuntimeContext, bool> rule)
         {
 
             if (!this._dic.ContainsKey(policyName))
@@ -102,9 +101,7 @@ namespace Bb.Policies
         /// </example>
         public bool Evaluate(string policy, object value, out RuntimeContext context)
         {
-
            return Evaluate(policy, value, null, out context);
-
         }
 
         /// <summary>
@@ -119,6 +116,7 @@ namespace Bb.Policies
         /// This method evaluates a named policy rule against a provided data object, with optional diagnostics.
         /// </remarks>
         /// <exception cref="System.ArgumentNullException">Thrown when policy or value is null.</exception>
+        /// <exception cref="System.InvalidOperationException">Thrown when policy is missing.</exception>
         /// <example>
         /// <code lang="C#">
         /// var evaluator = new PolicyEvaluator(new PolicyContainer());
@@ -138,14 +136,40 @@ namespace Bb.Policies
             if (string.IsNullOrEmpty(policy))
                 throw new ArgumentNullException(nameof(policy));
 
-            context = new RuntimeContext(diagnostic, this._dic, value);
-
             if (_dic.TryGetValue(policy, out var rule))
+            {
+
+                if (CreateContext != null)
+                    context = CreateContext();
+                else
+                    context = new RuntimeContext();
+
+                context
+                    .Initialize(diagnostic, this._dic)
+                    .Store(value);
+
+                if (ServiceProvider != null)
+                    context.Store(ServiceProvider);
+
                 context.Result = rule(context);
 
-            return context.Result;
+                return context.Result;
+            
+            }
+
+            throw new InvalidOperationException(policy);
 
         }
+
+        /// <summary>
+        /// Gets the runtime context for the evaluation.
+        /// </summary>
+        public Func<RuntimeContext> CreateContext { get; set; }
+
+        /// <summary>
+        /// Gets or sets the service provider for the evaluator.
+        /// </summary>
+        public IServiceProvider ServiceProvider { get; set; }
 
         private readonly Dictionary<string, Func<RuntimeContext, bool>> _dic;
 

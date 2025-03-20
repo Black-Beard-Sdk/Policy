@@ -23,7 +23,6 @@ TRUE           : 'true';
 FALSE          : 'false';
 
 PLUS           : '+';
-
 DOT            : '.';
 COLON          : ':';
 NOT 			   : '!';
@@ -33,6 +32,11 @@ BRACKET_LEFT  	: '[';
 BRACKET_RIGHT 	: ']';
 EQUAL 			: '=';
 INEQUAL 		   : '!=';
+GREATER 		   : '>';
+LESSER 		   : '<';
+GREATER_EQUAL 	: '>=';
+LESSER_EQUAL 	: '<=';
+
 OR 				: '|';
 AND 			   : '&';
 COMMA 			: ',';
@@ -42,10 +46,8 @@ IN 				: 'in';
 NOT_IN 			: '!in';
 
 ALIAS 			: 'alias';
-
 POLICY 			: 'policy';
 
-INHERIT        : 'inherit';
 fragment ESC
    : '\\' (["\\/bfnrt] | UNICODE)
    ;
@@ -57,6 +59,10 @@ STRING
 MULTI_LINE_COMMENT : '/*' .*? '*/' -> skip;
 //CODE_STRING :        QUOTE_CODE_STRING .*? QUOTE_CODE_STRING;
 SINGLE_QUOTE_CODE_STRING :  '\'';
+
+INT
+   : [0-9]+
+   ;
 
 ID
    : [_A-Za-z][_A-Za-z0-9]*

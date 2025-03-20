@@ -38,10 +38,8 @@ pair_alias :
    ;
 
 pair_policy : 
-   POLICY categories? policy_id inherit? COLON expression
+   POLICY categories? policy_id COLON expression
    ;
-
-inherit : INHERIT policy_ref;
 
 categories :
      PARENT_LEFT category (COMMA category)* PARENT_RIGHT
@@ -56,7 +54,7 @@ operationBoolean :
    ;
 
 operationEqual : 
-     EQUAL | INEQUAL
+     EQUAL | INEQUAL | GREATER | LESSER | GREATER_EQUAL | LESSER_EQUAL 
    ;
 
 operationContains : 
@@ -76,13 +74,15 @@ value_ref
    | IDQUOTED
    | ID
    | boolean
+   | integer
    ;
 
 source : (ID | IDQUOTED) DOT;
 string : STRING;
+integer : INT;
 alias_id : ID | IDQUOTED;
-policy_id : ID | IDQUOTED;
-policy_ref : ID | IDQUOTED;
+policy_id : ID (DOT ID)* | IDQUOTED;
+
 key_ref : ID | IDQUOTED;
 category : ID;
 

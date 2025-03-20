@@ -5,13 +5,10 @@ using Bb.Policies;
 using Bb.Policies.Asts;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Security.Principal;
-using System.Text;
 
 namespace Black.Beard.Policies.XUnit
 {
-
 
     public class UnitTestToken
     {
@@ -22,11 +19,11 @@ namespace Black.Beard.Policies.XUnit
         {
 
             string policyPayload = @"
-alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
-policy p1 : role has [Admin]
+alias role2 : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role2""
+policy p1 : role2 has [Admin]
 ";
             var e = GetEvaluator(policyPayload);
-            var principal = GetPrincipal(new Claim("role", "Admin"));
+            var principal = GetPrincipal(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role2", "Admin"));
 
             var result = e.Evaluate("p1", principal, out var ctx);
             Assert.True(result);
@@ -38,28 +35,25 @@ policy p1 : role has [Admin]
         {
 
             string policyPayload = @"
-alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
 policy p1 : role has [Admin]
 ";
             var e = GetEvaluator(policyPayload);
-            var principal = GetPrincipal(new Claim("role", "Admin"));
+            var principal = GetPrincipal(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", "Admin"));
 
             var result = e.Evaluate("p1", new { Principal = principal }, out var ctx);
             Assert.True(result);
 
         }
 
-
         [Fact]
         public void TestPolicy2()
         {
 
             string policyPayload = @"
-alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
 policy p1 : role = admin & role = guest
 ";
             var e = GetEvaluator(policyPayload);
-            var principal = GetPrincipal(new Claim("role", "admin"), new Claim("role", "guest"));
+            var principal = GetPrincipal(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", "admin"), new Claim("role", "guest"));
 
             var result = e.Evaluate("p1", new { Principal = principal }, out var ctx);
             Assert.True(result);
@@ -71,11 +65,10 @@ policy p1 : role = admin & role = guest
         {
 
             string policyPayload = @"
-alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
 policy p1 : role = admin & role = guest
 ";
             var e = GetEvaluator(policyPayload);
-            var principal = GetPrincipal(new Claim("role", "admin"));
+            var principal = GetPrincipal(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", "admin"));
 
             var result = e.Evaluate("p1", new { Principal = principal }, out var ctx);
             Assert.False(result);
@@ -282,8 +275,8 @@ policy p1 : role = admin & role = guest
         {
 
             string policyPayload = @"
-policy p1 : role=Admin
-policy p2 inherit p1 : Source.Name = test
+policy isAdmin : role=Admin
+policy p2 : isAdmin & Source.Name = test
 ";
             var e = GetEvaluator(policyPayload);
             var principal = GetPrincipal(new Claim("role", "Admin"));
@@ -298,8 +291,8 @@ policy p2 inherit p1 : Source.Name = test
         {
 
             string policyPayload = @"
-policy p1 : role=Admin
-policy p2 inherit p1 : Source.Name = test
+policy isAdmin : role=Admin
+policy p2 : isAdmin & Source.Name = test
 ";
             var e = GetEvaluator(policyPayload);
             var principal = GetPrincipal(new Claim("role", "admin"));
@@ -314,8 +307,8 @@ policy p2 inherit p1 : Source.Name = test
         {
 
             string policyPayload = @"
-policy p1 : role=Admin
-policy p2 inherit p1 : Source.Name = test
+policy isAdmin : role=Admin
+policy p2 : isAdmin & Source.Name = test
 ";
             var e = GetEvaluator(policyPayload);
             var principal = GetPrincipal(new Claim("role", "Admin"));
@@ -339,7 +332,7 @@ policy p2 inherit p1 : Source.Name = test
         public void TestPolicy140()
         {
 
-            string policyPayload = @"policy p1 inherit p1 : Identity.IsAuthenticated = true";
+            string policyPayload = @"policy p1 : Identity.IsAuthenticated";
             var e = GetEvaluator(policyPayload);
             var principal = GetPrincipal();
 
@@ -347,6 +340,101 @@ policy p2 inherit p1 : Source.Name = test
             Assert.True(result);
 
         }
+
+        [Fact]
+        public void TestPolicy141()
+        {
+
+            string policyPayload = @"policy p1 : Identity.IsAuthenticated | Identity.IsAuthenticated | Identity.IsAuthenticated";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal();
+            var result = e.Evaluate("p1", principal, out var ctx);
+            Assert.True(result);
+
+        }
+
+        [Fact]
+        public void TestPolicy180()
+        {
+            string policyPayload = @"policy p1 : Source.Age = 18";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal();
+            var result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 18 } }, out var ctx);
+            Assert.True(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 19 } }, out ctx);
+            Assert.False(result);
+
+        }
+
+        [Fact]
+        public void TestPolicy181()
+        {
+            string policyPayload = @"policy p1 : Source.Age > 18";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal();
+            var result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 18 } }, out var ctx);
+            Assert.False(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 17 } }, out ctx);
+            Assert.False(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 19 } }, out ctx);
+            Assert.True(result);
+
+        }
+
+        [Fact]
+        public void TestPolicy182()
+        {
+            string policyPayload = @"policy p1 : Source.Age >= 18";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal();
+
+            var result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 18 } }, out var ctx);
+            Assert.True(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 17 } }, out ctx);
+            Assert.False(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 19 } }, out ctx);
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void TestPolicy183()
+        {
+            string policyPayload = @"policy p1 : Source.Age < 18";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal();
+            var result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 18 } }, out var ctx);
+            Assert.False(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 17 } }, out ctx);
+            Assert.True(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 19 } }, out ctx);
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void TestPolicy184()
+        {
+            string policyPayload = @"policy p1 : Source.Age <= 18";
+            var e = GetEvaluator(policyPayload);
+            var principal = GetPrincipal();
+            var result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 18 } }, out var ctx);
+            Assert.True(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 17 } }, out ctx);
+            Assert.True(result);
+
+            result = e.Evaluate("p1", new { Principal = principal, Source = new { Age = 19 } }, out ctx);
+            Assert.False(result);
+
+        }
+
+
 
         public static PolicyEvaluator GetEvaluator(string policyPayload)
         {

@@ -57,12 +57,6 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitPair_policy([NotNull] PolicyParser.Pair_policyContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="PolicyParser.inherit"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInherit([NotNull] PolicyParser.InheritContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.categories"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -117,6 +111,12 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitString([NotNull] PolicyParser.StringContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.integer"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitInteger([NotNull] PolicyParser.IntegerContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.alias_id"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -128,12 +128,6 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitPolicy_id([NotNull] PolicyParser.Policy_idContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="PolicyParser.policy_ref"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitPolicy_ref([NotNull] PolicyParser.Policy_refContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.key_ref"/>.
 	/// </summary>

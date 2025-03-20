@@ -34,6 +34,8 @@ namespace Bb.Policies.Asts
             this._dicRule = new Dictionary<string, PolicyRule>();
             this.Kind = PolicyKind.Container;
 
+            #region alias
+
             _dicVariable.Add("actor", new PolicyVariable( "http://schemas.xmlsoap.org/ws/2009/09/identity/claims/actor", true));
             _dicVariable.Add("postalcode", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode", true));
             _dicVariable.Add("primarygroupsid", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/primarygroupsid", true));
@@ -89,6 +91,7 @@ namespace Bb.Policies.Asts
             _dicVariable.Add("dns", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dns", true));
             _dicVariable.Add("x500distinguishedname", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/x500distinguishedname", true));
 
+            #endregion alias
 
 
         }
@@ -137,33 +140,33 @@ namespace Bb.Policies.Asts
         public override bool ToString(Writer writer)
         {
 
+            var position = writer.Count;
+            bool next = false;
+
             foreach (var item in _dicVariable)
-                item.Value.ToString(writer);
+            {
+                
+                if (next)
+                    writer.AppendEndLine();
+                
+                if (item.Value.ToString(writer))
+                    next = true;
+
+            }
 
             foreach (var item in _dicRule)
-                item.Value.ToString(writer);
+            {
+                
+                if (next)
+                    writer.AppendEndLine();
 
-            return true;
+                if (item.Value.ToString(writer))
+                    next = true;
 
-        }
+            }
 
-        /// <summary>
-        /// Determines whether this policy container has source information.
-        /// </summary>
-        /// <returns><c>false</c> as policy containers do not have source information.</returns>
-        /// <remarks>
-        /// This method always returns false because containers are typically created programmatically
-        /// rather than parsed from source code with location information.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var container = new PolicyContainer();
-        /// bool hasSource = container.HasSource(); // Returns false
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return false;
+            return position != writer.Count;
+
         }
 
         /// <summary>
@@ -183,7 +186,7 @@ namespace Bb.Policies.Asts
         /// bool success = container.Add(variable);
         /// </code>
         /// </example>
-        public bool Add(Policy o)
+        public bool Add(PolicyNamed o)
         {
 
             if (o is PolicyVariable v)

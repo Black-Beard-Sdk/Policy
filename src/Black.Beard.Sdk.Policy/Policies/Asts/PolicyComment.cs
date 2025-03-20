@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿using Bb.Util;
+
+namespace Bb.Policies.Asts
 {
 
     /// <summary>
@@ -22,29 +24,12 @@
         /// var comment = new PolicyComment();
         /// </code>
         /// </example>
-        public PolicyComment()
+        public PolicyComment(string comment)
         {
-
+            this.Value = comment;
         }
 
-        /// <summary>
-        /// Determines whether this policy comment has source information.
-        /// </summary>
-        /// <returns><c>false</c> as policy comments do not have associated source information.</returns>
-        /// <remarks>
-        /// This method always returns false because comments are not considered part of the executable policy code
-        /// and do not have source tracking information associated with them.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var comment = new PolicyComment();
-        /// bool hasSource = comment.HasSource(); // Returns false
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return false;
-        }
+        public string Value { get; }
 
         /// <summary>
         /// Accepts a visitor to process this policy comment.
@@ -89,6 +74,7 @@
         /// </example>
         public override bool ToString(Writer writer)
         {
+            writer.AppendEndLine("// " + Value);
             return true;
         }
 

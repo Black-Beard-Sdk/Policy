@@ -77,26 +77,6 @@
         }
 
         /// <summary>
-        /// Determines whether this identifier expression has source information.
-        /// </summary>
-        /// <returns><c>true</c> if this identifier has non-empty source information; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// This method checks whether the identifier expression has a source qualifier
-        /// (e.g., "context" in "context.propertyName").
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var idExpression = new PolicyIdExpression("propertyName", ConstantType.Id);
-        /// idExpression.Source = "context";
-        /// bool hasSource = idExpression.HasSource(); // Returns true
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return !string.IsNullOrEmpty(Source);
-        }
-
-        /// <summary>
         /// Gets or sets the source qualifier for this identifier expression.
         /// </summary>
         /// <remarks>
@@ -115,6 +95,8 @@
         public override bool ToString(Writer writer)
         {
 
+            var position = writer.Count;
+
             if (!string.IsNullOrEmpty(Source))
             {
                 writer.Append(Source);
@@ -122,8 +104,8 @@
             }
 
             base.ToString(writer);
-            
-            return true;
+
+            return position != writer.Count;
 
         }
 

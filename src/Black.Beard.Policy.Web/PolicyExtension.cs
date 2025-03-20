@@ -10,6 +10,26 @@ namespace Bb
 
     public static class PolicyExtension
     {
+        private static readonly Logger<WebApplication> _logger;
+
+        static PolicyExtension()
+        {
+
+            _logger = new Logger<WebApplication>(new LoggerFactory());
+
+        }
+
+        /// <summary>
+        /// Configures the policy evaluator service.
+        /// </summary>
+        /// <param name="web"></param>
+        /// <returns></returns>
+        public static WebApplication ConfigurePolicy(this WebApplication web)
+        {
+            var evaluator = web.Services.GetRequiredService<PolicyEvaluator>();
+            evaluator.ServiceProvider = web.Services.GetRequiredService<IServiceProvider>();
+            return web;
+        }
 
         /// <summary>
         /// Append policies form specified file
@@ -38,12 +58,12 @@ namespace Bb
                 throw new Exception("Failed to evaluate file policies");
             var evaluator = new PolicyEvaluator(policies);
 
+            services.AddSingleton(evaluator);
 
             var items = GetAuthorizePoliciesFromAssemblies().ToList();
 
             services.AddAuthorization(options =>
             {
-
                 ManageDefaults(options, policies, evaluator);
 
                 foreach (var policyRule in policies.Rules)
@@ -62,9 +82,7 @@ namespace Bb
                     configureAction(options);
 
                 foreach (var item in items)
-                {
-
-                }
+                    _logger.LogDebug($"Policy {item} not found in policies file");
 
             });
 

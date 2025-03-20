@@ -11,7 +11,7 @@ namespace Bb.Policies.Asts
     /// This class extends PolicyOperationUnary by adding a right operand to the operation.
     /// Examples of binary operations include equality tests, containment checks, and logical operations.
     /// </remarks>
-    [System.Diagnostics.DebuggerDisplay("{Left} {Operator} {Right}")]
+    //[System.Diagnostics.DebuggerDisplay("{Left} {Operator} {Right}")]
     public class PolicyOperationBinary : PolicyOperationUnary
     {
 
@@ -88,6 +88,9 @@ namespace Bb.Policies.Asts
         /// </example>
         public override bool ToString(Writer writer)
         {
+
+            var position = writer.Count;
+
             var result = base.ToString(writer);
 
             switch (Operator)
@@ -125,6 +128,22 @@ namespace Bb.Policies.Asts
                     writer.Append(" | ");
                     break;
 
+                case PolicyOperator.Greater:
+                    writer.Append(" > ");
+                    break;
+
+                case PolicyOperator.GreaterOrEqual:
+                    writer.Append(" >= ");
+                    break;
+
+                case PolicyOperator.Lesser:
+                    writer.Append(" < ");
+                    break;
+
+                case PolicyOperator.LesserOrEqual:
+                    writer.Append(" <= ");
+                    break;
+
                 default:
                     throw new NotImplementedException(Operator.ToString());
             
@@ -133,7 +152,8 @@ namespace Bb.Policies.Asts
             if (Right != null)
                 writer.ToString(Right);
 
-            return result;
+            return position != writer.Count;
+
         }
 
         /// <summary>

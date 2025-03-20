@@ -4,7 +4,9 @@ using Bb.Expressions;
 using Bb.Policies.Asts;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Bb.Policies
 {
@@ -56,12 +58,18 @@ namespace Bb.Policies
                 // Start parsing
                 var rule = item.Value.Accept(this) as Expression;
 
-                if (!string.IsNullOrEmpty(item.InheritFrom))
+                if (rule.Type != typeof(bool))
                 {
                     var ctx = BuildCtx;
-                    var p = item.Location.AsConstant();
-                    var r = Expression.Call(ctx.Context, RuntimeContext._evaluateFrom, item.InheritFrom.AsConstant(), p);
-                    rule = Expression.AndAlso(rule, r);
+                    var p = item.Value.Location.AsConstant();
+                    rule = Expression.Call(ctx.Context, RuntimeContext._evaluateconvertBool, rule, p);
+                }
+
+                if (Debugger.IsAttached)
+                {
+                    var txt = item.ToString();
+                    var payload = rule.ToString();
+                    Debug.WriteLine($"{txt.Trim()} - {payload.Trim()}");
                 }
 
                 _compiler.Add(rule);
@@ -69,7 +77,7 @@ namespace Bb.Policies
 
                 if (rule != null)
                 {
-                    _evaluator.Add(item.Name, result);
+                    _evaluator.AddPolicyRule(item.Name, result);
 
                 }
                 else
@@ -114,44 +122,179 @@ namespace Bb.Policies
 
             var left = (Expression)e.Left.Accept(this);
             var right = (Expression)e.Right.Accept(this);
-
             var p = e.Location.AsConstant();
 
-            if (e.Left.HasSource())
-                return Expression.Call(ctx.Context, RuntimeContext._evaluate, left, e.Operator.AsConstant(), right, p);
+            if (left.Type == typeof(object) && right.Type == typeof(string))
+                return Expression.Call(ctx.Context, RuntimeContext._evaluateBinary, left, e.Operator.AsConstant(), right, p);
 
             switch (e.Operator)
             {
+                case PolicyOperator.Has:
+                case PolicyOperator.HasNot:
+                case PolicyOperator.NotIn:
+                case PolicyOperator.In:
+                    return EvaluateBinaryIn(ctx, e.Operator, left, right, p);
+
+                case PolicyOperator.Lesser:
+                case PolicyOperator.LesserOrEqual:
+                case PolicyOperator.Greater:
+                case PolicyOperator.GreaterOrEqual:
+                    return EvaluateBinaryNumeric(ctx, e.Operator, left, right, p);
 
                 case PolicyOperator.Equal:
-                    return Expression.Call(ctx.Context, RuntimeContext._evaluateEquality, left, right, p);
                 case PolicyOperator.NotEqual:
-                    return Expression.Call(ctx.Context, RuntimeContext._evaluateNotEquality, left, right, p);
-                case PolicyOperator.In:
-                    return Expression.Call(ctx.Context, RuntimeContext._evaluateIn, left, right, p);
-                case PolicyOperator.NotIn:
-                    return Expression.Call(ctx.Context, RuntimeContext._evaluateNotIn, left, right, p);
-                case PolicyOperator.Has:
-                    return Expression.Call(ctx.Context, RuntimeContext._evaluateHas, left, right, p);
-                case PolicyOperator.HasNot:
-                    return Expression.Call(ctx.Context, RuntimeContext._evaluateHasNot, left, right, p);
+                    return EvaluateBinaryEquality(ctx, e.Operator, left, right, p);
 
                 case PolicyOperator.AndExclusive:
                     return Expression.AndAlso(left, right);
+
                 case PolicyOperator.OrExclusive:
                     return Expression.OrElse(left, right);
 
-
-                case PolicyOperator.Undefined:
-                case PolicyOperator.Not:
                 default:
-                    throw new NotImplementedException();
+                    break;
+
             }
 
             throw new NotImplementedException();
 
         }
 
+        private static Expression EvaluateBinaryEquality(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
+        {
+
+            bool isNumeric = left.Type == typeof(object) && right.Type == typeof(int);
+            bool isString = left.Type == typeof(string) && right.Type == typeof(string);
+            var ope = @operator.AsConstant();
+
+            switch (@operator)
+            {
+
+                case PolicyOperator.Equal:
+                    if (isString)
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateEquality, left, right, p);
+
+                    else if (isNumeric)
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateBinaryNumeric, left, ope, right, p);
+
+                    else
+                    {
+
+                    }
+                    break;
+
+                case PolicyOperator.NotEqual:
+                    if (isString)
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateNotEquality, left, right, p);
+
+                    else if (isNumeric)
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateBinaryNumeric, left, ope, right, p);
+
+                    else
+                    {
+
+                    }
+                    break;
+
+                case PolicyOperator.UnaryCompare:
+                case PolicyOperator.Lesser:
+                case PolicyOperator.LesserOrEqual:
+                case PolicyOperator.Greater:
+                case PolicyOperator.GreaterOrEqual:
+                case PolicyOperator.In:
+                case PolicyOperator.NotIn:
+                case PolicyOperator.Has:
+                case PolicyOperator.HasNot:
+                case PolicyOperator.AndExclusive:
+                case PolicyOperator.OrExclusive:
+                case PolicyOperator.Not:
+                case PolicyOperator.Required:
+                case PolicyOperator.Undefined:
+                default:
+                    break;
+            }
+
+            throw new NotImplementedException(@operator.ToString());
+
+        }
+
+        private static Expression EvaluateBinaryNumeric(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
+        {
+
+            bool isNumeric = left.Type == typeof(object) && right.Type == typeof(int);
+            var ope = @operator.AsConstant();
+
+            switch (@operator)
+            {
+
+                case PolicyOperator.Equal:
+                case PolicyOperator.NotEqual:
+                case PolicyOperator.Lesser:
+                case PolicyOperator.LesserOrEqual:
+                case PolicyOperator.Greater:
+                case PolicyOperator.GreaterOrEqual:
+                    if (isNumeric)
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateBinaryNumeric, left, ope.AsConstant(), right, p);
+
+                    else
+                    {
+
+                    }
+                    break;
+
+                case PolicyOperator.UnaryCompare:
+                case PolicyOperator.In:
+                case PolicyOperator.NotIn:
+                case PolicyOperator.Has:
+                case PolicyOperator.HasNot:
+                case PolicyOperator.AndExclusive:
+                case PolicyOperator.OrExclusive:
+                case PolicyOperator.Not:
+                case PolicyOperator.Required:
+                case PolicyOperator.Undefined:
+                default:
+                    break;
+            }
+
+            throw new NotImplementedException(@operator.ToString());
+
+        }
+
+        private static Expression EvaluateBinaryIn(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
+        {
+
+            bool isString = left.Type == typeof(string) && right.Type == typeof(string[]);
+            if (isString)
+                switch (@operator)
+                {
+                    case PolicyOperator.In:
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateIn, left, right, p);
+                    case PolicyOperator.NotIn:
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateNotIn, left, right, p);
+                    case PolicyOperator.Has:
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateHas, left, right, p);
+                    case PolicyOperator.HasNot:
+                        return Expression.Call(ctx.Context, RuntimeContext._evaluateHasNot, left, right, p);
+
+                    case PolicyOperator.AndExclusive:
+                    case PolicyOperator.OrExclusive:
+                    case PolicyOperator.Not:
+                    case PolicyOperator.Required:
+                    case PolicyOperator.Equal:
+                    case PolicyOperator.NotEqual:
+                    case PolicyOperator.Lesser:
+                    case PolicyOperator.LesserOrEqual:
+                    case PolicyOperator.Greater:
+                    case PolicyOperator.GreaterOrEqual:
+                    case PolicyOperator.UnaryCompare:
+                    case PolicyOperator.Undefined:
+                    default:
+                        break;
+                }
+
+            throw new NotImplementedException(@operator.ToString());
+
+        }
 
         public object VisitId(PolicyIdExpression e)
         {
@@ -181,11 +324,20 @@ namespace Bb.Policies
                 case ConstantType.String:
                 case ConstantType.Id:
                 case ConstantType.QuotedId:
-                case ConstantType.Boolean:
                     return e.Value.AsConstant();
+
+                case ConstantType.Boolean:
+                    if (e.Value == "true")
+                        return Expression.Constant(true);
+                    return Expression.Constant(false);
+
+                case ConstantType.Integer:
+                    int i = int.Parse(e.Value);
+                    return Expression.Constant(i);
 
                 default:
                     break;
+
             }
 
             throw new NotImplementedException(e.Type.ToString());
@@ -203,22 +355,32 @@ namespace Bb.Policies
         public object VisitSubExpression(PolicySubExpression e)
         {
             return e.Sub.Accept(this);
-        }
+        }      
 
         public object VisitUnaryOperation(PolicyOperationUnary e)
         {
 
             var result = (Expression)e.Left.Accept(this);
 
+            var ctx = BuildCtx;
+            var p = e.Location.AsConstant();
+
             if (e.Operator == PolicyOperator.Not)
                 return Expression.Not(result);
 
             else if (e.Operator == PolicyOperator.Required)
-            {
-                var ctx = BuildCtx;
-                var p = e.Location.AsConstant();
                 return Expression.Call(ctx.Context, RuntimeContext._evaluateUnary, result, e.Operator.AsConstant(), p);
+
+            else if (e.Operator == PolicyOperator.UnaryCompare)
+            {
+
+                if (result.Type == typeof(object))
+                    return Expression.Call(ctx.Context, RuntimeContext._evaluateconvertBool, result, p);
+
+                return Expression.Call(ctx.Context, RuntimeContext._evaluateFrom, result, p);
+
             }
+
             throw new NotImplementedException(e.Operator.ToString());
 
         }

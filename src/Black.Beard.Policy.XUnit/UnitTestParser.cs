@@ -12,12 +12,12 @@ namespace Black.Beard.Policies.XUnit
         {
 
             string txt = @"
-alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
+alias role2 : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role2""
 ";
             var p = Policy.ParseText(txt);
 
             var o = p.ToString().Trim();
-            Assert.Equal("alias role : \"http://schemas.microsoft.com/ws/2008/06/identity/claims/role\"", o);
+            Assert.Equal("alias role2 : \"http://schemas.microsoft.com/ws/2008/06/identity/claims/role2\"", o);
 
         }
 
@@ -178,8 +178,7 @@ policy p1 : source.name = test
         public void TestPolicy13()
         {
             string txt = @"
-policy p1 : role=Admin
-policy p1 inherit p1 : source.name = test
+policy p1 : p1 & source.name = test
 ";
             var p = Policy.ParseText(txt);
             Assert.True(p.Diagnostics.InError);
@@ -204,9 +203,20 @@ policy p1 inherit p1 : source.name = test
         [Fact]
         public void TestPolicy15()
         {
-            string txt = @"policy p1 inherit p1 : Identity.IsAuthenticated = true";
+            string txt = @"
+policy isAuthenticated : Identity.IsAuthenticated
+policy p1 : isAuthenticated & Identity.IsAuthenticated = true
+";
             var p = Policy.ParseText(txt);
-            Assert.True(p.Diagnostics.InError);
+
+            var r1 = p.GetRule("isAuthenticated");
+            var txt1 = r1.ToString().Trim();
+            Assert.Equal("policy isAuthenticated : Identity.IsAuthenticated", txt1);
+
+            var r2 = p.GetRule("p1");
+            var txt2 = r2.ToString().Trim();
+            Assert.Equal("policy p1 : isAuthenticated & Identity.IsAuthenticated = true", txt2);
+
         }
 
         [Fact]
@@ -227,6 +237,55 @@ policy p1 inherit p1 : source.name = test
             var o = p.ToString().Trim();
             Assert.Equal("policy p1 : carr+ | ope+ | pkt+", o);
 
+        }
+
+        [Fact]
+        public void TestPolicy180()
+        {
+            string txt = @"policy p1 : Source.Age = 18";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : Source.Age = 18", o);
+
+        }
+
+        [Fact]
+        public void TestPolicy181()
+        {
+            string txt = @"policy p1 : Source.Age > 18";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : Source.Age > 18", o);
+
+        }
+
+        [Fact]
+        public void TestPolicy182()
+        {
+            string txt = @"policy p1 : Source.Age >= 18";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : Source.Age >= 18", o);
+
+        }
+
+        [Fact]
+        public void TestPolicy183()
+        {
+            string txt = @"policy p1 : Source.Age < 18";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : Source.Age < 18", o);
+
+        }
+
+        [Fact]
+        public void TestPolicy184()
+        {
+            string txt = @"policy p1 : Source.Age <= 18";
+            var p = Policy.ParseText(txt);
+            var o = p.ToString().Trim();
+            Assert.Equal("policy p1 : Source.Age <= 18", o);
         }
 
     }

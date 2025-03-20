@@ -3,6 +3,7 @@ using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Bb.Analysis.DiagTraces;
+using Bb.Analysis.Tools;
 using Bb.Policies.Asts;
 using Bb.Policies.Parser;
 using System.Globalization;
@@ -66,7 +67,7 @@ namespace Bb.Policies
         /// var result = visitor.Visit(parser.script());
         /// </code>
         /// </example>
-        public ScriptBuilderVisitor(PolicyParser parser, ScriptDiagnostics diagnostics, PolicyContainer container, Action<PolicyRule> action, string path) 
+        public ScriptBuilderVisitor(PolicyParser parser, ScriptDiagnostics diagnostics, PolicyContainer container, Action<PolicyRule> action, string path)
             : this(parser, diagnostics, path)
         {
             _container = container;
@@ -98,10 +99,12 @@ namespace Bb.Policies
         /// </example>
         public ScriptBuilderVisitor(PolicyParser parser, ScriptDiagnostics diagnostics, string path)
         {
+
             _currentCulture = CultureInfo.InvariantCulture;
             _parser = parser;
             _diagnostics = diagnostics;
             _scriptPath = path;
+            _stack = new Stack<BuildContext>();
 
             if (!string.IsNullOrEmpty(path))
             {
@@ -146,7 +149,7 @@ namespace Bb.Policies
 
             foreach (var item in pair)
             {
-                var o = (Policy)item.Accept(this);
+                var o = (PolicyNamed)item.Accept(this);
                 if (o != null)
                 {
 
@@ -156,14 +159,11 @@ namespace Bb.Policies
                     if (!_container.Add(o))
                     {
 
-                        string name = o.ToString();
-
+                        string name = o.Name;
                         if (o is PolicyRule r)
                             name = "policy " + r.Name;
-
                         else if (o is PolicyVariable s)
                             name = "alias " + s.Name;
-
                         this.AddError(o.Location, name, "duplicated name", _scriptPath);
 
                     }
@@ -223,15 +223,23 @@ namespace Bb.Policies
         public override object VisitPolicy_id([NotNull] PolicyParser.Policy_idContext context)
         {
 
-            var id = context.ID();
-            if (id != null)
-                return id.GetText();
+            StringBuilder sb = new StringBuilder();
 
-            id = context.IDQUOTED();
-            if (id != null)
-                return id.GetText().Trim('\'');
+            var id1 = context.ID();
+            if (id1 != null && id1.Length > 0)
+                foreach (var item in id1)
+                {
+                    if (sb.Length > 0)
+                        sb.Append(".");
+                    sb.Append(item.GetText());
+                }
 
-            return null;
+            var id2 = context.IDQUOTED();
+            if (id2 != null)
+                sb.Append(id2.GetText());
+
+            return sb.ToString();
+
         }
 
         /// <summary>
@@ -253,37 +261,6 @@ namespace Bb.Policies
         /// A <see cref="System.String"/> containing the alias identifier, or null if not found.
         /// </returns>
         public override object VisitAlias_id([NotNull] PolicyParser.Alias_idContext context)
-        {
-            var id = context.ID();
-            if (id != null)
-                return id.GetText();
-
-            id = context.IDQUOTED();
-            if (id != null)
-                return id.GetText().Trim('\'');
-
-            return null;
-        }
-
-        /// <summary>
-        /// Visits a policy reference context and extracts the referenced policy name.
-        /// </summary>
-        /// <param name="context">The context for a policy reference. Must not be null.</param>
-        /// <returns>The text of the referenced policy identifier, or null if not found.</returns>
-        /// <remarks>
-        /// This method extracts the name of a referenced policy from the parse tree.
-        /// It handles both regular identifiers and quoted identifiers.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var policyRefContext = parser.policy_ref();
-        /// var referencedPolicy = (string)visitor.VisitPolicy_ref(policyRefContext);
-        /// </code>
-        /// </example>
-        /// <returns>
-        /// A <see cref="System.String"/> containing the referenced policy identifier, or null if not found.
-        /// </returns>
-        public override object VisitPolicy_ref([NotNull] PolicyParser.Policy_refContext context)
         {
             var id = context.ID();
             if (id != null)
@@ -399,6 +376,10 @@ namespace Bb.Policies
             if (boolean != null)
                 return new PolicyConstant(boolean.GetText(), ConstantType.Boolean) { Location = context.ToLocation() };
 
+            var integer = context.integer();
+            if (integer != null)
+                return new PolicyConstant(integer.GetText(), ConstantType.Integer) { Location = context.ToLocation() };
+
             throw new NotImplementedException(context.GetText());
 
         }
@@ -466,7 +447,7 @@ namespace Bb.Policies
             if (str != null)
             {
                 var s = (string)str.Accept(this);
-                return new PolicyVariable(_id)
+                return new PolicyVariable(_id, false)
                 {
                     Origin = _scriptPath,
                     Value = new PolicyConstant(s, ConstantType.String)
@@ -506,37 +487,51 @@ namespace Bb.Policies
             if (policy_id == null)
                 return null;
 
-            string inheritFrom = string.Empty;
-            var inherit = context.inherit();
-            if (inherit != null)
-                inheritFrom = (string)inherit.policy_ref().Accept(this);
-
-
             var expr = context.expression();
             if (expr != null)
             {
 
-                var _id = (string)policy_id.Accept(this);
+                PolicyRule result = null;
 
-                if (inheritFrom == _id)
-                    AddError(inherit?.ToLocation() ?? TextLocation.Empty, inheritFrom, "recursive rule detected");
-
-
-                var e = expr.Accept(this);
-
-                var result = new PolicyRule(_id)
+                using (var ctx = NewContext())
                 {
-                    Value = (Policy)e,
-                    Location = context.ToLocation(),
-                    InheritFrom = inheritFrom,
-                    Origin = _scriptPath
-                };
 
-                var categories = context.categories();
-                if (categories != null)
-                {
-                    var c = (List<string>)categories.Accept(this);
-                    result.AddCategories(c);
+                    var _id = (string)policy_id.Accept(this);
+                    var e = (Policy)expr.Accept(this);
+
+                    //switch (e.Kind)
+                    //{
+                    //    case PolicyKind.Variable:
+                    //        break;
+                    //    case PolicyKind.Constant:
+                    //        break;
+                    //    case PolicyKind.Container:
+                    //        break;
+                    //    case PolicyKind.Rule:
+                    //        break;
+                    //    case PolicyKind.Operation:
+                    //        break;
+                    //    case PolicyKind.IdExpression:
+                    //        e = new PolicyConvert(e) { Location = e.Location };
+                    //        break;
+                    //    default:
+                    //        break;
+                    //}
+
+
+                    result = new PolicyRule(_id)
+                    {
+                        Value = e,
+                        Location = context.ToLocation(),
+                        Origin = _scriptPath
+                    };
+
+                    var categories = context.categories();
+                    if (categories != null)
+                    {
+                        var c = (List<string>)categories.Accept(this);
+                        result.AddCategories(c);
+                    }
                 }
 
                 return result;
@@ -636,6 +631,18 @@ namespace Bb.Policies
             if (context.INEQUAL() != null)
                 return PolicyOperator.NotEqual;
 
+            if (context.LESSER() != null)
+                return PolicyOperator.Lesser;
+
+            if (context.GREATER() != null)
+                return PolicyOperator.Greater;
+
+            if (context.LESSER_EQUAL() != null)
+                return PolicyOperator.LesserOrEqual;
+
+            if (context.GREATER_EQUAL() != null)
+                return PolicyOperator.GreaterOrEqual;
+
             throw new NotImplementedException(context.GetText());
 
         }
@@ -662,71 +669,85 @@ namespace Bb.Policies
         public override object VisitExpression([NotNull] PolicyParser.ExpressionContext context)
         {
 
-            PolicyOperator _operator;
+            PolicyOperator _operator = PolicyOperator.Undefined;
             var key_ref = context.key_ref();
             Policy left;
+            Policy right;
 
-            if (key_ref != null)
+            this.CurrentCtx().TryGetInStorage<bool>("inOperationBoolean", out bool InOperationBoolean);
+            using (var ctx = NewContext())
             {
-                string source = string.Empty;
-                var l = context.source();
-                if (l != null)
-                    source = l.ID().GetText();
 
-                left = (Policy)key_ref.Accept(this);
-                left = new PolicyIdExpression((PolicyConstant)left) { Location = context.ToLocation(), Source = source };
+                ctx.AddInStorage("inOperationBoolean", context.operationBoolean() != null);
 
-                var plus = context.PLUS();
-                if (plus != null)
+                if (key_ref != null)
                 {
-                    _operator = PolicyOperator.Required;
-                    return new PolicyOperationUnary(left, _operator) { Location = context.ToLocation() };
-                }
+                    string source = string.Empty;
+                    var l = context.source();
+                    if (l != null)
+                        source = l.ID().GetText();
 
-                var @operator = context.operationEqual();
-                if (@operator == null)
+                    left = (Policy)key_ref.Accept(this);
+                    left = new PolicyIdExpression((PolicyConstant)left) { Location = context.ToLocation(), Source = source };
+
+                    var plus = context.PLUS();
+                    if (plus != null)
+                    {
+                        _operator = PolicyOperator.Required;
+                        return new PolicyOperationUnary(left, _operator) { Location = context.ToLocation() };
+                    }
+
+                    var value_ref = context.value_ref();
+                    if (value_ref != null)
+                    {
+                        var @operator = context.operationEqual();
+                        _operator = (PolicyOperator)@operator.Accept(this);
+                        right = (Policy)value_ref.Accept(this);
+                        return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
+                    }
+
+                    var oo = context.operationBoolean();
+                    if (oo != null)
+                    {
+                        _operator = (PolicyOperator)context.operationBoolean().Accept(this);
+                        return new PolicyOperationUnary(left, _operator) { Location = context.ToLocation() };
+                    }
+
+                    if (InOperationBoolean)
+                        return new PolicyOperationUnary(left, PolicyOperator.UnaryCompare) { Location = context.ToLocation() };
+
                     return left;
 
-                var value_ref = context.value_ref();
-                if (value_ref != null)
+                }
+
+                var e = context.expression();
+                left = (Policy)e[0].Accept(this);
+
+                if (context.PARENT_LEFT() != null)
+                    return new PolicySubExpression((PolicyExpression)left) { Location = context.ToLocation() };
+
+                else if (context.NOT() != null)
                 {
-                    _operator = (PolicyOperator)@operator.Accept(this);
-                    var right = (Policy)value_ref.Accept(this);
+                    _operator = PolicyOperator.Not;
+                    return new PolicyOperationUnary((PolicyExpression)left, _operator) { Location = context.ToLocation() };
+                }
+
+                var operaC = context.operationContains();
+                if (operaC != null)
+                {
+                    _operator = (PolicyOperator)operaC.Accept(this);
+                    right = (Policy)context.array().Accept(this);
                     return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
                 }
-                
 
-                _operator = (PolicyOperator)context.operationBoolean().Accept(this);
-                return new PolicyOperationUnary(left, _operator) { Location = context.ToLocation() };
+                var o2 = context.operationBoolean();
+                if (o2 != null)
+                {
+                    _operator = (PolicyOperator)o2.Accept(this);
+                    right = (Policy)e[1].Accept(this);
+                    return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
+                }
 
-            }
-
-            var e = context.expression();
-            left = (Policy)e[0].Accept(this);
-
-            if (context.PARENT_LEFT() != null)
-                return new PolicySubExpression((PolicyExpression)left) { Location = context.ToLocation() };
-
-            else if (context.NOT() != null)
-            {
-                _operator = PolicyOperator.Not;
-                return new PolicyOperationUnary((PolicyExpression)left, _operator) { Location = context.ToLocation() };
-            }
-
-            var operaC = context.operationContains();
-            if (operaC != null)
-            {
-                _operator = (PolicyOperator)operaC.Accept(this);
-                var right = (Policy)context.array().Accept(this);
-                return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
-            }
-
-            var o2 = context.operationBoolean();
-            if (o2 != null)
-            {
-                _operator = (PolicyOperator)o2.Accept(this);
-                var right = (Policy)e[1].Accept(this);
-                return new PolicyOperationBinary(left, _operator, right) { Location = context.ToLocation() };
             }
 
             throw new NotImplementedException(context.GetText());
@@ -1063,6 +1084,249 @@ namespace Bb.Policies
                     $"Failed to parse script at position {e.Symbol.StartIndex}, line {e.Symbol.Line}, col {e.Symbol.Column} '{e.Symbol.Text}'"
             );
         }
+
+
+
+
+        #region Context
+
+        /// <summary>
+        /// Gets the current build context from the top of the context stack.
+        /// </summary>
+        /// <remarks>
+        /// This property provides access to the current build context, which contains
+        /// information needed for code generation such as parameters, expressions, and source code.
+        /// </remarks>
+        /// <returns>
+        /// The current <see cref="BuildContext"/> from the top of the stack.
+        /// </returns>
+        protected BuildContext BuildCtx
+        {
+            get => _stack.Peek();
+        }
+
+        /// <summary>
+        /// Gets or sets the path of the script being processed.
+        /// </summary>
+        /// <remarks>
+        /// This property stores the file path of the script being compiled,
+        /// which is useful for diagnostics and source reference.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var builder = new Sourcebuilder(diagnostics, true);
+        /// builder.ScriptPath = @"C:\Policies\access_policy.txt";
+        /// </code>
+        /// </example>
+        public string ScriptPath { get; internal set; }
+
+        /// <summary>
+        /// Creates a new build context based on the current context and pushes it onto the context stack.
+        /// </summary>
+        /// <remarks>
+        /// This method creates a new context that inherits properties from the current context,
+        /// pushes it onto the stack, and returns a disposable wrapper that will pop the context
+        /// when disposed.
+        /// </remarks>
+        /// <exception cref="System.InvalidOperationException">Thrown when the context stack is empty.</exception>
+        /// <returns>
+        /// A <see cref="CurrentContext"/> object that will restore the previous context when disposed.
+        /// </returns>
+        protected BuildContext NewContext()
+        {
+            var ctx = _stack.Count > 0 ? _stack.Peek() : null;
+            Action act = () => _stack.Pop();
+            var cts = new BuildContext(act) { Parent = ctx };
+            _stack.Push(cts);
+            return cts;
+        }
+
+        /// <summary>
+        /// Gets the current build context from the top of the context stack.
+        /// </summary>
+        /// <remarks>
+        /// This method provides access to the current build context without creating a new one.
+        /// </remarks>
+        /// <exception cref="System.InvalidOperationException">Thrown when the context stack is empty.</exception>
+        /// <returns>
+        /// The current <see cref="BuildContext"/> from the top of the stack.
+        /// </returns>
+        protected BuildContext CurrentCtx()
+        {
+            var ctx = _stack.Peek();
+            return ctx;
+        }
+
+
+
+
+        ///// <summary>
+        ///// Provides a disposable wrapper for a build context.
+        ///// </summary>
+        ///// <remarks>
+        ///// This class automatically restores the previous build context when disposed,
+        ///// making it easy to use build contexts in a scope-based manner.
+        ///// </remarks>
+        //protected class CurrentContext : IDisposable
+        //{
+        //    /// <summary>
+        //    /// Initializes a new instance of the <see cref="CurrentContext"/> class.
+        //    /// </summary>
+        //    /// <param name="act">The action to execute when this context is disposed. Must not be null.</param>
+        //    /// <param name="current">The current build context. Must not be null.</param>
+        //    /// <remarks>
+        //    /// This constructor creates a new context wrapper with the specified cleanup action.
+        //    /// </remarks>
+        //    public CurrentContext(Action act, BuildContext current)
+        //    {
+        //        action = act;
+        //        Current = current;
+        //    }
+
+        //    /// <summary>
+        //    /// Disposes of the context and restores the previous context.
+        //    /// </summary>
+        //    /// <remarks>
+        //    /// This method executes the cleanup action specified in the constructor,
+        //    /// which typically pops the context from the stack.
+        //    /// </remarks>
+        //    public void Dispose()
+        //    {
+        //        action();
+        //    }
+
+        //    /// <summary>
+        //    /// The action to execute when this context is disposed.
+        //    /// </summary>
+        //    /// <remarks>
+        //    /// This action typically pops the current build context from the stack.
+        //    /// </remarks>
+        //    private Action action;
+
+        //    /// <summary>
+        //    /// Gets the build context wrapped by this instance.
+        //    /// </summary>
+        //    /// <remarks>
+        //    /// This property provides access to the current build context.
+        //    /// </remarks>
+        //    public BuildContext Current { get; }
+        //    public bool InoperationBoolean { get; internal set; }
+
+        //}
+
+        /// <summary>
+        /// Stack of build contexts used for tracking the current compilation state.
+        /// </summary>
+        /// <remarks>
+        /// This stack maintains a hierarchical structure of build contexts,
+        /// allowing for nested processing of expressions and statements.
+        /// </remarks>
+        protected Stack<BuildContext> _stack = new Stack<BuildContext>();
+
+        /// <summary>
+        /// Represents a context for code generation during policy compilation.
+        /// </summary>
+        /// <remarks>
+        /// BuildContext contains information needed for code generation such as parameters,
+        /// expressions, and source code, as well as a dictionary for storing temporary values.
+        /// </remarks>
+        protected class BuildContext : IDisposable
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="BuildContext"/> class.
+            /// </summary>
+            /// <remarks>
+            /// This constructor initializes a new build context with an empty storage dictionary.
+            /// </remarks>
+            public BuildContext(Action action)
+            {
+                this._action = action;
+                _dic = new Dictionary<string, object>();
+            }
+
+            /// <summary>
+            /// Adds a value to the context's storage dictionary.
+            /// </summary>
+            /// <param name="key">The key to store the value under. Must not be null.</param>
+            /// <param name="value">The value to store.</param>
+            /// <remarks>
+            /// This method stores a value in the context's dictionary under the specified key.
+            /// If a value already exists for the key, it is replaced.
+            /// </remarks>
+            /// <exception cref="System.ArgumentNullException">Thrown when key is null.</exception>
+            public void AddInStorage(string key, object value)
+            {
+                _dic[key] = value;
+            }
+
+            /// <summary>
+            /// Tries to get a value from the context's storage dictionary.
+            /// </summary>
+            /// <param name="key">The key to look up. Must not be null.</param>
+            /// <param name="value">When this method returns, contains the value associated with the key, if found.</param>
+            /// <returns>True if the key was found; otherwise, false.</returns>
+            /// <remarks>
+            /// This method attempts to retrieve a value from the context's dictionary using the specified key.
+            /// </remarks>
+            /// <exception cref="System.ArgumentNullException">Thrown when key is null.</exception>
+            public bool TryGetInStorage<T>(string key, out T value)
+            {
+
+                value = default;
+                if (_dic.TryGetValue(key, out var v))
+                {
+                    value = (T)v;
+                    return true;
+                }
+
+                return false;
+
+            }
+
+            public void Dispose()
+            {
+                this._action();
+            }
+
+            private readonly Action _action;
+
+            /// <summary>
+            /// Dictionary for storing temporary values in the build context.
+            /// </summary>
+            /// <remarks>
+            /// This dictionary stores values that need to be accessible within the current build context.
+            /// </remarks>
+            private Dictionary<string, object> _dic;
+
+            public BuildContext? Parent { get; internal set; }
+
+        }
+
+        /// <summary>
+        /// Specifies the kind of code being generated.
+        /// </summary>
+        /// <remarks>
+        /// This enumeration indicates whether the code being generated is for a constructor, method, or undefined.
+        /// </remarks>
+        protected enum KindGenerating
+        {
+            /// <summary>
+            /// The kind of code being generated is not specified.
+            /// </summary>
+            Undefined,
+
+            /// <summary>
+            /// The code being generated is for a constructor.
+            /// </summary>
+            Constructor,
+
+            /// <summary>
+            /// The code being generated is for a method.
+            /// </summary>
+            Method,
+        }
+
+        #endregion Context
 
         /// <summary>
         /// The initial source text of the policy being parsed.

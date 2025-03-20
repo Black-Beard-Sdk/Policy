@@ -2,6 +2,7 @@
 
 namespace Bb.Policies.Asts
 {
+
     /// <summary>
     /// Represents a policy rule in the policy language.
     /// </summary>
@@ -9,8 +10,8 @@ namespace Bb.Policies.Asts
     /// A policy rule defines a named condition or action that can be evaluated against data.
     /// Rules can be categorized and can inherit from other rules.
     /// </remarks>
-    [System.Diagnostics.DebuggerDisplay("policy {Name} : {Value}")]
-    public class PolicyRule : Policy
+    //[System.Diagnostics.DebuggerDisplay("policy {Name} : {Value}")]
+    public class PolicyRule : PolicyNamed
     {
 
         /// <summary>
@@ -27,50 +28,10 @@ namespace Bb.Policies.Asts
         /// var rule = new PolicyRule("CheckAccess");
         /// </code>
         /// </example>
-        public PolicyRule(string name)
+        public PolicyRule(string name) : base(name)
         {
             Kind = PolicyKind.Rule;
-            this.Name = name;
             this._categories = new HashSet<string>();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PolicyRule"/> class.
-        /// </summary>
-        /// <remarks>
-        /// This constructor initializes a new rule with default values.
-        /// The name will be null and must be set before using the rule.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// // Create a new policy rule with default values
-        /// var rule = new PolicyRule();
-        /// </code>
-        /// </example>
-        public PolicyRule()
-        {
-            Kind = PolicyKind.Rule;
-        }
-
-        /// <summary>
-        /// Determines whether this rule has source information.
-        /// </summary>
-        /// <returns><c>true</c> if the rule's value has source information; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// This method delegates to the Value property's HasSource method, as a rule's
-        /// source information is determined by its value expression.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var rule = new PolicyRule("CheckAccess");
-        /// var idExpr = new PolicyIdExpression("propertyName", ConstantType.Id) { Source = "context" };
-        /// rule.Value = idExpr;
-        /// bool hasSource = rule.HasSource(); // Returns true because the rule's value has a source
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return Value.HasSource();
         }
 
         /// <summary>
@@ -121,8 +82,6 @@ namespace Bb.Policies.Asts
 
             if (Value != null)
                 writer.ToString(Value);
-
-            writer.AppendEndLine();
 
             return true;
 
@@ -199,23 +158,6 @@ namespace Bb.Policies.Asts
         /// </returns>
         public IEnumerable<string> Categories => this._categories;
 
-        /// <summary>
-        /// Gets the name of this rule.
-        /// </summary>
-        /// <remarks>
-        /// The name uniquely identifies the rule within its container.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var rule = new PolicyRule("CheckAccess");
-        /// string name = rule.Name; // Returns "CheckAccess"
-        /// </code>
-        /// </example>
-        /// <returns>
-        /// A <see cref="System.String"/> representing the rule's name.
-        /// </returns>
-        public string Name { get; }
-
         private readonly HashSet<string> _categories;
 
         /// <summary>
@@ -236,24 +178,6 @@ namespace Bb.Policies.Asts
         /// A <see cref="Policy"/> object representing the rule's value expression.
         /// </returns>
         public Policy Value { get; set; }
-
-        /// <summary>
-        /// Gets or sets the category from which this rule inherits.
-        /// </summary>
-        /// <remarks>
-        /// When a rule inherits from another category, it may inherit properties or behaviors
-        /// defined for that category in the policy system.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var rule = new PolicyRule("AdminAccess");
-        /// rule.InheritFrom = "BaseAccess";
-        /// </code>
-        /// </example>
-        /// <returns>
-        /// A <see cref="System.String"/> representing the category from which this rule inherits.
-        /// </returns>
-        public string InheritFrom { get; set; }
 
         /// <summary>
         /// Gets or sets the origin path from which this rule was loaded.

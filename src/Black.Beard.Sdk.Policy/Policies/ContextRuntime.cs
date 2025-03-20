@@ -2,12 +2,8 @@
 using Bb.ComponentModel.Accessors;
 using Bb.Expressions;
 using Bb.Policies.Asts;
-using SharpCompress.Common;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -36,20 +32,62 @@ namespace Bb.Policies
         /// </remarks>
         static RuntimeContext()
         {
-            _evaluateHas = typeof(RuntimeContext).GetMethod(nameof(EvaluateHas), [typeof(string), typeof(string[]), typeof(TextLocation)]);
-            _evaluateHasNot = typeof(RuntimeContext).GetMethod(nameof(EvaluateHasNot), [typeof(string), typeof(string[]), typeof(TextLocation)]);
-            _evaluateIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateIn), [typeof(string), typeof(string[]), typeof(TextLocation)]);
-            _evaluateNotIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotIn), [typeof(string), typeof(string[]), typeof(TextLocation)]);
-            _evaluateEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateEquality), [typeof(string), typeof(string), typeof(TextLocation)]);
-            _evaluateNotEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotEquality), [typeof(string), typeof(string), typeof(TextLocation)]);
-            _evaluate = typeof(RuntimeContext).GetMethod(nameof(Evaluate), [typeof(object), typeof(PolicyOperator), typeof(string), typeof(TextLocation)]);
-            _evaluateUnary = typeof(RuntimeContext).GetMethod(nameof(EvaluateUnary), [typeof(object), typeof(PolicyOperator), typeof(TextLocation)]);
+            _evaluateHas = typeof(RuntimeContext).GetMethod(nameof(EvaluateHas)
+                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
 
-            _evaluateFrom = typeof(RuntimeContext).GetMethod(nameof(EvaluateFrom), [typeof(string), typeof(TextLocation)]);
-            _evaluateValue = typeof(RuntimeContext).GetMethod(nameof(EvaluateValue), [typeof(string), typeof(string), typeof(TextLocation)]);
+            _evaluateHasNot = typeof(RuntimeContext).GetMethod(nameof(EvaluateHasNot)
+                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
+
+            _evaluateIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateIn)
+                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
+
+            _evaluateNotIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotIn)
+                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
+
+            _evaluateEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateEquality)
+                , [typeof(string), typeof(string), typeof(TextLocation)]);
+
+            _evaluateNotEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotEquality)
+                , [typeof(string), typeof(string), typeof(TextLocation)]);
+
+            _evaluateBinary = typeof(RuntimeContext).GetMethod(nameof(EvaluateBinary)
+                , [typeof(object), typeof(PolicyOperator), typeof(string), typeof(TextLocation)]);
+
+            _evaluateBinaryNumeric = typeof(RuntimeContext).GetMethod(nameof(EvaluateBinaryNumeric)
+                , [typeof(object), typeof(PolicyOperator), typeof(int), typeof(TextLocation)]);
+
+            _evaluateUnary = typeof(RuntimeContext).GetMethod(nameof(EvaluateUnary)
+                , [typeof(object), typeof(PolicyOperator), typeof(TextLocation)]);
+
+            _evaluateFrom = typeof(RuntimeContext).GetMethod(nameof(EvaluateFrom)
+                , [typeof(string), typeof(TextLocation)]);
+
+            _evaluateValue = typeof(RuntimeContext).GetMethod(nameof(EvaluateValue)
+                , [typeof(string), typeof(string), typeof(TextLocation)]);
+
+            _evaluateconvertBool = typeof(RuntimeContext).GetMethod(nameof(EvaluateconvertBool)
+                , [typeof(object), typeof(TextLocation)]);
+
+
+
 
             _TraceLocation = typeof(RuntimeContext).GetMethod(nameof(TraceLocation), [typeof(RuntimeContext), typeof(string), typeof(int), typeof(int), typeof(int), typeof(int)]);
             _ExitLocation = typeof(RuntimeContext).GetMethod(nameof(ExitLocation), [typeof(RuntimeContext), typeof(object)]);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RuntimeContext"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This constructor initializes the runtime context with the specified diagnostics, rules, and data.
+        /// The data object is stored in a dictionary for access during policy evaluation.
+        /// </remarks>
+        public RuntimeContext()
+        {
+            _watch = new Stopwatch();
+            _stack = new Stack<MethodContext>();
+            _dic = new Dictionary<string, object>();
+            _rules = new Dictionary<string, Func<RuntimeContext, bool>>();
         }
 
         /// <summary>
@@ -62,15 +100,18 @@ namespace Bb.Policies
         /// This constructor initializes the runtime context with the specified diagnostics, rules, and data.
         /// The data object is stored in a dictionary for access during policy evaluation.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Thrown when datas is null during the Store operation.</exception>        
-        public RuntimeContext(ScriptDiagnostics? diagnostic, Dictionary<string, Func<RuntimeContext, bool>> rules, object datas)
+        /// <exception cref="ArgumentNullException">Thrown when datas is null during the Store operation.</exception> 
+        public RuntimeContext Initialize(ScriptDiagnostics? diagnostic, Dictionary<string, Func<RuntimeContext, bool>> rules)
         {
-            this._rules = rules;
-            _watch = new Stopwatch();
-            _stack = new Stack<MethodContext>();
-            _dic = new Dictionary<string, object>();
+
+            if (rules != null)
+                foreach (var item in rules)
+                    _rules.Add(item.Key, item.Value);
+
             _diagnostics = diagnostic ?? new ScriptDiagnostics();
-            Store(datas);
+
+            return this;
+
         }
 
         /// <summary>
@@ -86,54 +127,60 @@ namespace Bb.Policies
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown when datas is null.</exception>
         /// <exception cref="Exception">Thrown when datas cannot be evaluated.</exception>
-        private void Store(object datas)
+        public RuntimeContext Store(object datas)
         {
 
             if (datas == null)
                 throw new ArgumentNullException(nameof(datas));
 
             if (datas is IPrincipal p1)
-            {
-                _principal = p1;
-                _dic.Add("Identity", p1.Identity);
-                _dic.Add("identity", p1.Identity);
-            }
+                Store(null, datas);
+
+            else if (datas is IServiceProvider serviceProvider)
+                Store(null, datas);
 
             else if (datas is IDictionary<string, object> d)
-            {
                 foreach (var item in d)
-                {
-                    if (item.Value is IPrincipal p2)
-                        _principal = p2;
-                    else
-                        _dic.Add(item.Key, item.Value);
-                }
-            }
+                    Store(item.Key, item.Value);
 
             else if (datas.GetType().IsClass)
             {
                 var properties = datas.GetType().GetAccessors(MemberStrategy.Instance);
                 foreach (var item in properties)
-                {
-
-                    var v = item.GetValue(datas);
-                    if (v is IPrincipal p3)
-                        _principal = p3;
-
-                    else
-                    {
-                        _dic.Add(item.Name, v);
-                        var c = item.Name.ToLower();
-                        if (c != item.Name)
-                            _dic.Add(c, v);
-                    }
-
-                }
-
+                    Store(item.Name, item.GetValue(datas));
             }
 
             else
                 throw new Exception($"{nameof(datas)} can't be evaluated");
+
+            return this;
+
+        }
+
+        /// <summary>
+        /// Store datas
+        /// </summary>
+        /// <param name="key">key of the object</param>
+        /// <param name="value">value to store</param>
+        /// <returns></returns>
+        public RuntimeContext Store(string key, object value)
+        {
+
+            if (value is IPrincipal p2)
+            {
+                _principal = p2;
+                _dic.Add("Identity", p2.Identity);
+                _dic.Add("identity", p2.Identity);
+
+            }
+            else if (value is IServiceProvider serviceProvider1)
+                ServiceProvider = serviceProvider1;
+
+            else
+                _dic.Add(key, value);
+
+            return this;
+
         }
 
         /// <summary>
@@ -161,8 +208,10 @@ namespace Bb.Policies
         /// <returns>
         /// The value of the specified property, or null if the source or property cannot be resolved.
         /// </returns>
-        public object EvaluateValue(string pathSource, string property, TextLocation textLocation)
+        public object? EvaluateValue(string pathSource, string property, TextLocation textLocation)
         {
+
+            object? result = default;
 
             if (!this._dic.TryGetValue(pathSource, out var source))
                 _diagnostics.AddInformation(textLocation, pathSource, $"source {pathSource}, can't be resolved");
@@ -175,11 +224,11 @@ namespace Bb.Policies
                     _diagnostics.AddInformation(textLocation, property, $"failed to resolve {property} in {pathSource.GetType()}");
 
                 else
-                    return acc.GetValue(source);
+                    result = acc.GetValue(source);
 
             }
 
-            return null;
+            return result;
 
         }
 
@@ -581,7 +630,7 @@ namespace Bb.Policies
         /// <returns>
         /// <c>true</c> if the operation evaluates to true; otherwise, <c>false</c>.
         /// </returns>
-        public bool Evaluate(object left, PolicyOperator @operator, string right, TextLocation textLocation)
+        public bool EvaluateBinary(object left, PolicyOperator @operator, string right, TextLocation textLocation)
         {
 
             if (left == null)
@@ -605,7 +654,6 @@ namespace Bb.Policies
                         return false;
 
                 }
-
 
             var type = left.GetType();
             var r = right.ConvertTo(type, CultureInfo.CurrentCulture);
@@ -641,6 +689,46 @@ namespace Bb.Policies
 
         }
 
+        public bool EvaluateBinaryNumeric(object left, PolicyOperator @operator, int right, TextLocation textLocation)
+        {
+
+            if (left == null)
+                return false;
+
+            var type = typeof(int);
+            var l = (int)left.ConvertTo(type, CultureInfo.CurrentCulture);
+            
+            switch (@operator)
+            {
+
+                case PolicyOperator.Lesser:
+                    return l < right;
+
+                case PolicyOperator.LesserOrEqual:
+                    return l <= right;
+
+                case PolicyOperator.Greater:
+                    return l > right;
+
+                case PolicyOperator.GreaterOrEqual:
+                    return l >= right;
+
+                case PolicyOperator.Equal:
+                    return l == right;
+
+                case PolicyOperator.NotEqual:
+                    return l != right;
+
+                default:
+                    break;
+
+            }
+
+            return false;
+
+        }
+
+
         public bool EvaluateUnary(object left, PolicyOperator @operator, TextLocation textLocation)
         {
 
@@ -661,6 +749,10 @@ namespace Bb.Policies
                         }
                     return result;
 
+                case PolicyOperator.UnaryCompare:
+
+                    break;
+
                 case PolicyOperator.Equal:
                 case PolicyOperator.NotEqual:
                 case PolicyOperator.In:
@@ -679,8 +771,16 @@ namespace Bb.Policies
 
         }
 
+        public bool EvaluateconvertBool(object left, TextLocation textLocation)
+        {
+            if (left == null)
+                return false;
+            var result = (bool)left.ConvertTo(typeof(bool), CultureInfo.CurrentCulture);
+            return result;
+        }
 
-        private bool IsInRole(string key)
+
+        public bool IsInRole(string key)
         {
 
             var c = key.ToLower();
@@ -779,7 +879,9 @@ namespace Bb.Policies
 
 
         public bool StopIsActivated { get; set; } = true;
+
         public bool Result { get; internal set; }
+        public IServiceProvider ServiceProvider { get; private set; }
 
         private class MethodContext
         {
@@ -795,21 +897,22 @@ namespace Bb.Policies
 
         }
 
-        internal static readonly MethodInfo? _evaluate;
+        internal static readonly MethodInfo? _evaluateBinary;
+        internal static readonly MethodInfo? _evaluateBinaryNumeric;
         internal static readonly MethodInfo? _evaluateUnary;
         internal static readonly MethodInfo? _evaluateEquality;
         internal static readonly MethodInfo? _evaluateNotEquality;
         internal static readonly MethodInfo? _evaluateFrom;
         internal static readonly MethodInfo? _evaluateValue;
+        internal static readonly MethodInfo? _evaluateconvertBool;
         internal static readonly MethodInfo? _evaluateIn;
         internal static readonly MethodInfo? _evaluateNotIn;
         internal static readonly MethodInfo? _evaluateHas;
         internal static readonly MethodInfo? _evaluateHasNot;
-        //internal static readonly MethodInfo _isInRole;
         internal static readonly MethodInfo _TraceLocation;
         internal static readonly MethodInfo _ExitLocation;
 
-        private readonly ScriptDiagnostics _diagnostics;
+        private ScriptDiagnostics _diagnostics;
         private readonly Dictionary<string, object> _dic;
         private readonly Dictionary<string, Func<RuntimeContext, bool>> _rules;
         private readonly Stopwatch _watch;

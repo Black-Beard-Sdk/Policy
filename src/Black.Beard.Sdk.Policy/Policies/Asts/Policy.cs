@@ -221,22 +221,6 @@ namespace Bb.Policies.Asts
         /// </example>
         public abstract bool ToString(Writer writer);
 
-        /// <summary>
-        /// Determines whether this policy node has source information.
-        /// </summary>
-        /// <returns><c>true</c> if this policy node has source information; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// This method checks whether the policy node has valid source code information,
-        /// which is useful for error reporting and debugging purposes.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var policy = new ConcretePolicy();
-        /// bool hasSource = policy.HasSource();
-        /// </code>
-        /// </example>
-        public abstract bool HasSource();
-
         ///// <summary>
         ///// Adds the specified comments.
         ///// </summary>
@@ -300,10 +284,13 @@ namespace Bb.Policies.Asts
     /// </remarks>
     public enum PolicyOperator
     {
+
         /// <summary>
         /// Represents an undefined or invalid operator.
         /// </summary>
         Undefined,
+
+        UnaryCompare,
 
         /// <summary>
         /// Represents the equality operator (==).
@@ -314,6 +301,11 @@ namespace Bb.Policies.Asts
         /// Represents the inequality operator (!=).
         /// </summary>
         NotEqual,
+
+        Lesser,
+        LesserOrEqual,
+        Greater,
+        GreaterOrEqual,
 
         /// <summary>
         /// Represents the containment operator (in).
@@ -350,7 +342,10 @@ namespace Bb.Policies.Asts
         /// </summary>
         Not,
 
+        /// <summary>
+        /// The claim is required
+        /// </summary>
         Required,
-
+        
     }
 }

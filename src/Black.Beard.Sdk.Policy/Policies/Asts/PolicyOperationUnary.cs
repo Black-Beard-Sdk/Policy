@@ -9,7 +9,7 @@ namespace Bb.Policies.Asts
     /// A unary operation consists of an operator and a single operand.
     /// This class serves as the base for binary operations and can represent operations like logical negation.
     /// </remarks>
-    [System.Diagnostics.DebuggerDisplay("{Operator}{Left}")]
+    //[System.Diagnostics.DebuggerDisplay("{Operator}{Left}")]
     public class PolicyOperationUnary : PolicyExpression
     {
         /// <summary>
@@ -33,26 +33,6 @@ namespace Bb.Policies.Asts
             Kind = PolicyKind.Operation;
             this.Left = left;
             Operator = @operator;
-        }
-
-        /// <summary>
-        /// Determines whether this unary operation has source information.
-        /// </summary>
-        /// <returns><c>true</c> if the operand has source information; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// This method delegates to the Left operand's HasSource method, as a unary operation's
-        /// source information is determined by its operand.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var operand = new PolicyIdExpression("propertyName", ConstantType.Id) { Source = "context" };
-        /// var operation = new PolicyOperationUnary(operand, PolicyOperator.Not);
-        /// bool hasSource = operation.HasSource(); // Returns true because the operand has a source
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return this.Left.HasSource();
         }
 
         /// <summary>
@@ -121,8 +101,10 @@ namespace Bb.Policies.Asts
         public override bool ToString(Writer writer)
         {
 
+            var position = writer.Count;
+
             if (Operator == PolicyOperator.Not)
-                    writer.Append("!");
+                writer.Append("!");
 
             if (Left != null)
                 writer.ToString(Left);
@@ -130,7 +112,8 @@ namespace Bb.Policies.Asts
             if (Operator == PolicyOperator.Required)
                 writer.Append("+");
 
-            return true;
+            return position != writer.Count;
+
         }
 
         /// <summary>
@@ -162,5 +145,6 @@ namespace Bb.Policies.Asts
         /// </code>
         /// </example>
         public PolicyOperator Operator { get; set; }
+
     }
 }

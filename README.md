@@ -55,19 +55,24 @@ Create a policy like a role must to have admin and guest
 policy p1 : role has [admin, guest]
 ```
 
-Create a policy like the value to evaluate is in another object with a property name equal to "property" and value equal to "1"
+Create a policy like the value to evaluate is in another object with a property name equal to "property" and value equal to 1
 ```batch
-policy p1 : source2.property = "1"
+policy p1 : source2.property = 1
 ```
 
-Create a policy like identity must be authenticated
+Create a policy like the value to evaluate is in another object with a property name equal to "property" and value equal to 1
 ```batch
-policy p1 : Identity.IsAuthenticated = true
+policy p1 : source2.property = 1
+```
+
+Create a policy like that check if greater than 18
+```batch
+policy isAdult : Identity.Age >= 18
 ```
 
 Add category on a rule
 ```batch
-policy p1 (web) : Identity.IsAuthenticated = true
+policy p1 (web) : Identity.IsAuthenticated
 ```
 
 ## How to use library
@@ -91,16 +96,40 @@ If you have a web site, reference nuget package **Black.Beard.Policy.Web**
 ```csharp
 WebApplicationBuilder builder;
 builder.AddPolicy("file path", c => true );
+
+var app = builder.Build();
+app.ConfigurePolicy()
+app.Run();
+
 ```
 
 sample of policy file
 ```batch
 
-alias mycustomrole : "http://schemas.microsoft.com/ws/2000/06/identity/claims/role"
+/* base rules */
+policy isAuthenticated
+    : Identity.IsAuthenticated
 
-policy default : Identity.IsAuthenticated = true
-policy fallback : Identity.IsAuthenticated = true
-policy admin : mycustomrole = admin
-policy user : mycustomrole = user
+policy isAnonymous  
+    : !Identity.IsAuthenticated
+
+policy IsAdmin
+    : role = administrator
+
+policy IsUser
+    : role = user
+
+
+/* default rules */
+policy default
+    : isAuthenticated
+
+policy fallback
+    : isAnonymous
+
+
+/* web rules */
+policy Mycontroler.get (web_root)
+    : isAuthenticated
 
 ```

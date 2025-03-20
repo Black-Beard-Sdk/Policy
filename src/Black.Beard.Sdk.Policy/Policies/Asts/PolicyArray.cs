@@ -34,7 +34,7 @@ namespace Bb.Policies.Asts
         /// </example>
         public PolicyArray(IEnumerable<PolicyConstant> items)
         {
-            _items = new List<PolicyConstant>(items);
+            _items = [.. items];
         }
 
         /// <summary>
@@ -145,25 +145,6 @@ namespace Bb.Policies.Asts
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _items.GetEnumerator();
-        }
-
-        /// <summary>
-        /// Determines whether this policy array has source information.
-        /// </summary>
-        /// <returns><c>false</c>, as policy arrays do not have source information.</returns>
-        /// <remarks>
-        /// This method indicates whether the policy array has associated source code information.
-        /// Policy arrays are typically created programmatically rather than parsed from source.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var array = new PolicyArray();
-        /// bool hasSource = array.HasSource(); // Will return false
-        /// </code>
-        /// </example>
-        public override bool HasSource()
-        {
-            return false;
         }
 
         private readonly List<PolicyConstant> _items;

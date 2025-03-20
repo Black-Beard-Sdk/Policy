@@ -14,6 +14,7 @@ namespace Bb.Policies.Asts;
 /// </remarks>
 public class Writer
 {
+
     /// <summary>
     /// Initializes a new instance of the <see cref="Writer"/> class.
     /// </summary>
@@ -519,6 +520,10 @@ public class Writer
     /// </returns>
     public StringBuilder Text { get => _sb; }
 
+    /// <summary>
+    /// Gets the number of characters in the current text.
+    /// </summary>
+    public int Count { get => _sb.Length; }
 
     private readonly StringBuilder _sb;
     private int _index;
