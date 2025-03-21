@@ -3,7 +3,6 @@ using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Bb.Analysis.DiagTraces;
-using Bb.Analysis.Tools;
 using Bb.Policies.Asts;
 using Bb.Policies.Parser;
 using System.Globalization;

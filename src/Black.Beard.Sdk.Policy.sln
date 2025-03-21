@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "�
 	ProjectSection(SolutionItems) = preProject
 		..\custom-instructions.md = ..\custom-instructions.md
 		..\README.md = ..\README.md
+		..\syntax.md = ..\syntax.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policy.Web", "Black.Beard.Policy.Web\Black.Beard.Policy.Web.csproj", "{A1BB94A0-9B8F-43E9-B930-12C799917350}"
