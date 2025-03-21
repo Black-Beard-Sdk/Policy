@@ -90,11 +90,18 @@ namespace Bb.Policies
 
         private void PrepareToBuild()
         {
+
+#if DEBUG_EXPRESSION
             _compiler = new LocalMethodCompiler(_withDebug)
             {
                 // OutputPath = path,
             };
-
+#else
+            _compiler = new LocalMethodCompiler()
+            {
+                // OutputPath = path,
+            };
+#endif
             _pathStorages = new Stack<DisposingStorage>();
             PrivatedIndex.Reset();
             //_resultReset = new List<MethodCallExpression>();

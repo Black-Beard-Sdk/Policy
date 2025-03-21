@@ -1,12 +1,10 @@
-﻿using Bb.Analysis.DiagTraces;
+﻿
+
+#if DEBUG_EXPRESSION
 using Bb.Builds;
-using Bb.Expressions.CsharpGenerators;
 using Bb.Nugets;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
+#endif
+
 
 namespace Bb.Expressions
 {
@@ -15,27 +13,36 @@ namespace Bb.Expressions
     public class LocalMethodCompiler : MethodCompiler
     {
 
-        public LocalMethodCompiler(bool withDebug)
+        public LocalMethodCompiler(
+#if DEBUG_EXPRESSION
+            bool withDebug
+#endif
+            )
             : base()
         {
+#if DEBUG_EXPRESSION
             this._withDebug = withDebug;
+#endif
         }
 
 
         public override TDelegate Compile<TDelegate>(string filepathCode = null)
         {
 
-            if (string.IsNullOrEmpty(filepathCode)) 
+            if (string.IsNullOrEmpty(filepathCode))
                 filepathCode = string.Empty;
 
             var lbd = GenerateLambda<TDelegate>(filepathCode);
 
+#if DEBUG_EXPRESSION
             if (this._withDebug)
                 return GenerateDebug(filepathCode, lbd);
-
+#endif
             return lbd.Compile();
 
         }
+
+#if DEBUG_EXPRESSION
 
         private TDelegate GenerateDebug<TDelegate>(string filepathCode, Expression<TDelegate> lbd)
         {
@@ -116,6 +123,8 @@ namespace Bb.Expressions
             }
         }
 
+#endif
+
         private class ConstantCollector : System.Linq.Expressions.ExpressionVisitor
         {
 
@@ -142,10 +151,13 @@ namespace Bb.Expressions
 
         }
 
+#if DEBUG_EXPRESSION
         private readonly bool _withDebug;
+#endif
 
     }
 
+#if DEBUG_EXPRESSION
 
     [Serializable]
     public class CompilationException : Exception
@@ -168,5 +180,7 @@ namespace Bb.Expressions
         public Compilers.AssemblyResult AssemblyResult { get; }
 
     }
+
+#endif
 
 }
