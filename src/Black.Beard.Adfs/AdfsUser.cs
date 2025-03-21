@@ -12,6 +12,7 @@ namespace Black.Beard.Adfs
     /// </remarks>
     public class AdfsUser
     {
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AdfsUser"/> class.
         /// </summary>
@@ -40,6 +41,11 @@ namespace Black.Beard.Adfs
             _userPrincipal = userPrincipal ?? throw new ArgumentNullException(nameof(userPrincipal));
         }
 
+        public string UserPrincipalName
+        {
+            get => _userPrincipal.UserPrincipalName;
+        }
+
         /// <summary>
         /// Gets or sets the username (SamAccountName) of the user.
         /// </summary>
@@ -61,7 +67,7 @@ namespace Black.Beard.Adfs
         /// user.Save();
         /// </code>
         /// </example>
-        public string Username
+        public string Login
         {
             get => _userPrincipal.SamAccountName;
             set => _userPrincipal.SamAccountName = value;
@@ -91,6 +97,18 @@ namespace Black.Beard.Adfs
         {
             get => _userPrincipal.DisplayName;
             set => _userPrincipal.DisplayName = value;
+        }
+
+        public string GivenName
+        {
+            get => _userPrincipal.GivenName;
+            set => _userPrincipal.GivenName = value;
+        }
+
+        public string Surname
+        {
+            get => _userPrincipal.Surname;
+            set => _userPrincipal.Surname = value;
         }
 
         /// <summary>

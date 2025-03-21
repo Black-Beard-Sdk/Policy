@@ -31,89 +31,89 @@ namespace Bb.Expressions
             var lbd = GenerateLambda<TDelegate>(filepathCode);
 
             if (this._withDebug)
-            {
-
-                var visitor = new ConstantCollector();
-                visitor.Visit(lbd);
-                var constants = visitor._list;
-
-                // generate csharp code
-                var _u = new string[] { };
-                string name = Path.GetFileNameWithoutExtension(filepathCode);
-                string path = Path.Combine(this.OutputPath, "_temps");
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-                string file = Path.Combine(path, filepathCode);
-                var code = SourceCodeDomGenerator.GetCode(lbd, $"N_{name}", "Myclass", "MyMethod", _withDebug, _u);
-                System.CodeDom.CodeCompileUnit compileUnit = new System.CodeDom.CodeCompileUnit();
-                compileUnit.Namespaces.Add(code);
-                LocalCodeGenerator.GenerateCsharpCode(compileUnit, file);
-
-
-                var dir = Path.Combine(Environment.CurrentDirectory, Path.GetRandomFileName());
-                var controller = new NugetController()
-                    .AddFolder(dir, NugetController.HostNugetOrg);
-
-                // Build assembly
-                BuildCSharp build = new BuildCSharp()
-                {
-                    OutputPath = path,
-                    Debug = _withDebug,
-                    
-                }
-                .SetNugetController(controller)
-                .AddSource(file)
-                .AddReferences(
-                      typeof(LocationDefault)
-                    , typeof(LocalMethodCompiler)
-                    )
-                .AddPackage("Microsoft.CodeAnalysis.CSharp.Workspaces")
-                ;
-
-                var assembly = build.Build(name);
-
-                if (assembly == null)
-                    return default;
-
-                if (!assembly.Success && System.Diagnostics.Debugger.IsAttached)
-                {
-                    System.Diagnostics.Debugger.Break();
-                    throw new CompilationException(assembly);
-                }
-                else
-                {
-
-                    var ass = assembly.LoadAssembly();
-
-                    var typename = $"N_{name}." + "Myclass";
-                    var type = ass.GetType(typename);
-
-                    if (type == null)
-                        throw new TypeLoadException($"type {typename} not found.");
-
-                    var method = type.GetMethod("MyMethod");
-
-                    var ctor = type.GetConstructor(new Type[] { typeof(object[]) });
-
-                    var a = constants.Select(c => (object)c).ToArray();
-                    var instance = ctor.Invoke(new object[] { a });
-
-                    var args = Parameters.ToArray();
-                    var l = Expression.Lambda
-                    (
-                        Expression.Call(Expression.Constant(instance), method, args),
-                        args
-                    );
-
-                    return (TDelegate)(object)l.Compile();
-
-                }
-
-            }
+                return GenerateDebug(filepathCode, lbd);
 
             return lbd.Compile();
 
+        }
 
+        private TDelegate GenerateDebug<TDelegate>(string filepathCode, Expression<TDelegate> lbd)
+        {
+            var visitor = new ConstantCollector();
+            visitor.Visit(lbd);
+            var constants = visitor._list;
+
+            // generate csharp code
+            var _u = new string[] { };
+            string name = Path.GetFileNameWithoutExtension(filepathCode);
+            string path = Path.Combine(this.OutputPath, "_temps");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            string file = Path.Combine(path, filepathCode);
+            var code = SourceCodeDomGenerator.GetCode(lbd, $"N_{name}", "Myclass", "MyMethod", _withDebug, _u);
+            System.CodeDom.CodeCompileUnit compileUnit = new System.CodeDom.CodeCompileUnit();
+            compileUnit.Namespaces.Add(code);
+            LocalCodeGenerator.GenerateCsharpCode(compileUnit, file);
+
+
+            var dir = Path.Combine(Environment.CurrentDirectory, Path.GetRandomFileName());
+            var controller = new NugetController()
+                .AddFolder(dir, NugetController.HostNugetOrg);
+
+            // Build assembly
+            BuildCSharp build = new BuildCSharp()
+            {
+                OutputPath = path,
+                Debug = _withDebug,
+
+            }
+            .SetNugetController(controller)
+            .AddSource(file)
+            .AddReferences(
+                  typeof(LocationDefault)
+                , typeof(LocalMethodCompiler)
+                )
+            .AddPackage("Microsoft.CodeAnalysis.CSharp.Workspaces")
+            ;
+
+            var assembly = build.Build(name);
+
+            if (assembly == null)
+                return default;
+
+            if (!assembly.Success && System.Diagnostics.Debugger.IsAttached)
+            {
+                System.Diagnostics.Debugger.Break();
+                throw new CompilationException(assembly);
+            }
+            else
+            {
+
+                var ass = assembly.LoadAssembly();
+
+                var typename = $"N_{name}." + "Myclass";
+                var type = ass.GetType(typename);
+
+                if (type == null)
+                    throw new TypeLoadException($"type {typename} not found.");
+
+                var method = type.GetMethod("MyMethod");
+
+                var ctor = type.GetConstructor(new Type[] { typeof(object[]) });
+
+                var a = constants.Select(c => (object)c).ToArray();
+                var instance = ctor.Invoke(new object[] { a });
+
+                var args = Parameters.ToArray();
+                var l = Expression.Lambda
+                (
+                    Expression.Call(Expression.Constant(instance), method, args),
+                    args
+                );
+
+                return (TDelegate)(object)l.Compile();
+
+            }
         }
 
         private class ConstantCollector : System.Linq.Expressions.ExpressionVisitor
