@@ -1,0 +1,8 @@
+﻿
+
+alias TokenEndpointPath					: "protocol/openid-connect/token"
+alias OpenIdConnectConfigurationPath	: ".well-known/openid-configuration"
+alias ResourceAccessClaimType			: "resource_access"
+alias RealmAccessClaimType				: "realm_access"
+alias RoleClaimType						: "role"
+alias NameClaimType						: "preferred_username"

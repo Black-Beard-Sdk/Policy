@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace Bb.Policies.Asts
 {
     /// <summary>

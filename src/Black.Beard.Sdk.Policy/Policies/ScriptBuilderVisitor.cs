@@ -109,11 +109,11 @@ namespace Bb.Policies
             {
                 var dir = new FileInfo(path).Directory;
                 if (dir != null)
-                    _scriptPathDirectory = dir.FullName;
+                    ScriptPathDirectory = dir.FullName;
             }
 
-            if (string.IsNullOrEmpty(_scriptPathDirectory))
-                _scriptPathDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            if (string.IsNullOrEmpty(ScriptPathDirectory))
+                ScriptPathDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
         }
 
@@ -148,9 +148,12 @@ namespace Bb.Policies
 
             foreach (var item in pair)
             {
+
                 var o = (PolicyNamed)item.Accept(this);
                 if (o != null)
                 {
+
+                    o.Origin = this._scriptPath;
 
                     if (_action != null && o is PolicyRule r1)
                         _action(r1);
@@ -416,6 +419,22 @@ namespace Bb.Policies
 
         }
 
+        public override object VisitPair_include([NotNull] PolicyParser.Pair_includeContext context)
+        {
+
+            var str = context.@string();
+            if (str != null)
+            {
+                var s = (string)str.Accept(this);
+                return new PolicyInclude(s)
+                {
+                    Location = context.ToLocation()
+                };
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Visits an alias definition and creates a policy variable.
         /// </summary>
@@ -446,7 +465,7 @@ namespace Bb.Policies
             if (str != null)
             {
                 var s = (string)str.Accept(this);
-                return new PolicyVariable(_id, false)
+                return new PolicyVariable(_id)
                 {
                     Origin = _scriptPath,
                     Value = new PolicyConstant(s, ConstantType.String)
@@ -1381,7 +1400,7 @@ namespace Bb.Policies
         /// <remarks>
         /// This field stores the directory path, which is used for resolving relative imports.
         /// </remarks>
-        private readonly string _scriptPathDirectory;
+        public readonly string ScriptPathDirectory;
 
         /// <summary>
         /// The culture used for parsing culture-specific values.

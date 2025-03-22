@@ -34,6 +34,8 @@
         /// </returns>
         public string Name { get; }
 
+        public string Origin { get; internal set; }
+
     }
 
 }

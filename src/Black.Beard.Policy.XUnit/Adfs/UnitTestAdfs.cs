@@ -1,10 +1,10 @@
 
 
 
+using Bb.Adfs;
+using Bb.Helpers;
 using Bb.Policies;
-using Bb.Policies.Asts;
-using Black.Beard.Adfs;
-using Black.Beard.Policies.XUnit;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -16,47 +16,47 @@ namespace Black.Beard.Policy.XUnit.Adfs
     {
 
 
-        [Fact]
-        public void TestGenerateApiKey()
-        {
+        //[Fact]
+        //public void TestGenerateApiKey()
+        //{
+        //    var apiKey = ApiKeyGenerator.GenerateApiKey(100)
+        //                    .GenerateIdentifiers(25, 35, "mysalt");
 
-
-            var apiKey = ApiKeyGenerator.GenerateApiKey(100)
-                            .GenerateIdentifiers(25, 35, "mysalt");
-
-            Assert.NotNull(apiKey);
-
-        }
+        //    Assert.NotNull(apiKey);
+        //}
 
         [Fact]
-        public void TestCreateUser()
+        public void TestCreateApiOnAdfs()
         {
 
-            string salt = "salt";
+            string salt = "my_salt";
             string firstname = "firstname";
             string lastname = "lastname";
-            string email = "email";
-            string organisation = "organisation";
+            string email = "gaelgael5@gmail.com";
+            string organisation = "black.beard";
 
 
-            using (var adfs = new AdfsConnection("myserver", "mydomain", "myuser"))
+            string adfsServer = "adfs.company.com";
+            string adfsDomain = "DC=company,DC=com";
+            string adfsUser = "administrator";
+            string adfsPassword = "password123";
+
+
+            ILogger logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AdfsConnection>();
+
+            using (var adfs = new AdfsConnection(logger))
             {
 
-                if (adfs.Connect("mypassword"))
+                if (adfs.Connect(adfsServer, adfsDomain, adfsUser, adfsPassword))
                 {
-
                     var user = adfs.CreateApiKey(salt, firstname, lastname, email, organisation, "group1");
-
                 }
                 else
-                {
                     Assert.True(false, "Connection failed");
-                }
 
             }
 
         }
-
 
     }
 

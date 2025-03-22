@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace Bb.Policies.Asts
 {
 
@@ -30,10 +29,9 @@ namespace Bb.Policies.Asts
         /// variable.Value = new PolicyConstant("3", ConstantType.String);
         /// </code>
         /// </example>
-        public PolicyVariable(string name, bool cache) : base(name)
+        public PolicyVariable(string name) : base(name)
         {
             Kind = PolicyKind.Variable;
-            this._cache = cache;
         }
 
         /// <summary>
@@ -80,9 +78,6 @@ namespace Bb.Policies.Asts
         public override bool ToString(Writer writer)
         {
 
-            if (_cache)
-                return false;
-
             writer.Append($"alias {Name} : ");
 
             if (Value != null)
@@ -127,7 +122,6 @@ namespace Bb.Policies.Asts
         /// A <see cref="System.String"/> representing the origin path of this variable.
         /// </returns>
         public string Origin { get; internal set; }
-        private readonly bool _cache;
 
     }
 

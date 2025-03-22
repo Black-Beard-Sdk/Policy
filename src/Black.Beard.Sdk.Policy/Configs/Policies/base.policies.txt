@@ -1,0 +1,16 @@
+﻿
+
+
+
+// ---------- base rules ----------
+policy isAuthenticated	: Identity.IsAuthenticated
+policy isAnonymous		: !Identity.IsAuthenticated
+
+
+policy IsAdmin			: role = administrator
+policy IsUser			: role = user
+
+
+// ---------- default rules ----------
+policy default			: isAuthenticated
+policy fallback			: isAnonymous

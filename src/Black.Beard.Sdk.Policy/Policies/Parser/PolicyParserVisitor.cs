@@ -45,6 +45,12 @@ public interface IPolicyParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitPair([NotNull] PolicyParser.PairContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="PolicyParser.pair_include"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPair_include([NotNull] PolicyParser.Pair_includeContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="PolicyParser.pair_alias"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

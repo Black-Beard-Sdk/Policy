@@ -1,7 +1,7 @@
 ﻿using System.DirectoryServices;
 using Microsoft.Extensions.Logging;
 
-namespace Black.Beard.Adfs
+namespace Bb.Adfs
 {
     /// <summary>
     /// Helper class for Active Directory operations.

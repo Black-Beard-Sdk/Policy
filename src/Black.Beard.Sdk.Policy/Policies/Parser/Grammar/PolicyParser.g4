@@ -29,8 +29,13 @@ script :
     ;
 
 pair :
-     pair_alias
+     pair_include
+   | pair_alias
    | pair_policy
+   ;
+
+pair_include : 
+   INCLUDE string
    ;
 
 pair_alias : 

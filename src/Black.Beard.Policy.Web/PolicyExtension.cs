@@ -2,13 +2,15 @@
 using Bb.Policies.Asts;
 using Microsoft.AspNetCore.Authorization;
 using System.Reflection;
+using Keycloak.AuthServices.Authentication;
 
 namespace Bb
 {
 
     public static class PolicyExtension
     {
-        private static readonly Logger<WebApplication> _logger;
+
+        
 
         static PolicyExtension()
         {
@@ -45,8 +47,9 @@ namespace Bb
             var evaluator = new PolicyEvaluator(policies);
 
             services.AddSingleton(evaluator);
-
             var items = GetAuthorizePoliciesFromAssemblies().ToList();
+
+            services.AddKeycloakWebApiAuthentication(builder.Configuration);
 
             services.AddAuthorization(options =>
             {
@@ -80,41 +83,18 @@ namespace Bb
         /// <summary>
         /// Configures the policy evaluator service.
         /// </summary>
-        /// <param name="web"></param>
+        /// <param name="app"></param>
         /// <returns></returns>
-        public static WebApplication ConfigurePolicy(this WebApplication web)
+        public static WebApplication ConfigurePolicy(this WebApplication app)
         {
-            var evaluator = web.Services.GetRequiredService<PolicyEvaluator>();
-            evaluator.ServiceProvider = web.Services.GetRequiredService<IServiceProvider>();
-            return web;
-        }
+            
+            var evaluator = app.Services.GetRequiredService<PolicyEvaluator>();
+            evaluator.ServiceProvider = app.Services.GetRequiredService<IServiceProvider>();
 
-        private static void ManageDefaults(AuthorizationOptions options, PolicyContainer policies, PolicyEvaluator evaluator)
-        {
-            if (policies.DefaultRule != null)
-            {
-                options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAssertion((c) => evaluator.Evaluate("default", c.User, out RuntimeContext context))
-                    .Build();
-            }
-            else
-            {
+            app.UseAuthentication();
+            app.UseAuthorization();
 
-            }
-
-            if (policies.FallbackRule != null)
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAssertion((c) => evaluator.Evaluate("fallback", c.User, out RuntimeContext context))
-                    .Build();
-            }
-            else if (policies.DefaultRule != null)
-                options.FallbackPolicy = options.DefaultPolicy;
-
-            else
-            {
-
-            }
+            return app;
         }
 
         /// <summary>
@@ -162,6 +142,36 @@ namespace Bb
 
         }
 
+
+        private static void ManageDefaults(AuthorizationOptions options, PolicyContainer policies, PolicyEvaluator evaluator)
+        {
+            if (policies.DefaultRule != null)
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAssertion((c) => evaluator.Evaluate("default", c.User, out RuntimeContext context))
+                    .Build();
+            }
+            else
+            {
+
+            }
+
+            if (policies.FallbackRule != null)
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAssertion((c) => evaluator.Evaluate("fallback", c.User, out RuntimeContext context))
+                    .Build();
+            }
+            else if (policies.DefaultRule != null)
+                options.FallbackPolicy = options.DefaultPolicy;
+
+            else
+            {
+
+            }
+        }
+
+
         private static void CollectPoliciesFromAttributes(IEnumerable<AuthorizeAttribute> attributes, HashSet<string> policies)
         {
             foreach (var attribute in attributes)
@@ -169,6 +179,8 @@ namespace Bb
                     policies.Add(attribute.Policy);
         }
 
+
+        private static readonly Logger<WebApplication> _logger;
 
     }
 

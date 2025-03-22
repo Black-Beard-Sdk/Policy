@@ -45,47 +45,29 @@ HAS_NOT 			: '!has';
 IN 				: 'in';
 NOT_IN 			: '!in';
 
+
 ALIAS 			: 'alias';
 POLICY 			: 'policy';
+INCLUDE 			: 'include';
 
-fragment ESC
-   : '\\' (["\\/bfnrt] | UNICODE)
-   ;
 
-STRING
-   : ('"') (ESC | SAFECODEPOINT)* '"'
-   ;
 
-MULTI_LINE_COMMENT : '/*' .*? '*/' -> skip;
-//CODE_STRING :        QUOTE_CODE_STRING .*? QUOTE_CODE_STRING;
-SINGLE_QUOTE_CODE_STRING :  '\'';
+STRING                  : ('"') (ESC | SAFECODEPOINT)* '"';
+INT                     : [0-9]+;
+ID                      : [_A-Za-z][_A-Za-z0-9]*;
+IDQUOTED                : '\'' ID '\'';
 
-INT
-   : [0-9]+
-   ;
 
-ID
-   : [_A-Za-z][_A-Za-z0-9]*
-   ;
+fragment ESC            : '\\' (["\\/bfnrt] | UNICODE);
+fragment SAFECODEPOINT  : ~ ["\\\u0000-\u001F];
+fragment UNICODE        : 'u' HEX HEX HEX HEX;
+fragment HEX            : [0-9a-fA-F];
 
-IDQUOTED
-   : '\'' ID '\''
-   ;
 
-VARIABLE_NAME : [_A-Za-z][_A-Za-z0-9]* COLON;
+MULTI_LINE_COMMENT      : '/*' .*? '*/' -> skip;
+LineComment             : '//' ~ [\r\n]* -> skip;
 
-IDLOWCASE
-   : [_a-z] [_a-z0-9]*
-   ;
-
-fragment SAFECODEPOINT
-   : ~ ["\\\u0000-\u001F]
-   ;
-
-fragment UNICODE
-   : 'u' HEX HEX HEX HEX
-   ;
-
-fragment HEX
-   : [0-9a-fA-F]
-   ;
+// VARIABLE_NAME : [_A-Za-z][_A-Za-z0-9]* COLON;
+// IDLOWCASE : [_a-z] [_a-z0-9]*;
+// CODE_STRING :        QUOTE_CODE_STRING .*? QUOTE_CODE_STRING;
+// SINGLE_QUOTE_CODE_STRING :  '\'';

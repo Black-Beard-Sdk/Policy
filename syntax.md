@@ -18,9 +18,18 @@ Pairs can be either aliases | policy rules.
 
 ```ruby
 pair :
-     pair_alias
+     pair_include
+   | pair_alias
    | pair_policy
 ```
+
+### Includes
+
+An include is used for include additional file.
+```ruby
+pair_include : 
+   'include' string
+   ;
 
 ### Aliases
 
@@ -99,6 +108,19 @@ operationEqual : `=', `!=', `>', `<', `>=', `<='
 operationContains: `in', `!in', `has', `!has'
 ```
 
+### Comments
+
+
+```csharp
+/*
+  
+   multiline comment
+ 
+ */
+
+// on comment line
+
+```
 
 ### Fragments
 
@@ -124,40 +146,113 @@ fragment HEX
    : [0-9a-fA-F]
 ```
 
+
 ## Examples
 
-### Example 1: Alias
+### Alias
 
 ```ruby
 alias exampleAlias: "example string"
 ```
 
-### Example 2: Policy Rule without Categories
+### Policy Rule without Categories
 
 ```ruby
 policy examplePolicy: key1 = "value1"
 ```
 
-### Example 3: Policy Rule with Categories
+### Policy Rule with Categories
 
 ```ruby
 policy (category1, category2) examplePolicyWithCategories: key2 & key3
 ```
 
-### Example 4: Complex Expression
+### Complex Expression
 
 ```ruby
 policy complexPolicy: (key4 | key5) & !key6
 ```
 
-### Example 5: Containment Operation
+### Containment Operation
 
 ```ruby
 policy containmentPolicy: key7 in ["value2", "value3"]
 ```
 
-### Example 6: Nested Expressions
+### Nested Expressions
 
 ```ruby
 policy nestedPolicy: (key8 = "value4") & (key9 has "value5")
+```
+
+### Any samples for Create policy
+
+Create an alias for using in the policy like claim name
+```batch
+alias role : ""http://schemas.microsoft.com/ws/2008/06/identity/claims/role""
+```
+
+### Create a policy like a claim ope is required but the value is not important
+```batch
+policy p1 : ope+
+```
+
+### Create a policy like a role admin is required
+```batch
+policy p1 : role=admin
+```
+
+### Create a policy like a role can't be guest
+```batch
+policy p1 : role != guest
+```
+
+### Create a policy like a role admin is required
+```batch
+policy p1 : (role = admin)
+```
+
+### Create a policy like a role can't be guest
+```batch
+policy p1 : !(role == guest)
+```
+
+### Create a policy like a role can be admin or guest
+```batch
+policy p1 : role in [admin, guest]
+```
+
+### Create a policy like a role can't be admin or guest
+```batch
+policy p1 : role !in [admin, guest]
+```
+
+### Create a policy like a role must not to have admin and guest
+```batch
+policy p1 : role !has [admin, guest]
+```
+
+### Create a policy like a role must to have admin and guest
+```batch
+policy p1 : role has [admin, guest]
+```
+
+### Create a policy like the value to evaluate is in another object with a property name equal to "property" and value equal to 1
+```batch
+policy p1 : source2.property = 1
+```
+
+### Create a policy like the value to evaluate is in another object with a property name equal to "property" and value equal to 1
+```batch
+policy p1 : source2.property = 1
+```
+
+### Create a policy like that check if greater than 18
+```batch
+policy isAdult : Identity.Age >= 18
+```
+
+### Add category on a rule
+```batch
+policy p1 (web) : Identity.IsAuthenticated
 ```

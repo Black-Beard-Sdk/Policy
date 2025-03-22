@@ -1,6 +1,4 @@
 ﻿using Bb.Analysis.DiagTraces;
-using System;
-using System.Collections.Generic;
 
 namespace Bb.Policies.Asts
 {
@@ -32,68 +30,8 @@ namespace Bb.Policies.Asts
         {
             this._dicVariable = new Dictionary<string, PolicyVariable>();
             this._dicRule = new Dictionary<string, PolicyRule>();
+            this._dicInclude = new Dictionary<string, PolicyInclude>();
             this.Kind = PolicyKind.Container;
-
-            #region alias
-
-            _dicVariable.Add("actor", new PolicyVariable( "http://schemas.xmlsoap.org/ws/2009/09/identity/claims/actor", true));
-            _dicVariable.Add("postalcode", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode", true));
-            _dicVariable.Add("primarygroupsid", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/primarygroupsid", true));
-            _dicVariable.Add("primarysid", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid", true));
-            _dicVariable.Add("role", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", true));
-            _dicVariable.Add("rsa", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/rsa", true));
-            _dicVariable.Add("serialnumber", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/serialnumber", true));
-            _dicVariable.Add("sid", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid", true));
-            _dicVariable.Add("spn", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/spn", true));
-            _dicVariable.Add("stateorprovince", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince", true));
-            _dicVariable.Add("streetaddress", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress", true));
-            _dicVariable.Add("surname", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname", true));
-            _dicVariable.Add("system", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/system", true));
-            _dicVariable.Add("thumbprint", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/thumbprint", true));
-            _dicVariable.Add("upn", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn", true));
-            _dicVariable.Add("uri", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri", true));
-            _dicVariable.Add("userdata", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata", true));
-            _dicVariable.Add("version", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/version", true));
-            _dicVariable.Add("webpage", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/webpage", true));
-            _dicVariable.Add("windowsaccountname", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname", true));
-            _dicVariable.Add("windowsdeviceclaim", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsdeviceclaim", true));
-            _dicVariable.Add("windowsdevicegroup", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsdevicegroup", true));
-            _dicVariable.Add("windowsfqbnversion", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsfqbnversion", true));
-            _dicVariable.Add("windowssubauthority", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/windowssubauthority", true));
-            _dicVariable.Add("otherphone", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone", true));
-            _dicVariable.Add("nameidentifier", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", true));
-            _dicVariable.Add("name", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name", true));
-            _dicVariable.Add("mobilephone", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone", true));
-            _dicVariable.Add("anonymous", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/anonymous", true));
-            _dicVariable.Add("authentication", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/authentication", true));
-            _dicVariable.Add("authenticationinstant", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/authenticationinstant", true));
-            _dicVariable.Add("authenticationmethod", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/authenticationmethod", true));
-            _dicVariable.Add("authorizationdecision", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/authorizationdecision", true));
-            _dicVariable.Add("cookiepath", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/cookiepath", true));
-            _dicVariable.Add("country", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country", true));
-            _dicVariable.Add("dateofbirth", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth", true));
-            _dicVariable.Add("denyonlyprimarygroupsid", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/denyonlyprimarygroupsid", true));
-            _dicVariable.Add("denyonlyprimarysid", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/denyonlyprimarysid", true));
-            _dicVariable.Add("denyonlysid", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/denyonlysid", true));
-            _dicVariable.Add("windowsuserclaim", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsuserclaim", true));
-            _dicVariable.Add("denyonlywindowsdevicegroup", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/denyonlywindowsdevicegroup", true));
-            _dicVariable.Add("dsa", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/dsa", true));
-            _dicVariable.Add("email", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", true));
-            _dicVariable.Add("expiration", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration", true));
-            _dicVariable.Add("expired", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/expired", true));
-            _dicVariable.Add("gender", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender", true));
-            _dicVariable.Add("givenname", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname", true));
-            _dicVariable.Add("groupsid", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid", true));
-            _dicVariable.Add("hash", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/hash", true));
-            _dicVariable.Add("homephone", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone", true));
-            _dicVariable.Add("ispersistent", new PolicyVariable("http://schemas.microsoft.com/ws/2008/06/identity/claims/ispersistent", true));
-            _dicVariable.Add("locality", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality", true));
-            _dicVariable.Add("dns", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dns", true));
-            _dicVariable.Add("x500distinguishedname", new PolicyVariable("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/x500distinguishedname", true));
-
-            #endregion alias
-
-
         }
 
         /// <summary>
@@ -145,10 +83,10 @@ namespace Bb.Policies.Asts
 
             foreach (var item in _dicVariable)
             {
-                
+
                 if (next)
                     writer.AppendEndLine();
-                
+
                 if (item.Value.ToString(writer))
                     next = true;
 
@@ -156,7 +94,7 @@ namespace Bb.Policies.Asts
 
             foreach (var item in _dicRule)
             {
-                
+
                 if (next)
                     writer.AppendEndLine();
 
@@ -195,14 +133,18 @@ namespace Bb.Policies.Asts
             if (o is PolicyRule r)
                 return Add(r);
 
+            if (o is PolicyInclude i)
+                return Add(i);
+
             return false;
 
         }
 
+
         /// <summary>
         /// Adds a policy variable to this container.
         /// </summary>
-        /// <param name="o">The policy variable to add. Must not be null.</param>
+        /// <param name="item">The policy variable to add. Must not be null.</param>
         /// <returns><c>true</c> if the variable was successfully added; <c>false</c> if a variable with the same name already exists.</returns>
         /// <remarks>
         /// This method adds the specified variable to the container's variable collection.
@@ -216,22 +158,23 @@ namespace Bb.Policies.Asts
         /// bool success = container.Add(variable);
         /// </code>
         /// </example>
-        public bool Add(PolicyVariable o)
+        public bool Add(PolicyVariable item)
         {
 
-            if (_dicVariable.ContainsKey(o.Name))
+            if (_dicVariable.ContainsKey(item.Name))
                 return false;
 
-            _dicVariable.Add(o.Name, o);
+            _dicVariable.Add(item.Name, item);
 
             return true;
 
         }
 
+
         /// <summary>
         /// Adds a policy rule to this container.
         /// </summary>
-        /// <param name="rule">The policy rule to add. Must not be null.</param>
+        /// <param name="item">The policy rule to add. Must not be null.</param>
         /// <returns><c>true</c> if the rule was successfully added; <c>false</c> if a rule with the same name already exists.</returns>
         /// <remarks>
         /// This method adds the specified rule to the container's rule collection.
@@ -245,23 +188,40 @@ namespace Bb.Policies.Asts
         /// bool success = container.Add(rule);
         /// </code>
         /// </example>
-        public bool Add(PolicyRule rule)
+        public bool Add(PolicyRule item)
         {
 
-            if (rule.Name == "default")
-                this.DefaultRule = rule;
+            if (item.Name == "default")
+                this.DefaultRule = item;
 
-            else if (rule.Name == "fallback")
-                this.FallbackRule = rule;
+            else if (item.Name == "fallback")
+                this.FallbackRule = item;
 
-            else if (_dicRule.ContainsKey(rule.Name))
+            else if (_dicRule.ContainsKey(item.Name))
                 return false;
             else
-                _dicRule.Add(rule.Name, rule);
+                _dicRule.Add(item.Name, item);
 
             return true;
 
         }
+
+
+        public bool Add(PolicyInclude item)
+        {
+
+            if (item is null)
+                throw new ArgumentNullException(nameof(item));
+
+            if (_dicInclude.ContainsKey(item.Name))
+                return false;
+
+            _dicInclude.Add(item.Name, item);
+
+            return true;
+
+        }
+
 
         /// <summary>
         /// Tries to resolve a variable name to its alias value.
@@ -327,6 +287,16 @@ namespace Bb.Policies.Asts
             return _dicRule[v];
         }
 
+        internal void EvaluateInclude(string path)
+        {
+            foreach (var item in this._dicInclude)
+                if (item.Value.Fullpath == path)
+                {
+                    item.Value.IsLoaded = true;
+                    break;
+                }
+        }
+
         /// <summary>
         /// Gets all rules in this container.
         /// </summary>
@@ -350,8 +320,6 @@ namespace Bb.Policies.Asts
         /// </returns>
         public IEnumerable<PolicyRule> Rules => _dicRule.Values;
 
-        private Dictionary<string, PolicyVariable> _dicVariable;
-        private Dictionary<string, PolicyRule> _dicRule;
 
         /// <summary>
         /// Gets or sets the diagnostics associated with this policy container.
@@ -374,9 +342,35 @@ namespace Bb.Policies.Asts
         /// </returns>
         public ScriptDiagnostics Diagnostics { get; internal set; }
 
+        /// <summary>
+        /// Gets the default rule for this container.
+        /// </summary>
         public PolicyRule DefaultRule { get; private set; }
 
+        /// <summary>
+        /// Gets the fallback rule for this container.
+        /// </summary>
         public PolicyRule FallbackRule { get; private set; }
+
+        /// <summary>
+        /// Return true if needs to load include file
+        /// </summary>
+        public bool MustLoadIncludes => _dicInclude.Any(c => !c.Value.IsLoaded);
+
+        /// <summary>
+        /// Return the list of includes to files
+        /// </summary>
+        public PolicyInclude[] IncludeToLoads => _dicInclude.Where(c => !c.Value.IsLoaded).Select(c => c.Value).ToArray();
+
+        /// <summary>
+        /// Gets the path of the policy file that was parsed to create this container.
+        /// </summary>
+        public string Path { get; internal set; }
+
+
+        private Dictionary<string, PolicyVariable> _dicVariable;
+        private Dictionary<string, PolicyRule> _dicRule;
+        private Dictionary<string, PolicyInclude> _dicInclude;
 
     }
 

@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Black.Beard.Adfs
+namespace Bb.Helpers
 {
     /// <summary>
     /// Provides methods for generating API keys and security identifiers.
@@ -28,6 +28,7 @@ namespace Black.Beard.Adfs
         /// </example>
         public static string GenerateApiKey(int length = 100)
         {
+
             var random = new Random();
             var apiKey = new char[length];
 

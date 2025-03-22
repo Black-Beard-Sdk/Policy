@@ -1,5 +1,5 @@
 ﻿using Bb.Analysis.DiagTraces;
-
+using Bb;
 
 namespace Bb.Policies.Asts
 {
@@ -98,7 +98,7 @@ namespace Bb.Policies.Asts
         /// <exception cref="System.ArgumentNullException">Thrown when text is null.</exception>
         /// <example>
         /// <code lang="C#">
-        /// string code = "variable x = 10;";
+        /// string code = "policy test : role = Administrator";
         /// IntellisenseAst ast = Policy.EvaluateTextForIntellisense(code);
         /// </code>
         /// </example>
@@ -106,7 +106,7 @@ namespace Bb.Policies.Asts
         {
             var _errors = new ScriptDiagnostics();
             var tree = ScriptParser.EvaluateString(text);
-            tree.ParseTree(); 
+            tree.ParseTree();
             return tree;
         }
 
@@ -148,18 +148,32 @@ namespace Bb.Policies.Asts
         /// <exception cref="Bb.Policies.PolicyParserException">Thrown when parsing errors occur.</exception>
         /// <example>
         /// <code lang="C#">
-        /// string policyText = "rule MyRule { condition: true; }";
+        /// string policyText = "policy MyRule : role = Administrator";
         /// PolicyContainer container = Policy.ParseText(policyText);
         /// </code>
         /// </example>
         public static PolicyContainer ParseText(string text)
         {
-            var _errors = new ScriptDiagnostics();
+
+            var errors = new ScriptDiagnostics();
+            var container = new PolicyContainer() { Diagnostics = errors };
             var parser = ScriptParser.ParseString(text);
-            var visitor = new ScriptBuilderVisitor(parser.Parser, _errors, string.Empty);
-            var tree = (PolicyContainer)parser.Visit(visitor);            
+
+            var visitor = new ScriptBuilderVisitor(parser.Parser, errors, container, null, string.Empty);
+
+            var tree = (PolicyContainer)parser.Visit(visitor);
+
+            while (container.MustLoadIncludes)
+                foreach (var item in container.IncludeToLoads)
+                {
+                    var file = item.ResolveLocation(visitor.ScriptPathDirectory);
+                    if (!item.FileExists)
+                        errors.AddError(item.Location, item.Name, $"failed to load file {file}");
+                    ParsePath(file, errors, container);
+                }
+
             return tree;
-        }       
+        }
 
         /// <summary>
         /// Parses the policy file at the specified path into a policy container.
@@ -175,16 +189,58 @@ namespace Bb.Policies.Asts
         /// <exception cref="Bb.Policies.PolicyParserException">Thrown when parsing errors occur.</exception>
         /// <example>
         /// <code lang="C#">
-        /// string filePath = @"C:\policies\example.policy";
+        /// string filePath = @"C:\policies\example.policies.txt";
         /// PolicyContainer container = Policy.ParsePath(filePath);
         /// </code>
         /// </example>
         public static PolicyContainer ParsePath(string path)
         {
-            var _errors = new ScriptDiagnostics();
+            var errors = new ScriptDiagnostics();
+            var container = new PolicyContainer() { Diagnostics = errors, Path = path };
+            return ParsePath(path, errors, container);
+        }
+
+
+        /// <summary>
+        /// Parses the policy file at the specified path into a policy container.
+        /// </summary>
+        /// <param name="path">The path of the file to parse. Must not be null or empty.</param>
+        /// <param name="errors">store diagnostics.</param>
+        /// <param name="container">The to store rules.</param>
+        /// <returns>A <see cref="PolicyContainer"/> representing the parsed policy.</returns>
+        /// <remarks>
+        /// This method reads and parses the file at the specified path and builds a complete
+        /// policy container that contains all the rules and expressions defined in the file.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when path is null.</exception>
+        /// <exception cref="FileNotFoundException">Thrown when the specified file does not exist.</exception>
+        /// <exception cref="Policies.PolicyParserException">Thrown when parsing errors occur.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// var errors = new ScriptDiagnostics();
+        /// var container = new PolicyContainer();
+        /// string filePath = @"C:\policies\example.policies.txt";
+        /// PolicyContainer container = Policy.ParsePath(filePath);
+        /// </code>
+        /// </example>
+        public static PolicyContainer ParsePath(string path, ScriptDiagnostics errors, PolicyContainer container)
+        {
+
             var parser = ScriptParser.ParsePath(path);
-            var visitor = new ScriptBuilderVisitor(parser.Parser, _errors, string.Empty);
+            var visitor = new ScriptBuilderVisitor(parser.Parser, errors, container, null, path);
             var tree = (PolicyContainer)parser.Visit(visitor);
+
+            container.EvaluateInclude(path);
+
+            while (container.MustLoadIncludes)
+                foreach (var item in container.IncludeToLoads)
+                {
+                    var file = item.ResolveLocation(visitor.ScriptPathDirectory);
+                    if (!item.FileExists)
+                        errors.AddError(item.Location, item.Name, $"failed to load file {file}");
+                    ParsePath(file, errors, container);
+                }
+
             return tree;
         }
 
@@ -346,6 +402,6 @@ namespace Bb.Policies.Asts
         /// The claim is required
         /// </summary>
         Required,
-        
+
     }
 }

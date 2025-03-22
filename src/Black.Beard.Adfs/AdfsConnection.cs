@@ -4,9 +4,10 @@ using System;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 using System.Runtime.CompilerServices;
+using Bb.Helpers;
 using Microsoft.Extensions.Logging;
 
-namespace Black.Beard.Adfs
+namespace Bb.Adfs
 {
     /// <summary>
     /// Manages connections to Active Directory Federation Services (ADFS).
@@ -21,10 +22,6 @@ namespace Black.Beard.Adfs
         /// <summary>
         /// Initializes a new instance of the <see cref="AdfsConnection"/> class.
         /// </summary>
-        /// <param name="serverUrl">URL of the ADFS server. Cannot be null.</param>
-        /// <param name="domain">Domain name for authentication. Cannot be null.</param>
-        /// <param name="username">Username for authentication. Cannot be null.</param>
-        /// <param name="password">Password for authentication. Cannot be null.</param>
         /// <param name="logger">Optional logger for logging operations. If null, no logging will be performed.</param>
         /// <remarks>
         /// This constructor initializes the connection properties but does not establish the connection.
@@ -38,26 +35,21 @@ namespace Black.Beard.Adfs
         /// ILogger logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger&lt;AdfsConnection&gt;();
         /// 
         /// // Create a new connection to ADFS with logging
-        /// var connection = new AdfsConnection(
-        ///     "adfs.company.com", 
-        ///     "DC=company,DC=com", 
-        ///     "administrator", 
-        ///     "password123",
-        ///     logger);
+        /// var connection = new AdfsConnection(logger);
         /// </code>
         /// </example>
-        public AdfsConnection(string serverUrl, string domain, string username/*, string password*/, ILogger logger = null)
+        public AdfsConnection(ILogger logger)
         {
-            _serverUrl = serverUrl ?? throw new ArgumentNullException(nameof(serverUrl));
-            _domain = domain ?? throw new ArgumentNullException(nameof(domain));
-            _username = username ?? throw new ArgumentNullException(nameof(username));
-            //_password = password ?? throw new ArgumentNullException(nameof(password));
             _logger = logger;
         }
 
         /// <summary>
         /// Establishes a connection to the ADFS server.
         /// </summary>
+        /// <param name="serverUrl">URL of the ADFS server. Cannot be null.</param>
+        /// <param name="domain">Domain name for organization unit. Cannot be null.</param>
+        /// <param name="username">Username for authentication. Cannot be null.</param>
+        /// <param name="password">Password for authentication. Cannot be null.</param>
         /// <returns>True if the connection was successfully established; otherwise, false.</returns>
         /// <remarks>
         /// This method attempts to create a new PrincipalContext using the connection parameters
@@ -68,9 +60,14 @@ namespace Black.Beard.Adfs
         /// <see cref="bool"/>
         /// <example>
         /// <code lang="C#">
-        /// var connection = new AdfsConnection("adfs.company.com", "DC=company,DC=com", "administrator", "password123");
         /// 
-        /// if (connection.Connect())
+        /// // Create a logger
+        /// ILogger logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger&lt;AdfsConnection&gt;();
+        /// 
+        /// // Create a new connection to ADFS with logging
+        /// var connection = new AdfsConnection(logger);
+        /// 
+        /// if (connection.Connect("adfs.company.com", "DC=company,DC=com", "administrator", "password123"))
         /// {
         ///     Console.WriteLine("Successfully connected to ADFS server.");
         /// }
@@ -80,28 +77,61 @@ namespace Black.Beard.Adfs
         /// }
         /// </code>
         /// </example>
-        public bool Connect(string password)
+        public bool Connect(string serverUrl, string domain, string username, string password)
         {
+
             try
             {
-                _logger?.LogInformation("Attempting to connect to ADFS server {ServerUrl} with domain {Domain}", _serverUrl, _domain);
+                _logger?.LogInformation("Attempting to connect to ADFS server {ServerUrl} with domain {Domain}", serverUrl, domain);
 
-                _principalContext = new PrincipalContext(ContextType.Domain, _serverUrl, _domain, _username, password);
+                _principalContext = new PrincipalContext(ContextType.Domain, serverUrl, domain, username, password);
 
                 if (_principalContext != null)
                 {
-                    _logger?.LogInformation("Successfully connected to ADFS server {ServerUrl}", _serverUrl);
+                    _logger?.LogInformation("Successfully connected to ADFS server {ServerUrl}", serverUrl);
                     return true;
                 }
 
-                _logger?.LogWarning("Failed to create PrincipalContext for ADFS server {ServerUrl}", _serverUrl);
+                _logger?.LogWarning("Failed to create PrincipalContext for ADFS server {ServerUrl}", serverUrl);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error connecting to ADFS server {ServerUrl}: {ErrorMessage}", _serverUrl, ex.Message);
+                _logger?.LogError(ex, "Error connecting to ADFS server {ServerUrl}: {ErrorMessage}", serverUrl, ex.Message);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Gets a DirectoryEntry object for the ADFS connection.
+        /// </summary>
+        /// <returns>A new DirectoryEntry object for the ADFS server.</returns>
+        /// <remarks>
+        /// This method creates a new DirectoryEntry using the LDAP path constructed from the
+        /// server URL and domain provided in the constructor. The DirectoryEntry provides
+        /// lower-level access to the directory than the PrincipalContext.
+        /// </remarks>
+        /// <exception cref="DirectoryServicesCOMException">Thrown when there is an error connecting to the directory service.</exception>
+        /// <see cref="DirectoryEntry"/>
+        /// <example>
+        /// <code lang="C#">
+        /// var connection = new AdfsConnection("adfs.company.com", "DC=company,DC=com", "administrator", "password123");
+        /// 
+        /// // Get a DirectoryEntry for direct LDAP operations
+        /// using (DirectoryEntry entry = connection.GetDirectoryEntry())
+        /// {
+        ///     // Use the DirectoryEntry for LDAP operations
+        ///     DirectorySearcher searcher = new DirectorySearcher(entry);
+        ///     searcher.Filter = "(objectClass=user)";
+        ///     SearchResultCollection results = searcher.FindAll();
+        /// }
+        /// </code>
+        /// </example>
+        public DirectoryEntry GetDirectoryEntry(string serverUrl, string domain, string username, string password)
+        {
+            string ldapPath = $"LDAP://{serverUrl}/{domain}";
+            _logger?.LogDebug("Creating DirectoryEntry with LDAP path: {LdapPath}", ldapPath);
+            return new DirectoryEntry(ldapPath, username, password);
         }
 
         /// <summary>
@@ -148,40 +178,7 @@ namespace Black.Beard.Adfs
         /// <summary>
         /// Gets length of the password.
         /// </summary>
-        public int PasswordLength { get;  set; } = 35;
-
-        ///// <summary>
-        ///// Gets a DirectoryEntry object for the ADFS connection.
-        ///// </summary>
-        ///// <returns>A new DirectoryEntry object for the ADFS server.</returns>
-        ///// <remarks>
-        ///// This method creates a new DirectoryEntry using the LDAP path constructed from the
-        ///// server URL and domain provided in the constructor. The DirectoryEntry provides
-        ///// lower-level access to the directory than the PrincipalContext.
-        ///// </remarks>
-        ///// <exception cref="DirectoryServicesCOMException">Thrown when there is an error connecting to the directory service.</exception>
-        ///// <see cref="DirectoryEntry"/>
-        ///// <example>
-        ///// <code lang="C#">
-        ///// var connection = new AdfsConnection("adfs.company.com", "DC=company,DC=com", "administrator", "password123");
-        ///// 
-        ///// // Get a DirectoryEntry for direct LDAP operations
-        ///// using (DirectoryEntry entry = connection.GetDirectoryEntry())
-        ///// {
-        /////     // Use the DirectoryEntry for LDAP operations
-        /////     DirectorySearcher searcher = new DirectorySearcher(entry);
-        /////     searcher.Filter = "(objectClass=user)";
-        /////     SearchResultCollection results = searcher.FindAll();
-        ///// }
-        ///// </code>
-        ///// </example>
-        //public DirectoryEntry GetDirectoryEntry()
-        //{
-        //    string ldapPath = $"LDAP://{_serverUrl}/{_domain}";
-        //    _logger?.LogDebug("Creating DirectoryEntry with LDAP path: {LdapPath}", ldapPath);
-        //    return new DirectoryEntry(ldapPath, _username, _password);
-        //}
-
+        public int PasswordLength { get; set; } = 35;
 
         public string[] RenewApiKey(string salt, string payloadApiKey)
         {
@@ -225,7 +222,7 @@ namespace Black.Beard.Adfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckIsConnected()
+        protected void CheckIsConnected()
         {
             if (_principalContext == null)
             {
@@ -568,174 +565,6 @@ namespace Black.Beard.Adfs
         }
 
         /// <summary>
-        /// Creates a new user in Active Directory with the specified properties in a specific organizational unit.
-        /// </summary>
-        /// <param name="login">Username for the new account. Cannot be null or empty.</param>
-        /// <param name="password">Password for the new account. Cannot be null.</param>
-        /// <param name="username">Display username for the account.</param>
-        /// <param name="firstName">First name of the user. Cannot be null or empty.</param>
-        /// <param name="lastName">Last name of the user. Cannot be null or empty.</param>
-        /// <param name="email">Email address of the user. Cannot be null or empty.</param>
-        /// <param name="organization">Organization the user belongs to. Cannot be null or empty.</param>
-        /// <param name="organizationalUnit">Path to the organizational unit where the user should be created (e.g., "OU=Users,DC=company,DC=com"). If null or empty, the user is created in the default container.</param>
-        /// <param name="passwordExpiryDays">Number of days until the password expires. If 0 or negative, password never expires.</param>
-        /// <param name="actionAdfsUser">Optional action to perform on the user after creation. Can be null.</param>
-        /// <returns>An AdfsUser object representing the newly created user.</returns>
-        /// <remarks>
-        /// This method creates a new user in the specified organizational unit in Active Directory with the provided properties.
-        /// If passwordExpiryDays is greater than 0, the password will be set to expire after the specified number of days.
-        /// If organizationalUnit is null or empty, the user is created in the default container.
-        /// After the user is created, the optional actionAdfsUser delegate is called, allowing additional operations to be performed.
-        /// </remarks>
-        /// <exception cref="ArgumentException">Thrown when login, firstName, lastName, or email is null or empty.</exception>
-        /// <exception cref="ArgumentNullException">Thrown when password is null.</exception>
-        /// <exception cref="PrincipalExistsException">Thrown when a user with the specified login already exists.</exception>
-        /// <exception cref="DirectoryServicesCOMException">Thrown when the specified organizational unit does not exist.</exception>
-        /// <see cref="AdfsUser"/>
-        /// <example>
-        /// <code lang="C#">
-        /// var connection = new AdfsConnection("adfs.company.com", "DC=company,DC=com", "administrator", "password123");
-        /// 
-        /// // Create a new user in a specific organizational unit
-        /// AdfsUser user = connection.CreateUserInOU(
-        ///     "johndoe", 
-        ///     "P@ssw0rd123",
-        ///     "johndoe",
-        ///     "John", 
-        ///     "Doe", 
-        ///     "john.doe@company.com", 
-        ///     "Marketing", 
-        ///     "OU=Marketing,OU=Users,DC=company,DC=com",
-        ///     90,
-        ///     u => {
-        ///         u.AddGroups("MarketingUsers");
-        ///         return true; // Indicate that changes were made
-        ///     });
-        /// 
-        /// Console.WriteLine($"Created user: {user.DisplayName} in organizational unit");
-        /// </code>
-        /// </example>
-        public AdfsUser CreateUserInOU(string login, string password, string username, string firstName, string lastName,
-            string email, string organization, string organizationalUnit, int passwordExpiryDays = 0, 
-            Func<AdfsUser, bool> actionAdfsUser = null)
-        {
-            CheckIsConnected();
-
-            if (string.IsNullOrEmpty(login))
-                throw new ArgumentException("Login cannot be null or empty", nameof(login));
-
-            if (string.IsNullOrEmpty(firstName))
-                throw new ArgumentException("First name cannot be null or empty", nameof(firstName));
-
-            if (string.IsNullOrEmpty(lastName))
-                throw new ArgumentException("Last name cannot be null or empty", nameof(lastName));
-
-            if (string.IsNullOrEmpty(email))
-                throw new ArgumentException("Email cannot be null or empty", nameof(email));
-
-            if (password == null)
-                throw new ArgumentNullException(nameof(password));
-
-            try
-            {
-                _logger?.LogInformation("Creating user {Login} ({FirstName} {LastName}) from organization {Organization} in OU: {OU}",
-                    login, firstName, lastName, organization, organizationalUnit);
-
-                // Create a context for the specified OU if provided
-                PrincipalContext contextToUse;
-                
-                if (!string.IsNullOrEmpty(organizationalUnit))
-                {
-                    // Create a new PrincipalContext for the specified organizational unit
-                    contextToUse = new PrincipalContext(
-                        ContextType.Domain,
-                        _serverUrl,
-                        organizationalUnit,
-                        _username);
-                    
-                    _logger?.LogDebug("Created PrincipalContext for organizational unit: {OU}", organizationalUnit);
-                }
-                else
-                {
-                    // Use the default context if no OU is specified
-                    contextToUse = this._principalContext;
-                    _logger?.LogDebug("Using default PrincipalContext (no organizational unit specified)");
-                }
-
-                string fullName = $"{firstName} {lastName}";
-                UserPrincipal newUser = new UserPrincipal(contextToUse)
-                {
-                    SamAccountName = login,
-                    Name = fullName,
-                    GivenName = firstName,
-                    Surname = lastName,
-                    DisplayName = $"{organization}:{firstName}",
-                    Description = $"User from {organization}",
-                    EmailAddress = email,
-                    UserPrincipalName = $"{username}@{_principalContext.ConnectedServer}",
-                    Enabled = true,
-                };
-
-                newUser.SetPassword(password);
-
-                // Configure password expiration
-                if (passwordExpiryDays > 0)
-                {
-                    _logger?.LogDebug("Setting password to expire in {ExpiryDays} days for user {Login}",
-                        passwordExpiryDays, login);
-
-                    // Set the password expiration date
-                    DateTime expirationDate = DateTime.Now.AddDays(passwordExpiryDays);
-                    newUser.PasswordNotRequired = false;
-                    newUser.PasswordNeverExpires = false;
-
-                    // We can't directly set the password expiration date with UserPrincipal
-                    // We need to use DirectoryEntry for that
-                    DirectoryEntry userEntry = newUser.GetUnderlyingObject() as DirectoryEntry;
-                    if (userEntry != null)
-                    {
-                        // Convert the date to FILETIME format (100-nanosecond intervals since January 1, 1601)
-                        long fileTime = expirationDate.ToFileTime();
-                        userEntry.Properties["pwdLastSet"].Value = fileTime;
-                    }
-                }
-                else
-                {
-                    _logger?.LogDebug("Setting password to never expire for user {Login}", login);
-                    // If passwordExpiryDays is 0 or negative, the password never expires
-                    newUser.PasswordNeverExpires = true;
-                }
-
-                // Save the user to the directory
-                _logger?.LogDebug("Saving new user {Login} to directory in OU: {OU}", login, organizationalUnit ?? "default");
-                newUser.Save();
-
-                var result = new AdfsUser(newUser);
-
-                // Execute additional actions if provided
-                if (actionAdfsUser != null)
-                {
-                    _logger?.LogDebug("Executing additional actions on user {Login}", login);
-                    if (actionAdfsUser(result))
-                    {
-                        _logger?.LogDebug("Saving user {Login} after additional actions", login);
-                        result.Save();
-                    }
-                }
-
-                _logger?.LogInformation("Successfully created user {Login} ({FullName}) in OU: {OU}", 
-                    login, fullName, organizationalUnit ?? "default");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error creating user {Login} in OU {OU}: {ErrorMessage}", 
-                    login, organizationalUnit, ex.Message);
-                throw;
-            }
-        }
-
-        /// <summary>
         /// Releases all resources used by the AdfsConnection.
         /// </summary>
         /// <remarks>
@@ -756,15 +585,13 @@ namespace Black.Beard.Adfs
         /// </example>
         public void Dispose()
         {
-            _logger?.LogDebug("Disposing AdfsConnection for server {ServerUrl}", _serverUrl);
-            _principalContext?.Dispose();
+            if (_principalContext != null)
+            {
+                _logger?.LogDebug("Disposing AdfsConnection");
+                _principalContext.Dispose();
+            }
         }
 
-
-        private readonly string _serverUrl;
-        private readonly string _domain;
-        private readonly string _username;
-        // private readonly string _password;
         private readonly ILogger _logger;
         private PrincipalContext _principalContext;
 

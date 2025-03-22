@@ -1,7 +1,7 @@
 ﻿using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 
-namespace Black.Beard.Adfs
+namespace Bb.Adfs
 {
     /// <summary>
     /// Represents a user in the ADFS directory and exposes its properties.

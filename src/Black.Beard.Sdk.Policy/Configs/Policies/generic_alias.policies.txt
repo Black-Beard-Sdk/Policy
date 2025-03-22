@@ -1,0 +1,72 @@
+﻿            
+alias role                       : "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+alias actor                      : "http://schemas.xmlsoap.org/ws/2009/09/identity/claims/actor"
+alias groupsid                   : "http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid"
+
+
+// alias sid                        : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid"
+// alias primarygroupsid            : "http://schemas.microsoft.com/ws/2008/06/identity/claims/primarygroupsid"
+// alias primarysid                 : "http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid"
+// 
+// alias dns                        : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dns"
+// alias rsa                        : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/rsa"
+// alias upn                        : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
+// alias uri                        : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri"
+// alias spn                        : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/spn"
+// alias dsa                        : "http://schemas.microsoft.com/ws/2008/06/identity/claims/dsa"
+// alias hash                       : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/hash"
+
+// alias system                     : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/system"
+// alias version                    : "http://schemas.microsoft.com/ws/2008/06/identity/claims/version"
+// alias webpage                    : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/webpage"
+// alias serialnumber               : "http://schemas.microsoft.com/ws/2008/06/identity/claims/serialnumber"
+// alias anonymous                  : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/anonymous"
+
+// alias x500distinguishedname      : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/x500distinguishedname"     
+// alias authentication             : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/authentication"
+// alias authenticationinstant      : "http://schemas.microsoft.com/ws/2008/06/identity/claims/authenticationinstant"
+// alias authenticationmethod       : "http://schemas.microsoft.com/ws/2008/06/identity/claims/authenticationmethod"
+// alias authorizationdecision      : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/authorizationdecision"
+
+// alias denyonlyprimarygroupsid    : "http://schemas.microsoft.com/ws/2008/06/identity/claims/denyonlyprimarygroupsid"
+// alias denyonlyprimarysid         : "http://schemas.microsoft.com/ws/2008/06/identity/claims/denyonlyprimarysid"
+// alias denyonlysid                : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/denyonlysid"
+// alias windowsuserclaim           : "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsuserclaim"
+// alias denyonlywindowsdevicegroup : "http://schemas.microsoft.com/ws/2008/06/identity/claims/denyonlywindowsdevicegroup"
+
+// alias cookiepath                 : "http://schemas.microsoft.com/ws/2008/06/identity/claims/cookiepath"
+// alias expiration                 : "http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration"
+// alias expired                    : "http://schemas.microsoft.com/ws/2008/06/identity/claims/expired"
+// alias ispersistent               : "http://schemas.microsoft.com/ws/2008/06/identity/claims/ispersistent"
+// alias locality                   : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/locality"
+
+
+
+// ---------- adresses ----------
+// alias streetaddress              : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress"
+// alias postalcode                 : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/postalcode"
+// alias stateorprovince            : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/stateorprovince"
+// alias country                    : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/country"
+
+// ---------- phones ----------
+// alias otherphone                 : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/otherphone"
+// alias homephone                  : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone"
+// alias mobilephone                : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone"
+
+// ---------- windows ----------
+// alias windowsaccountname         : "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname"
+// alias windowsdeviceclaim         : "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsdeviceclaim"
+// alias windowsdevicegroup         : "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsdevicegroup"
+// alias windowsfqbnversion         : "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsfqbnversion"
+// alias windowssubauthority        : "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowssubauthority"
+
+// ---------- users ----------
+// alias givenname                  : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"
+// alias surname                    : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"
+// alias nameidentifier             : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+// alias name                       : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+// alias dateofbirth                : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth"
+// alias gender                     : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender"
+// alias email                      : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+// alias thumbprint                 : "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/thumbprint"
+// alias userdata                   : "http://schemas.microsoft.com/ws/2008/06/identity/claims/userdata"
