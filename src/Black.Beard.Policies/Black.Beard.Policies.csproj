@@ -1,0 +1,78 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Bb</RootNamespace>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/Black-Beard-Sdk/Policy</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <IncludeSymbols>True</IncludeSymbols>
+    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Remove="Policies\PoliciesCategorizer.cs" />
+    <Compile Remove="Policies\PoliciesResolveItems.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Configs\Policies\*.policies.txt" Pack="true" PackagePath="Configs\Policies" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="git.Expressions\**" />
+    <EmbeddedResource Remove="git.Expressions\**" />
+    <None Remove="git.Expressions\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageReference Include="Black.Beard.Analysis" Version="1.0.140" />
+    <PackageReference Include="Black.Beard.CodeDom" Version="1.0.140" />
+    <PackageReference Include="Black.Beard.ComponentModel" Version="1.0.196" />
+    <PackageReference Include="Black.Beard.Expressions" Version="1.0.196" />
+    <PackageReference Include="System.CodeDom" Version="9.0.4" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
+    <PackageReference Include="Black.Beard.Helpers" Version="2.0.59" />
+    <PackageReference Include="Black.Beard.Helpers.ContentLoaders.Files" Version="2.0.59" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Configs\Policies\base.policies.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Configs\Policies\generic_alias.policies.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Configs\Policies\generic_openid.policies.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

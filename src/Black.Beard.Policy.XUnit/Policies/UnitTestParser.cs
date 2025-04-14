@@ -176,9 +176,7 @@ policy p1 : source.name = test
         [Fact]
         public void TestPolicy13()
         {
-            string txt = @"
-policy p1 : p1 & source.name = test
-";
+            string txt = @"policy p1 : p1 & source.name = test";
             var p = Policy.ParseText(txt);
             Assert.True(p.Diagnostics.InError);
         }

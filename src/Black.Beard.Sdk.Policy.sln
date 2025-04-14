@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35828.75
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policies", "Black.Beard.Sdk.Policy\Black.Beard.Policies.csproj", "{91454BBD-EE65-4BB4-A4CE-24604A33B893}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policy.XUnit", "Black.Beard.Policy.XUnit\Black.Beard.Policy.XUnit.csproj", "{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "Éléments de solution", "{9C8CB701-102D-CF49-A3E0-89AC09D42C2C}"
@@ -19,16 +17,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policy.Web", "B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Adfs", "Black.Beard.Adfs\Black.Beard.Adfs.csproj", "{C776A669-6A85-4969-A437-9181C6B11308}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Keycloak", "Black.Beard.Keycloak\Black.Beard.Keycloak.csproj", "{EB7BDF8B-3CD0-44DD-BA63-C56E3FC5A984}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Rest", "Black.Beard.Rest\Black.Beard.Rest.csproj", "{85CE6644-7B07-43CD-8C15-1B8C4E2FC0A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "KeycloakAspireStarter1\ServiceDefaults\ServiceDefaults.csproj", "{B1B55F20-DEA6-41B7-A2B9-5BDC0CED4772}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policies", "Black.Beard.Policies\Black.Beard.Policies.csproj", "{8A8DBB65-5975-0058-13CF-E46E5039ECC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91454BBD-EE65-4BB4-A4CE-24604A33B893}.Release|Any CPU.Build.0 = Release|Any CPU
 		{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{243C2C81-E38A-440E-B113-A6D6CE3B0B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -41,6 +43,22 @@ Global
 		{C776A669-6A85-4969-A437-9181C6B11308}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C776A669-6A85-4969-A437-9181C6B11308}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C776A669-6A85-4969-A437-9181C6B11308}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB7BDF8B-3CD0-44DD-BA63-C56E3FC5A984}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB7BDF8B-3CD0-44DD-BA63-C56E3FC5A984}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB7BDF8B-3CD0-44DD-BA63-C56E3FC5A984}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB7BDF8B-3CD0-44DD-BA63-C56E3FC5A984}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85CE6644-7B07-43CD-8C15-1B8C4E2FC0A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85CE6644-7B07-43CD-8C15-1B8C4E2FC0A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85CE6644-7B07-43CD-8C15-1B8C4E2FC0A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85CE6644-7B07-43CD-8C15-1B8C4E2FC0A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1B55F20-DEA6-41B7-A2B9-5BDC0CED4772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1B55F20-DEA6-41B7-A2B9-5BDC0CED4772}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1B55F20-DEA6-41B7-A2B9-5BDC0CED4772}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1B55F20-DEA6-41B7-A2B9-5BDC0CED4772}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A8DBB65-5975-0058-13CF-E46E5039ECC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A8DBB65-5975-0058-13CF-E46E5039ECC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A8DBB65-5975-0058-13CF-E46E5039ECC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A8DBB65-5975-0058-13CF-E46E5039ECC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -19,25 +19,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Black.Beard.Helpers" Version="2.0.49" />
-    <PackageReference Include="Black.Beard.Helpers.ContentLoaders.Files" Version="2.0.49" />
-    <PackageReference Include="Keycloak.AuthServices.Authentication" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.1" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+    <Compile Include="Keycloak\KeycloakTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Black.Beard.Helpers" Version="2.0.59" />
+    <PackageReference Include="Black.Beard.Helpers.ContentLoaders.Files" Version="2.0.59" />
+    <PackageReference Include="Keycloak.AuthServices.Authentication" Version="2.6.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
+    <PackageReference Include="Testcontainers.Keycloak" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="3.1.2">
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Black.Beard.Adfs\Black.Beard.Adfs.csproj" />
+    <ProjectReference Include="..\Black.Beard.Keycloak\Black.Beard.Keycloak.csproj" />
+    <ProjectReference Include="..\Black.Beard.Policies\Black.Beard.Policies.csproj" />
+    <ProjectReference Include="..\Black.Beard.Rest\Black.Beard.Rest.csproj" />
     <ProjectReference Include="..\Black.Beard.Sdk.Policy\Black.Beard.Policies.csproj" />
   </ItemGroup>
 

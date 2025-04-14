@@ -2,11 +2,11 @@
 
 # Configuration
 KEYCLOAK_URL="http://localhost:8080"
-ADMIN_USER="admin"
-ADMIN_PASS="admin"
+ADMIN_USER="root"
+ADMIN_PASS=""
 REALM_NAME="test"
-USER_NAME="testadmin"
-USER_PASSWORD="testpassword"
+USER_NAME="dev-admin"
+USER_PASSWORD="dev-admin"
 
 # 1. Obtenir le token d’admin
 TOKEN=$(curl -s -X POST "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" \

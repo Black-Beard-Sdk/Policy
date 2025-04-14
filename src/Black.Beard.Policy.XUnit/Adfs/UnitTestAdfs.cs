@@ -1,13 +1,6 @@
 
-
-
 using Bb.Adfs;
-using Bb.Helpers;
-using Bb.Policies;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Security.Principal;
 
 namespace Black.Beard.Policy.XUnit.Adfs
 {
