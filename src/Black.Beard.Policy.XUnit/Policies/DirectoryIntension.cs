@@ -8,11 +8,11 @@
     {
 
 
-        public static DirectoryInfo WriteFile(this DirectoryInfo self, string filename, string content, Encoding encoding = null)
+        public static FileInfo WriteFile(this DirectoryInfo self, string filename, string content, Encoding encoding = null)
         {
             var file = self.Combine(filename).AsFile();
             file.WriteFile(content, encoding);
-            return self;
+            return file;
 
         }
 

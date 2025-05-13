@@ -1,9 +1,9 @@
-﻿using Bb.Analysis.DiagTraces;
+﻿// Ignore Spelling: Asts Ast
+
+using Bb.Analysis.DiagTraces;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
-using System.Collections.Generic;
 using Antlr4.Runtime.Atn;
-using System;
 
 namespace Bb.Policies.Asts
 {
@@ -37,7 +37,7 @@ namespace Bb.Policies.Asts
             get
             {
                 if (_children == null)
-                    ParseTree();
+                    _children = ParseTree();
                 return _children;
             }
         }
@@ -45,42 +45,29 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Parses the tree and populates the children of the current AST node.
         /// </summary>
-        internal void ParseTree()
+        internal List<IntellisenseAst> ParseTree()
         {
-
 
             if (_item is ErrorNodeImpl e)
                 AddError(e);
 
-            else if (_item is ParserRuleContext r)
-            {
-                if (r.exception != null)
+            else if (_item is ParserRuleContext r && r.exception != null)
                     AddError(r);
-            }
-
-            else if (_item is ITerminalNode)
-            {
-
-            }
-
-            else
-            {
-
-            }
 
             int c = _item.ChildCount;
-            _children = new List<IntellisenseAst>(c);
+            var children = new List<IntellisenseAst>(c);
+
             for (int i = 0; i < c; i++)
             {
                 var dd = _item.GetChild(i);
                 var cc = new IntellisenseAst(_context, dd);
-                _children.Add(cc);
-                if (cc.Type != -1)
-                {
-                    if (dd.ChildCount == 0)
-                        cc._children = new List<IntellisenseAst>();
-                }
+                children.Add(cc);
+                if (cc.Type != -1 && dd.ChildCount == 0)
+                    cc._children = new List<IntellisenseAst>();
             }
+
+            return children;
+
         }
 
         /// <summary>
@@ -93,8 +80,8 @@ namespace Bb.Policies.Asts
                 if (_location == null)
                 {
 
-                    if (this.IsTerminal)
-                        _location = (_item as ITerminalNode).ToLocation();
+                    if (this.IsTerminal && _item is ITerminalNode t)
+                        _location = t.ToLocation();
 
                     else if (_item is ParserRuleContext r)
                         _location = r.ToLocation();
@@ -103,9 +90,7 @@ namespace Bb.Policies.Asts
                         _location = e.ToLocation();
 
                     else
-                    {
-
-                    }
+                        _location = TextLocation.Empty;
                 }
 
                 return _location;
@@ -167,8 +152,8 @@ namespace Bb.Policies.Asts
             get
             {
 
-                if (this.IsTerminal)
-                    _text = (_item as ITerminalNode).Symbol.Text;
+                if (this.IsTerminal && _item is ITerminalNode t)
+                    _text = t.Symbol.Text;
                 else
                     _text = _item.GetText();
 
@@ -188,8 +173,8 @@ namespace Bb.Policies.Asts
                 if (_name == null)
                 {
 
-                    if (this.IsTerminal)
-                        _name = _context.Parser.Vocabulary.GetSymbolicName((_item as ITerminalNode).Symbol.Type);
+                    if (this.IsTerminal && _item is ITerminalNode t)
+                        _name = _context.Parser.Vocabulary.GetSymbolicName(t.Symbol.Type);
 
                     else if (_item is ErrorNodeImpl e)
                         _name = e.Symbol.Text;
@@ -208,7 +193,7 @@ namespace Bb.Policies.Asts
             }
         }
 
-                /// <summary>
+        /// <summary>
         /// Gets a value indicating whether the current AST node is not null.
         /// </summary>
         public bool NotNull { get; }
@@ -312,11 +297,11 @@ namespace Bb.Policies.Asts
 
         }
 
-        private IParseTree _item;
-        private string _name = null;
-        private string _text = null;
-        private TextLocation _location = null;
-        private List<IntellisenseAst> _children;
+        private readonly IParseTree _item;
+        private string? _name;
+        private string? _text;
+        private TextLocation _location = TextLocation.Empty;
+        private List<IntellisenseAst>? _children;
         private readonly IntellisenseContext _context;
 
 

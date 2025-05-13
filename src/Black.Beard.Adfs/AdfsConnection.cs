@@ -1,9 +1,10 @@
-﻿// Ignore Spelling: username firstname lastname
+﻿// Ignore Spelling: username firstname lastname Adfs Api
 
 using System;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using Bb.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,20 @@ namespace Bb.Adfs
     /// This class provides functionality for establishing and managing connections to ADFS,
     /// as well as performing common operations such as creating users and managing their properties.
     /// </remarks>
+    /// <example>
+    /// <code lang="C#">
+    /// // Create and use a connection
+    /// using (var connection = new AdfsConnection("adfs.company.com", "DC=company,DC=com", "administrator", "password123"))
+    /// {
+    ///     // Use the connection...
+    ///     AdfsUser user = connection.CreateUser(...);
+    ///     
+    ///     // The connection will be automatically disposed when the using block exits
+    /// }
+    /// </code>
+    /// </example>
+
+    [SupportedOSPlatform("windows")]
     public class AdfsConnection : IDisposable
     {
 
@@ -155,7 +170,7 @@ namespace Bb.Adfs
         /// UserPrincipal user = UserPrincipal.FindByIdentity(context, "johndoe");
         /// </code>
         /// </example>
-        public PrincipalContext PrincipalContext
+        public PrincipalContext? PrincipalContext
         {
             get
             {
@@ -183,9 +198,12 @@ namespace Bb.Adfs
         public string[] RenewApiKey(string salt, string payloadApiKey)
         {
 
+            if (string.IsNullOrEmpty(payloadApiKey))
+                throw new ArgumentException($"'{nameof(payloadApiKey)}' cannot be null or empty", nameof(payloadApiKey));
+
             CheckIsConnected();
 
-            _logger?.LogInformation("Renewing API key for payload: {PayloadLength} characters", payloadApiKey?.Length ?? 0);
+            _logger?.LogInformation("Renewing API key for payload: {PayloadLength} characters", payloadApiKey.Length);
 
             try
             {
@@ -197,7 +215,7 @@ namespace Bb.Adfs
                 if (user == null)
                 {
                     _logger?.LogWarning("User not found for username: {Username}", username);
-                    throw new ArgumentException("User not found", nameof(username));
+                    throw new InvalidDataException($"User {nameof(username)}={username} not found");
                 }
 
                 _logger?.LogInformation("Generating new API key for user: {Username}", username);
@@ -265,7 +283,7 @@ namespace Bb.Adfs
         /// }
         /// </code>
         /// </example>
-        public AdfsUser GetUserByUsername(string username)
+        public AdfsUser? GetUserByUsername(string username)
         {
             return GetUserBy(IdentityType.SamAccountName, username);
         }
@@ -305,7 +323,7 @@ namespace Bb.Adfs
         /// }
         /// </code>
         /// </example>
-        public AdfsUser GetUserBy(IdentityType identity, string value)
+        public AdfsUser? GetUserBy(IdentityType identity, string value)
         {
 
             CheckIsConnected();
@@ -349,7 +367,7 @@ namespace Bb.Adfs
         /// <param name="firstname">First name of the user. Cannot be null or empty.</param>
         /// <param name="lastname">Last name of the user. Cannot be null or empty.</param>
         /// <param name="email">Email address of the user. Cannot be null or empty.</param>
-        /// <param name="organization">Organisation the user belongs to. Cannot be null or empty.</param>
+        /// <param name="organization">Organization the user belongs to. Cannot be null or empty.</param>
         /// <param name="groupNames">Names of AD groups to add the user to. Can be empty but not null.</param>
         /// <returns>An array containing the API key and login for the created user.</returns>
         /// <remarks>
@@ -399,7 +417,7 @@ namespace Bb.Adfs
 
                 _logger?.LogDebug("Generated login for API key: {Login}", login);
 
-                var user = CreateUser(login, pwd, username, firstname, lastname, email, organization, 0, c =>
+                CreateUser(login, pwd, username, firstname, lastname, email, organization, 0, c =>
                 {
                     bool changed = false;
 
@@ -468,7 +486,7 @@ namespace Bb.Adfs
         /// </code>
         /// </example>
         public AdfsUser CreateUser(string login, string password, string username, string firstName, string lastName,
-            string email, string organization, int passwordExpiryDays = 0, Func<AdfsUser, bool> actionAdfsUser = null)
+            string email, string organization, int passwordExpiryDays = 0, Func<AdfsUser, bool>? actionAdfsUser = null)
         {
 
             CheckIsConnected();
@@ -487,6 +505,9 @@ namespace Bb.Adfs
 
             if (password == null)
                 throw new ArgumentNullException(nameof(password));
+
+            if (_principalContext == null || string.IsNullOrEmpty(_principalContext.ConnectedServer))
+                throw new InvalidOperationException("PrincipalContext is not connected. Cannot create user.");
 
             try
             {
@@ -522,7 +543,7 @@ namespace Bb.Adfs
 
                     // We can't directly set the password expiration date with UserPrincipal
                     // We need to use DirectoryEntry for that
-                    DirectoryEntry userEntry = newUser.GetUnderlyingObject() as DirectoryEntry;
+                    DirectoryEntry? userEntry = newUser.GetUnderlyingObject() as DirectoryEntry;
                     if (userEntry != null)
                     {
                         // Convert the date to FILETIME format (100-nanosecond intervals since January 1, 1601)
@@ -564,36 +585,28 @@ namespace Bb.Adfs
             }
         }
 
-        /// <summary>
-        /// Releases all resources used by the AdfsConnection.
-        /// </summary>
-        /// <remarks>
-        /// This method disposes the PrincipalContext if it has been created, releasing any resources it holds.
-        /// After calling Dispose, do not attempt to use any methods or properties of this instance.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// // Create and use a connection
-        /// using (var connection = new AdfsConnection("adfs.company.com", "DC=company,DC=com", "administrator", "password123"))
-        /// {
-        ///     // Use the connection...
-        ///     AdfsUser user = connection.CreateUser(...);
-        ///     
-        ///     // The connection will be automatically disposed when the using block exits
-        /// }
-        /// </code>
-        /// </example>
-        public void Dispose()
+        private readonly ILogger _logger;
+        private PrincipalContext? _principalContext;
+        private bool disposedValue;
+
+        protected virtual void Dispose(bool disposing)
         {
-            if (_principalContext != null)
+            if (!disposedValue)
             {
-                _logger?.LogDebug("Disposing AdfsConnection");
-                _principalContext.Dispose();
+                if (disposing && _principalContext != null)
+                {
+                    _logger?.LogDebug("Disposing AdfsConnection");
+                    _principalContext.Dispose();
+                }
+
+                disposedValue = true;
             }
         }
 
-        private readonly ILogger _logger;
-        private PrincipalContext _principalContext;
-
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

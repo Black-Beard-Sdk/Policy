@@ -1,4 +1,6 @@
-﻿using Antlr4.Runtime;
+﻿// Ignore Spelling: Crc
+
+using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Bb.Policies.Parser;
 using System;
@@ -55,7 +57,7 @@ namespace Bb.Policies
         /// );
         /// </code>
         /// </example>
-        public ScriptParserBase(TextWriter output, TextWriter outputError, StringBuilder content, Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator, Func<TParser, T> getRoot)
+        public ScriptParserBase(TextWriter? output, TextWriter? outputError, StringBuilder content, Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator, Func<TParser, T> getRoot)
         {
 
             Output = output ?? Console.Out;
@@ -167,7 +169,7 @@ namespace Bb.Policies
         public static ScriptParserBase<TParser, T> ParseString(
             Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
             Func<TParser, T> funcGetContext, 
-            StringBuilder source, string sourceFile = "", TextWriter output = null, TextWriter outputError = null)
+            StringBuilder source, string sourceFile = "", TextWriter? output = null, TextWriter? outputError = null)
         {
 
             ICharStream stream = CharStreams.fromString(source.ToString());
@@ -226,7 +228,7 @@ namespace Bb.Policies
         public static ScriptParserBase<TParser, T> ParsePath(
             Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
             Func<TParser, T> funcGetContext, 
-            string source, TextWriter output = null, TextWriter outputError = null)
+            string source, TextWriter? output = null, TextWriter? outputError = null)
         {
 
             var payload = source.LoadFromFile();
@@ -286,23 +288,6 @@ namespace Bb.Policies
         protected TParser Create(ICharStream stream) => _creator(this, stream);
 
         /// <summary>
-        /// Gets or sets a value indicating whether parser tracing is enabled.
-        /// </summary>
-        /// <remarks>
-        /// When set to true, parsers created by this class will generate trace output for debugging purposes.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// // Enable tracing for debugging
-        /// ScriptParserBase&lt;PolicyParser, PolicyParser.ScriptContext&gt;.Trace = true;
-        /// 
-        /// var parser = ScriptParserBase&lt;PolicyParser, PolicyParser.ScriptContext&gt;.ParseString(
-        ///     creator, funcGetContext, "policy IsAdult : Identity.age >= 18");
-        /// </code>
-        /// </example>
-        public static bool Trace { get; set; }
-
-        /// <summary>
         /// Gets the collection of files included by the parsed script.
         /// </summary>
         /// <remarks>
@@ -342,7 +327,7 @@ namespace Bb.Policies
         /// Console.WriteLine($"Parsing file: {parser.File}");
         /// </code>
         /// </example>
-        public string File { get; set; }
+        public string? File { get; set; }
 
         /// <summary>
         /// Gets the content being parsed.
@@ -430,7 +415,7 @@ namespace Bb.Policies
         /// <returns>
         /// A <typeparamref name="T"/> representing the root of the parse tree.
         /// </returns>
-        public T Tree { get { return _context; } }
+        public T? Tree { get { return _context; } }
 
         /// <summary>
         /// Gets the CRC32 checksum of the parsed content.
@@ -484,7 +469,7 @@ namespace Bb.Policies
         /// <returns>
         /// A <typeparamref name="TParser"/> instance used for parsing.
         /// </returns>
-        public TParser Parser { get => _parser; }
+        public TParser Parser { get => _parser ?? throw new InvalidOperationException("Initialize parser with method Initialize"); }
 
         /// <summary>
         /// Gets a value indicating whether the parser encountered errors.
@@ -506,7 +491,7 @@ namespace Bb.Policies
         /// <returns>
         /// <c>true</c> if the parser encountered errors; otherwise, <c>false</c>.
         /// </returns>
-        public bool InError { get => _parser.ErrorListeners.Count > 0; }
+        public bool InError { get => _parser?.ErrorListeners.Count > 0; }
 
         /// <summary>
         /// Visits the parse tree with the specified visitor.
@@ -552,7 +537,7 @@ namespace Bb.Policies
         /// <remarks>
         /// This field stores the ANTLR parser that was created for parsing the content.
         /// </remarks>
-        protected TParser _parser;
+        protected TParser? _parser;
 
         /// <summary>
         /// Set of file paths included by the parsed script.
@@ -584,7 +569,7 @@ namespace Bb.Policies
         /// <remarks>
         /// This field stores the root of the parse tree created by the parser.
         /// </remarks>
-        protected T _context;
+        protected T? _context;
 
     }
 

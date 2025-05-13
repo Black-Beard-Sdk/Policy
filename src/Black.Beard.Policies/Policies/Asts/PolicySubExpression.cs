@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿// Ignore Spelling: Asts
+
+namespace Bb.Policies.Asts
 {
     /// <summary>
     /// Represents a parenthesized subexpression in a policy expression.
@@ -61,7 +63,8 @@
         /// string result = subExpr.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return visitor.VisitSubExpression(this);
         }

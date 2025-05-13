@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Principal;
-
+using System.Linq;
 
 namespace Bb.Policies
 {
@@ -33,47 +33,7 @@ namespace Bb.Policies
         /// </remarks>
         static RuntimeContext()
         {
-            _evaluateHas = typeof(RuntimeContext).GetMethod(nameof(EvaluateHas)
-                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
 
-            _evaluateHasNot = typeof(RuntimeContext).GetMethod(nameof(EvaluateHasNot)
-                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
-
-            _evaluateIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateIn)
-                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
-
-            _evaluateNotIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotIn)
-                , [typeof(string), typeof(string[]), typeof(TextLocation)]);
-
-            _evaluateEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateEquality)
-                , [typeof(string), typeof(string), typeof(TextLocation)]);
-
-            _evaluateNotEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotEquality)
-                , [typeof(string), typeof(string), typeof(TextLocation)]);
-
-            _evaluateBinary = typeof(RuntimeContext).GetMethod(nameof(EvaluateBinary)
-                , [typeof(object), typeof(PolicyOperator), typeof(string), typeof(TextLocation)]);
-
-            _evaluateBinaryNumeric = typeof(RuntimeContext).GetMethod(nameof(EvaluateBinaryNumeric)
-                , [typeof(object), typeof(PolicyOperator), typeof(int), typeof(TextLocation)]);
-
-            _evaluateUnary = typeof(RuntimeContext).GetMethod(nameof(EvaluateUnary)
-                , [typeof(object), typeof(PolicyOperator), typeof(TextLocation)]);
-
-            _evaluateFrom = typeof(RuntimeContext).GetMethod(nameof(EvaluateFrom)
-                , [typeof(string), typeof(TextLocation)]);
-
-            _evaluateValue = typeof(RuntimeContext).GetMethod(nameof(EvaluateValue)
-                , [typeof(string), typeof(string), typeof(TextLocation)]);
-
-            _evaluateconvertBool = typeof(RuntimeContext).GetMethod(nameof(EvaluateconvertBool)
-                , [typeof(object), typeof(TextLocation)]);
-
-
-
-
-            _TraceLocation = typeof(RuntimeContext).GetMethod(nameof(TraceLocation), [typeof(RuntimeContext), typeof(string), typeof(int), typeof(int), typeof(int), typeof(int)]);
-            _ExitLocation = typeof(RuntimeContext).GetMethod(nameof(ExitLocation), [typeof(RuntimeContext), typeof(object)]);
         }
 
         /// <summary>
@@ -85,7 +45,11 @@ namespace Bb.Policies
         /// </remarks>
         public RuntimeContext()
         {
-            _watch = new Stopwatch();
+            _diagnostics = new ScriptDiagnostics();
+            _principal = null;
+            ServiceProvider = null;
+
+
             _stack = new Stack<MethodContext>();
             _dic = new Dictionary<string, object>();
             _rules = new Dictionary<string, Func<RuntimeContext, bool>>();
@@ -101,7 +65,7 @@ namespace Bb.Policies
         /// This constructor initializes the runtime context with the specified diagnostics, rules, and data.
         /// The data object is stored in a dictionary for access during policy evaluation.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Thrown when datas is null during the Store operation.</exception> 
+        /// <exception cref="ArgumentNullException">Thrown when data is null during the Store operation.</exception> 
         public RuntimeContext Initialize(ScriptDiagnostics? diagnostic, Dictionary<string, Func<RuntimeContext, bool>> rules)
         {
 
@@ -109,7 +73,7 @@ namespace Bb.Policies
                 foreach (var item in rules)
                     _rules.Add(item.Key, item.Value);
 
-            _diagnostics = diagnostic ?? new ScriptDiagnostics();
+            _diagnostics = diagnostic ?? [];
 
             return this;
 
@@ -118,7 +82,7 @@ namespace Bb.Policies
         /// <summary>
         /// Stores the data object in the context's dictionary.
         /// </summary>
-        /// <param name="datas">The data object to store.</param>
+        /// <param name="data">The data object to store.</param>
         /// <remarks>
         /// This method processes the data object and stores its properties in the context's dictionary
         /// for access during policy evaluation. It handles different types of data objects:
@@ -126,58 +90,61 @@ namespace Bb.Policies
         /// - Dictionaries have their key-value pairs added directly
         /// - Other objects have their properties extracted and added
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Thrown when datas is null.</exception>
-        /// <exception cref="Exception">Thrown when datas cannot be evaluated.</exception>
-        public RuntimeContext Store(object datas)
+        /// <exception cref="ArgumentNullException">Thrown when data is null.</exception>
+        /// <exception cref="Exception">Thrown when data cannot be evaluated.</exception>
+        public RuntimeContext Store(object data)
         {
 
-            if (datas == null)
-                throw new ArgumentNullException(nameof(datas));
+            ArgumentNullException.ThrowIfNull(data);
 
-            if (datas is IPrincipal p1)
-                Store(null, datas);
+            if (data is IPrincipal)
+                Store(null, data);
 
-            else if (datas is IServiceProvider serviceProvider)
-                Store(null, datas);
+            else if (data is IServiceProvider)
+                Store(null, data);
 
-            else if (datas is IDictionary<string, object> d)
+            else if (data is IDictionary<string, object> d)
                 foreach (var item in d)
                     Store(item.Key, item.Value);
 
-            else if (datas.GetType().IsClass)
+            else if (data.GetType().IsClass)
             {
-                var properties = datas.GetType().GetAccessors(MemberStrategys.Instance);
+                var properties = data.GetType().GetAccessors(MemberStrategys.Instance);
                 foreach (var item in properties)
-                    Store(item.Name, item.GetValue(datas));
+                    if (item.GetValue != null)
+                        Store(item.Name, item.GetValue(data));
             }
 
             else
-                throw new Exception($"{nameof(datas)} can't be evaluated");
+                throw new InvalidOperationException($"{nameof(data)} can't be evaluated");
 
             return this;
 
         }
 
         /// <summary>
-        /// Store datas
+        /// Store data
         /// </summary>
         /// <param name="key">key of the object</param>
         /// <param name="value">value to store</param>
         /// <returns></returns>
-        public RuntimeContext Store(string key, object value)
+        public RuntimeContext Store(string? key, object value)
         {
 
             if (value is IPrincipal p2)
             {
                 _principal = p2;
-                _dic.Add("Identity", p2.Identity);
-                _dic.Add("identity", p2.Identity);
+                if (p2.Identity != null)
+                {
+                    _dic.Add("Identity", p2.Identity);
+                    _dic.Add("identity", p2.Identity);
+                }
 
             }
             else if (value is IServiceProvider serviceProvider1)
                 ServiceProvider = serviceProvider1;
 
-            else
+            else if (!string.IsNullOrEmpty(key))
                 _dic.Add(key, value);
 
             return this;
@@ -224,7 +191,7 @@ namespace Bb.Policies
                 if (!accessor.TryGetValue(property, out var acc))
                     _diagnostics.AddInformation(textLocation, property, $"failed to resolve {property} in {pathSource.GetType()}");
 
-                else
+                else if (acc != null && acc.GetValue != null)
                     result = acc.GetValue(source);
 
             }
@@ -246,7 +213,7 @@ namespace Bb.Policies
         /// <returns>
         /// <c>true</c> if the rule evaluates to true; <c>false</c> if the rule evaluates to false or cannot be found.
         /// </returns>
-        public bool EvaluateFrom(string formKey, TextLocation textLocation)
+        public bool EvaluateFrom(string formKey, Analysis.DiagTraces.TextLocation textLocation)
         {
 
             if (_rules.TryGetValue(formKey, out var rule))
@@ -273,12 +240,12 @@ namespace Bb.Policies
         /// <code lang="C#">
         /// var principal = new GenericPrincipal(
         ///     new GenericIdentity("user"), 
-        ///     new[] { "Admin", "User" }
+        ///     new[] { "Administrator", "User" }
         /// );
         /// var context = new RuntimeContext(new ScriptDiagnostics(), 
         ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
         /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
-        /// bool result = context.EvaluateHas("role", new[] { "Admin", "User" }, location);
+        /// bool result = context.EvaluateHas("role", new[] { "Administrator", "User" }, location);
         /// // result will be true
         /// </code>
         /// </example>
@@ -287,6 +254,9 @@ namespace Bb.Policies
         /// </returns>
         public bool EvaluateHas(string key, string[] values, TextLocation textLocation)
         {
+
+            if (_principal == null)
+                return false;
 
             bool result = true;
 
@@ -342,7 +312,7 @@ namespace Bb.Policies
         /// var context = new RuntimeContext(new ScriptDiagnostics(), 
         ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
         /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
-        /// bool result = context.EvaluateHasNot("role", new[] { "Admin" }, location);
+        /// bool result = context.EvaluateHasNot("role", new[] { "Administrator" }, location);
         /// // result will be true
         /// </code>
         /// </example>
@@ -351,6 +321,9 @@ namespace Bb.Policies
         /// </returns>
         public bool EvaluateHasNot(string key, string[] values, TextLocation textLocation)
         {
+
+            if (_principal == null)
+                return false;
 
             bool result = true;
 
@@ -406,7 +379,7 @@ namespace Bb.Policies
         /// var context = new RuntimeContext(new ScriptDiagnostics(), 
         ///     new Dictionary&lt;string, Func&lt;RuntimeContext, bool&gt;&gt;(), principal);
         /// var location = TextLocation.Create((1, 1, 0), (1, 10, 9));
-        /// bool result = context.EvaluateIn("role", new[] { "Admin", "User" }, location);
+        /// bool result = context.EvaluateIn("role", new[] { "Administrator", "User" }, location);
         /// // result will be true
         /// </code>
         /// </example>
@@ -416,13 +389,15 @@ namespace Bb.Policies
         public bool EvaluateIn(string key, string[] values, TextLocation textLocation)
         {
 
+            if (_principal == null)
+                return false;
+
             bool result = false;
 
             if (IsInRole(key))
             {
-                foreach (var item in values)
-                    if (_principal.IsInRole(item))
-                        return true;
+                if (values.Any(c => _principal.IsInRole(c)))
+                    return true;
 
                 _diagnostics.AddInformation(textLocation, string.Join(", ", values), $"user hasn't role");
 
@@ -430,9 +405,8 @@ namespace Bb.Policies
             else if (_principal is ClaimsPrincipal p)
             {
                 var pp = p.Claims.Where(c => c.Type == key).ToList();
-                foreach (var item in values)
-                    if (pp.Any(c => c.Value == item))
-                        result = true;
+                foreach (var _ in values.Where(item => pp.Any(c => c.Value == item)).Select(item => new { }))
+                    result = true;
 
                 _diagnostics.AddInformation(textLocation, string.Join(", ", values), $"user hasn't necessary claim {key}");
 
@@ -472,27 +446,28 @@ namespace Bb.Policies
         public bool EvaluateNotIn(string key, string[] values, TextLocation textLocation)
         {
 
+            if (_principal == null)
+                return false;
+
             bool result = true;
 
             if (IsInRole(key))
             {
-                foreach (var item in values)
-                    if (_principal.IsInRole(item))
-                    {
-                        _diagnostics.AddInformation(textLocation, item, $"user can't have role {item}");
-                        result = false;
-                    }
+                foreach (var item in values.Where(item => _principal.IsInRole(item)))
+                {
+                    _diagnostics.AddInformation(textLocation, item, $"user can't have role {item}");
+                    result = false;
+                }
             }
 
             else if (_principal is ClaimsPrincipal p)
             {
                 var pp = p.Claims.Where(c => c.Type == key).ToList();
-                foreach (var item in values)
-                    if (pp.Any(c => c.Value == item))
-                    {
-                        result = false;
-                        _diagnostics.AddInformation(textLocation, string.Join(", ", values), $"user hasn't necessary claim {key}");
-                    }
+                foreach (var _ in values.Where(item => pp.Any(c => c.Value == item)).Select(item => new { }))
+                {
+                    result = false;
+                    _diagnostics.AddInformation(textLocation, string.Join(", ", values), $"user hasn't necessary claim {key}");
+                }
             }
 
             return result;
@@ -528,6 +503,9 @@ namespace Bb.Policies
         /// </returns>
         public bool EvaluateEquality(string key, string value, TextLocation textLocation)
         {
+
+            if (_principal == null)
+                return false;
 
             bool result = true;
 
@@ -582,6 +560,9 @@ namespace Bb.Policies
         /// </returns>
         public bool EvaluateNotEquality(string key, string value, TextLocation textLocation)
         {
+
+            if (_principal == null)
+                return false;
 
             bool result = true;
 
@@ -696,9 +677,8 @@ namespace Bb.Policies
             if (left == null)
                 return false;
 
-            var type = typeof(int);
-            var l = (int)left.ConvertTo(type, CultureInfo.CurrentCulture);
-            
+            var l = left.ConvertTo<int>(CultureInfo.CurrentCulture);
+
             switch (@operator)
             {
 
@@ -729,7 +709,6 @@ namespace Bb.Policies
 
         }
 
-
         public bool EvaluateUnary(object left, PolicyOperator @operator, TextLocation textLocation)
         {
 
@@ -741,9 +720,8 @@ namespace Bb.Policies
 
                 case PolicyOperator.Required:
                     bool result = true;
-                    var key = (string)left.ConvertTo(typeof(string), CultureInfo.CurrentCulture);
-                    if (_principal is ClaimsPrincipal p)
-                        if (!p.Claims.Any(c => c.Type == key))
+                    var key = left.ConvertTo<string>(CultureInfo.CurrentCulture);
+                    if (!string.IsNullOrEmpty(key ) && _principal is ClaimsPrincipal p && !p.Claims.Any(c => c.Type == key))
                         {
                             result = false;
                             _diagnostics.AddInformation(textLocation, key, $"user must have claim {key}");
@@ -772,14 +750,13 @@ namespace Bb.Policies
 
         }
 
-        public bool EvaluateconvertBool(object left, TextLocation textLocation)
+        public bool EvaluateConvertBool(object left, TextLocation textLocation)
         {
             if (left == null)
                 return false;
-            var result = (bool)left.ConvertTo(typeof(bool), CultureInfo.CurrentCulture);
+            var result = left.ConvertTo<bool>(CultureInfo.CurrentCulture);
             return result;
         }
-
 
         public bool IsInRole(string key)
         {
@@ -849,7 +826,6 @@ namespace Bb.Policies
         {
 
             var location = TextLocation.Create((line, column, position), (-1, -1, positionEnd));
-            //location.Filename = ctx.ScriptFile;
 
             var e = new MethodContext()
             {
@@ -882,9 +858,9 @@ namespace Bb.Policies
         public bool StopIsActivated { get; set; } = true;
 
         public bool Result { get; internal set; }
-        public IServiceProvider ServiceProvider { get; private set; }
+        public IServiceProvider? ServiceProvider { get; private set; }
 
-        private class MethodContext
+        private sealed class MethodContext
         {
 
             public MethodContext()
@@ -892,34 +868,61 @@ namespace Bb.Policies
                 Watch = new Stopwatch();
             }
 
-            public TextLocation Trace { get; internal set; }
+            public TextLocation? Trace { get; internal set; }
 
             public Stopwatch Watch { get; }
 
         }
 
-        internal static readonly MethodInfo? _evaluateBinary;
-        internal static readonly MethodInfo? _evaluateBinaryNumeric;
-        internal static readonly MethodInfo? _evaluateUnary;
-        internal static readonly MethodInfo? _evaluateEquality;
-        internal static readonly MethodInfo? _evaluateNotEquality;
-        internal static readonly MethodInfo? _evaluateFrom;
-        internal static readonly MethodInfo? _evaluateValue;
-        internal static readonly MethodInfo? _evaluateconvertBool;
-        internal static readonly MethodInfo? _evaluateIn;
-        internal static readonly MethodInfo? _evaluateNotIn;
-        internal static readonly MethodInfo? _evaluateHas;
-        internal static readonly MethodInfo? _evaluateHasNot;
-        internal static readonly MethodInfo _TraceLocation;
-        internal static readonly MethodInfo _ExitLocation;
+
+        internal static readonly MethodInfo _evaluateHas = typeof(RuntimeContext).GetMethod(nameof(EvaluateHas), [typeof(string), typeof(string[]), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateHas));
+
+        internal static readonly MethodInfo _evaluateHasNot = typeof(RuntimeContext).GetMethod(nameof(EvaluateHasNot), [typeof(string), typeof(string[]), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateHasNot));
+
+        internal static readonly MethodInfo _evaluateIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateIn), [typeof(string), typeof(string[]), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateIn));
+
+        internal static readonly MethodInfo _evaluateNotIn = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotIn), [typeof(string), typeof(string[]), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateNotIn));
+
+        internal static readonly MethodInfo _evaluateEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateEquality), [typeof(string), typeof(string), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateEquality));
+
+        internal static readonly MethodInfo _evaluateNotEquality = typeof(RuntimeContext).GetMethod(nameof(EvaluateNotEquality), [typeof(string), typeof(string), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateNotEquality));
+
+        internal static readonly MethodInfo _evaluateValue = typeof(RuntimeContext).GetMethod(nameof(EvaluateValue), [typeof(string), typeof(string), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateValue));
+
+        internal static readonly MethodInfo _evaluateBinary = typeof(RuntimeContext).GetMethod(nameof(EvaluateBinary), [typeof(object), typeof(PolicyOperator), typeof(string), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateBinary));
+
+        internal static readonly MethodInfo _evaluateBinaryNumeric = typeof(RuntimeContext).GetMethod(nameof(EvaluateBinaryNumeric), [typeof(object), typeof(PolicyOperator), typeof(int), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateBinaryNumeric));
+
+        internal static readonly MethodInfo _evaluateUnary = typeof(RuntimeContext).GetMethod(nameof(EvaluateUnary), [typeof(object), typeof(PolicyOperator), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateUnary));
+
+        internal static readonly MethodInfo _evaluateFrom = typeof(RuntimeContext).GetMethod(nameof(EvaluateFrom), [typeof(string), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateFrom));
+
+        internal static readonly MethodInfo _evaluateconvertBool = typeof(RuntimeContext).GetMethod(nameof(EvaluateConvertBool), [typeof(object), typeof(TextLocation)])
+                ?? throw new InvalidDataException(nameof(EvaluateConvertBool));
+
+        internal static readonly MethodInfo _TraceLocation = typeof(RuntimeContext).GetMethod(nameof(TraceLocation), [typeof(RuntimeContext), typeof(string), typeof(int), typeof(int), typeof(int), typeof(int)])
+                ?? throw new InvalidDataException(nameof(TraceLocation));
+
+        internal static readonly MethodInfo _ExitLocation = typeof(RuntimeContext).GetMethod(nameof(ExitLocation), [typeof(RuntimeContext), typeof(object)])
+                ?? throw new InvalidDataException(nameof(ExitLocation));
 
         private ScriptDiagnostics _diagnostics;
         private readonly Dictionary<string, object> _dic;
         private readonly Dictionary<string, Func<RuntimeContext, bool>> _rules;
-        private readonly Stopwatch _watch;
         private readonly Stack<MethodContext> _stack;
-        private readonly object sources;
-        private IPrincipal _principal;
+        private IPrincipal? _principal;
+    
     }
 
 }

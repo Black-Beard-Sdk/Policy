@@ -1,6 +1,6 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
+﻿// Ignore Spelling: Jwt Rsa Jti
+
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -12,7 +12,7 @@ namespace Black.Beard.Policies.XUnit
 
 
     /// <summary>
-    /// // génère la documentation
+    /// Helper class for creating and validating JWT tokens.
     /// </summary>
     public class JwtHelper
     {
@@ -20,17 +20,17 @@ namespace Black.Beard.Policies.XUnit
         /// <summary>
         /// The private key used to sign the token
         /// </summary>
-        public RsaSecurityKey PrivateKey { get; private set; }
+        public RsaSecurityKey? PrivateKey { get; private set; }
 
         /// <summary>
         /// The public key used to validate the token
         /// </summary>
-        public RsaSecurityKey PublicKey { get; private set; }
+        public RsaSecurityKey? PublicKey { get; private set; }
 
         /// <summary>
         /// The symmetric key used for signing and validation
         /// </summary>
-        public SymmetricSecurityKey SymmetricKey { get; private set; }
+        public SymmetricSecurityKey? SymmetricKey { get; private set; }
 
         /// <summary>
         /// The issuer of the token
@@ -109,7 +109,7 @@ namespace Black.Beard.Policies.XUnit
         /// <param name="keySize">The size of the RSA key. Default is 2048.</param>
         /// <param name="action">An optional action to configure the RSA instance.</param>
         /// <returns>The updated <see cref="JwtHelper"/> instance.</returns>
-        public JwtHelper WithRsa(int keySize = 2048, Action<RSA> action = null)
+        public JwtHelper WithRsa(int keySize = 2048, Action<RSA>? action = null)
         {
             _rsa = RSA.Create(keySize);
             this.PrivateKey = new RsaSecurityKey(_rsa);
@@ -340,6 +340,15 @@ namespace Black.Beard.Policies.XUnit
             if (token == null)
                 throw new ArgumentNullException("token");
 
+            SecurityKey? signingKey = SymmetricKey;
+            if (signingKey == null)
+            {
+                if (PublicKey != null)
+                    signingKey = PublicKey;
+                else
+                    throw new InvalidOperationException("No signing key found.");
+            }
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var validationParameters = new TokenValidationParameters
             {
@@ -349,7 +358,7 @@ namespace Black.Beard.Policies.XUnit
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = this.Issuer,
                 ValidAudience = this.Audience,
-                IssuerSigningKey = SymmetricKey ?? (SecurityKey)PublicKey
+                IssuerSigningKey = signingKey
             };
 
             var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
@@ -358,7 +367,7 @@ namespace Black.Beard.Policies.XUnit
             return principal;
         }
 
-        private RSA _rsa;
+        private RSA? _rsa;
         private readonly List<Claim> _claims;
         Func<DateTime> _funcExpires;
 

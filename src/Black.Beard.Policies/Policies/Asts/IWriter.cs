@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿// Ignore Spelling: Asts
+
+namespace Bb.Policies.Asts
 {
     /// <summary>
     /// Interface for objects that can be written to a <see cref="Writer"/>.

@@ -18,6 +18,15 @@ namespace Bb.Policies
     /// </remarks>
     public class ScriptParser
     {
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScriptParser"/> class.
+        /// </summary>
+        protected ScriptParser()
+        {
+            
+        }
+
         /// <summary>
         /// Parses a policy script string into an intellisense-compatible abstract syntax tree.
         /// </summary>
@@ -48,9 +57,9 @@ namespace Bb.Policies
         public static IntellisenseAst EvaluateString(string text)
         {
             var _errors = new ScriptDiagnostics();
-            var parser = ParseString(text);
-            var ctx = new IntellisenseContext(parser.Parser, _errors, string.Empty);
-            var tree = new IntellisenseAst(ctx, parser.Tree);
+            var parser = ParseString(text) ?? throw new InvalidOperationException("script parsing failed");
+            var ctx = new IntellisenseContext(parser.Parser ?? throw new InvalidOperationException("script parsing failed"), _errors, string.Empty);
+            var tree = new IntellisenseAst(ctx, parser.Tree ?? throw new InvalidOperationException("script parsing failed"));
             return tree;
         }
 
@@ -86,9 +95,9 @@ namespace Bb.Policies
         public static IntellisenseAst EvaluatePath(string text)
         {
             var _errors = new ScriptDiagnostics();
-            var parser = ParsePath(text);
-            var ctx = new IntellisenseContext(parser.Parser, _errors, string.Empty);
-            var tree = new IntellisenseAst(ctx, parser.Tree);
+            var parser = ParsePath(text) ?? throw new InvalidOperationException("script parsing failed");
+            var ctx = new IntellisenseContext(parser.Parser ?? throw new InvalidOperationException("script parsing failed"), _errors, string.Empty);
+            var tree = new IntellisenseAst(ctx, parser.Tree ?? throw new InvalidOperationException("script parsing failed"));
             return tree;
         }
 
@@ -160,7 +169,7 @@ namespace Bb.Policies
         /// <returns>
         /// A <see cref="ScriptParserBase{TParser, TContext}"/> object containing the parser and parse tree.
         /// </returns>
-        public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParseString(StringBuilder source, string sourceFile = "", TextWriter output = null, TextWriter outputError = null)
+        public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParseString(StringBuilder source, string sourceFile = "", TextWriter? output = null, TextWriter? outputError = null)
         {
             return ScriptParserBase<PolicyParser, PolicyParser.ScriptContext>.ParseString(creator, _func, source, sourceFile, output, outputError);
         }
@@ -206,7 +215,7 @@ namespace Bb.Policies
         /// <returns>
         /// A <see cref="ScriptParserBase{TParser, TContext}"/> object containing the parser and parse tree.
         /// </returns>
-        public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParsePath(string source, TextWriter output = null, TextWriter outputError = null)
+        public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParsePath(string source, TextWriter? output = null, TextWriter? outputError = null)
         {
             return ScriptParserBase<PolicyParser, PolicyParser.ScriptContext>.ParsePath(creator, _func, source, output, outputError);
         }

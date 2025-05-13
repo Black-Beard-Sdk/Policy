@@ -1,4 +1,5 @@
-﻿
+﻿// Ignore Spelling: Asts
+
 namespace Bb.Policies.Asts
 {
 
@@ -30,6 +31,11 @@ namespace Bb.Policies.Asts
 
         public string Value { get; }
 
+        public override T? Accept<T>(IPolicyVisitor<T> visitor) where T : default
+        {
+            return visitor.VisitComment(this);
+        }
+
         /// <summary>
         /// Accepts a visitor to process this policy comment.
         /// </summary>
@@ -48,10 +54,7 @@ namespace Bb.Policies.Asts
         /// string result = comment.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
-        {
-            return visitor.VisitComment(this);
-        }
+
 
         /// <summary>
         /// Writes this comment to the specified writer.

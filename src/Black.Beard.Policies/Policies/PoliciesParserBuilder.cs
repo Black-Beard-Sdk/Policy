@@ -1,17 +1,13 @@
 ﻿using Bb.Analysis.DiagTraces;
-using Bb.Analysis.Tools;
 using Bb.Expressions;
 using Bb.Policies.Asts;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Bb.Policies
 {
 
-    internal class PoliciesParserBuilder : Sourcebuilder, IPolicyVisitor<object>
+    internal class PoliciesParserBuilder : SourceBuilder, IPolicyVisitor<object>
     {
 
         public PoliciesParserBuilder(ScriptDiagnostics diagnostics, PolicyEvaluator evaluator, bool withDebug)
@@ -26,8 +22,11 @@ namespace Bb.Policies
             _container.Accept(this);
         }
 
-        public object VisitContainer(PolicyContainer e)
+        public object? VisitContainer(PolicyContainer e)
         {
+
+            if (_container == null)
+                throw new InvalidOperationException("container is null");
 
             if (e.Diagnostics.InError)
                 throw new InvalidOperationException("rules are in error");
@@ -50,38 +49,40 @@ namespace Bb.Policies
 
             PrepareToBuild();
 
-            var s = _stack.Peek();
+            if (_compiler == null)
+                throw new InvalidOperationException("compiler is null");
+
+            var rule = item.Value ?? throw new InvalidOperationException("rule value is null");
 
             using (CurrentContext current_ctx = NewContext())
             {
 
                 // Start parsing
-                var rule = item.Value.Accept(this) as Expression;
+                var ruleExpression = rule.Accept(this) as Expression;
 
-                if (rule.Type != typeof(bool))
+                if (ruleExpression == null)
+                    throw new InvalidOperationException("rule is null");
+
+                if (ruleExpression.Type != typeof(bool))
                 {
                     var ctx = BuildCtx;
-                    var p = item.Value.Location.AsConstant();
-                    rule = Expression.Call(ctx.Context, RuntimeContext._evaluateconvertBool, rule, p);
+                    var p = (rule.Location ?? TextLocation.Empty).AsConstant();
+                    ruleExpression = Expression.Call(ctx.Context, RuntimeContext._evaluateconvertBool, ruleExpression, p);
                 }
 
                 if (Debugger.IsAttached)
                 {
                     var txt = item.ToString();
-                    var payload = rule.ToString();
+                    var payload = ruleExpression.ToString();
                     Debug.WriteLine($"{txt.Trim()} - {payload.Trim()}");
                 }
 
-                _compiler.Add(rule);
-                var result = _compiler.Compile<Func<RuntimeContext, bool>>();
+                _compiler.Add(ruleExpression);
+                var result = _compiler.Compile<Func<RuntimeContext, bool>>(null);
 
-                if (rule != null)
+                if (ruleExpression != null)
                 {
                     _evaluator.AddPolicyRule(item.Name, result);
-
-                }
-                else
-                {
 
                 }
 
@@ -102,13 +103,9 @@ namespace Bb.Policies
                 // OutputPath = path,
             };
 #endif
-            _pathStorages = new Stack<DisposingStorage>();
             PrivatesIndex.Reset();
-            //_resultReset = new List<MethodCallExpression>();
             _indexMethod = 0;
-
             var Context = _compiler.AddParameter(typeof(RuntimeContext), "argContext");
-            //var Argument = _compiler.AddParameter(typeof(object), "argDatas");
 
             _stack.Clear();
             _stack.Push(new BuildContext()
@@ -122,14 +119,14 @@ namespace Bb.Policies
             });
         }
 
-        public object VisitBinaryOperation(PolicyOperationBinary e)
+        public object? VisitBinaryOperation(PolicyOperationBinary e)
         {
 
             var ctx = BuildCtx;
 
-            var left = (Expression)e.Left.Accept(this);
-            var right = (Expression)e.Right.Accept(this);
-            var p = e.Location.AsConstant();
+            var left = e.Left?.Accept(this) as Expression ?? throw new InvalidDataException($"left can't be null");
+            var right = e.Right?.Accept(this) as Expression ?? throw new InvalidDataException($"right can't be null");
+            var p = (e.Location ?? TextLocation.Empty).AsConstant();
 
             if (left.Type == typeof(object) && right.Type == typeof(string))
                 return Expression.Call(ctx.Context, RuntimeContext._evaluateBinary, left, e.Operator.AsConstant(), right, p);
@@ -184,10 +181,6 @@ namespace Bb.Policies
                     else if (isNumeric)
                         return Expression.Call(ctx.Context, RuntimeContext._evaluateBinaryNumeric, left, ope, right, p);
 
-                    else
-                    {
-
-                    }
                     break;
 
                 case PolicyOperator.NotEqual:
@@ -197,10 +190,6 @@ namespace Bb.Policies
                     else if (isNumeric)
                         return Expression.Call(ctx.Context, RuntimeContext._evaluateBinaryNumeric, left, ope, right, p);
 
-                    else
-                    {
-
-                    }
                     break;
 
                 case PolicyOperator.UnaryCompare:
@@ -242,11 +231,6 @@ namespace Bb.Policies
                 case PolicyOperator.GreaterOrEqual:
                     if (isNumeric)
                         return Expression.Call(ctx.Context, RuntimeContext._evaluateBinaryNumeric, left, ope.AsConstant(), right, p);
-
-                    else
-                    {
-
-                    }
                     break;
 
                 case PolicyOperator.UnaryCompare:
@@ -303,15 +287,15 @@ namespace Bb.Policies
 
         }
 
-        public object VisitId(PolicyIdExpression e)
+        public object? VisitId(PolicyIdExpression e)
         {
 
-            var result = (Expression)VisitConstant(e);
+            var result = VisitConstant(e) as Expression ?? throw new InvalidOperationException("constant creation return null value");
 
             if (!string.IsNullOrEmpty(e.Source))
             {
                 var ctx = BuildCtx;
-                var p = e.Location.AsConstant();
+                var p = (e.Location ?? TextLocation.Empty).AsConstant();
                 result = Expression.Call(ctx.Context, RuntimeContext._evaluateValue, e.Source.AsConstant(), result, p);
 
             }
@@ -320,11 +304,18 @@ namespace Bb.Policies
             return result;
         }
 
-        public object VisitConstant(PolicyConstant e)
+        public object? VisitConstant(PolicyConstant e)
         {
 
-            if (this.ResolveVariable(e.Value, e.Location, out var result))
+            if (this.ResolveVariable(e.Value, out var result))
+            {
+
+                if (result == null)
+                    return Expression.Constant(null);
+
                 return result.AsConstant();
+
+            }
 
             switch (e.Type)
             {
@@ -351,26 +342,26 @@ namespace Bb.Policies
 
         }
 
-        public object VisitArray(PolicyArray e)
+        public object? VisitArray(PolicyArray e)
         {
             List<Expression> items = new List<Expression>();
             foreach (var item in e)
-                items.Add((Expression)item.Accept(this));
+                items.Add(item.Accept(this) as Expression ?? throw new InvalidOperationException($"item {items.Count} is null"));
             return Expression.NewArrayInit(typeof(string), items.ToArray());
         }
 
-        public object VisitSubExpression(PolicySubExpression e)
+        public object? VisitSubExpression(PolicySubExpression e)
         {
             return e.Sub.Accept(this);
-        }      
+        }
 
-        public object VisitUnaryOperation(PolicyOperationUnary e)
+        public object? VisitUnaryOperation(PolicyOperationUnary e)
         {
 
-            var result = (Expression)e.Left.Accept(this);
+            var result = e.Left?.Accept(this) as Expression ?? throw new InvalidOperationException($"operand is null");
 
             var ctx = BuildCtx;
-            var p = e.Location.AsConstant();
+            var p = (e.Location ?? TextLocation.Empty).AsConstant();
 
             if (e.Operator == PolicyOperator.Not)
                 return Expression.Not(result);
@@ -393,30 +384,32 @@ namespace Bb.Policies
         }
 
 
-        public object VisitComment(PolicyComment e)
+        public object? VisitComment(PolicyComment e)
         {
             return null;
         }
 
-        public object VisitRule(PolicyRule e)
+        public object? VisitRule(PolicyRule e)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitVariable(PolicyVariable e)
+        public object? VisitVariable(PolicyVariable e)
         {
             throw new NotImplementedException();
         }
 
-        private bool ResolveVariable(string name, TextLocation location, out string alias)
+        private bool ResolveVariable(string name, out string? alias)
         {
+            if (_container == null)
+                throw new InvalidOperationException("container is null");
+
             return _container.ResolveVariable(name, out alias);
         }
 
-        private LocalMethodCompiler _compiler;
-        private Stack<DisposingStorage> _pathStorages;
+        private LocalMethodCompiler? _compiler;
 
-        private PolicyContainer _container;
+        private PolicyContainer? _container;
         private readonly PolicyEvaluator _evaluator;
     }
 

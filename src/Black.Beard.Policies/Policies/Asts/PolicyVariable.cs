@@ -1,4 +1,5 @@
-﻿
+﻿// Ignore Spelling: Asts
+
 namespace Bb.Policies.Asts
 {
 
@@ -52,7 +53,8 @@ namespace Bb.Policies.Asts
         /// string result = variable.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return visitor.VisitVariable(this);
         }
@@ -102,26 +104,7 @@ namespace Bb.Policies.Asts
         /// <returns>
         /// A <see cref="PolicyConstant"/> representing the variable's value.
         /// </returns>
-        public PolicyConstant Value { get; set; }
-
-        /// <summary>
-        /// Gets or sets the origin path from which this variable was loaded.
-        /// </summary>
-        /// <remarks>
-        /// This property stores the file path or other source identifier from which
-        /// the variable was loaded, which can be useful for debugging and auditing.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var container = Policy.ParsePath(@"C:\policies\config.policy");
-        /// var variable = container.Variables.First();
-        /// string origin = variable.Origin; // Returns "C:\policies\config.policy"
-        /// </code>
-        /// </example>
-        /// <returns>
-        /// A <see cref="System.String"/> representing the origin path of this variable.
-        /// </returns>
-        public string Origin { get; internal set; }
+        public PolicyConstant? Value { get; set; }
 
     }
 

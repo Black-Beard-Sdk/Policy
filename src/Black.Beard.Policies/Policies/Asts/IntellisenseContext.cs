@@ -1,4 +1,6 @@
-﻿using Bb.Analysis.DiagTraces;
+﻿// Ignore Spelling: Asts
+
+using Bb.Analysis.DiagTraces;
 
 namespace Bb.Policies.Asts
 {
@@ -11,32 +13,6 @@ namespace Bb.Policies.Asts
     /// </remarks>
     public struct IntellisenseContext
     {
-        /// <summary>
-        /// Gets the default instance of the <see cref="IntellisenseContext"/> structure.
-        /// </summary>
-        /// <remarks>
-        /// This instance has all properties set to their default values and NotNull set to false.
-        /// </remarks>
-        public static readonly IntellisenseContext Default = new IntellisenseContext();
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IntellisenseContext"/> structure with default values.
-        /// </summary>
-        /// <remarks>
-        /// This constructor initializes all properties to their default values and sets NotNull to false.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var context = new IntellisenseContext();
-        /// </code>
-        /// </example>
-        public IntellisenseContext()
-        {
-            Parser = default;
-            Diagnostics = default;
-            ScriptPath = default;
-            NotNull = false;
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IntellisenseContext"/> structure with the specified parameters.
@@ -59,7 +35,7 @@ namespace Bb.Policies.Asts
         public IntellisenseContext(Antlr4.Runtime.Parser parser, ScriptDiagnostics diagnostics, string path)
         {
             Parser = parser;
-            Diagnostics = diagnostics;
+            Diagnostics = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
             ScriptPath = path;
             NotNull = true;
         }

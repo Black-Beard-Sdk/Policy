@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿// Ignore Spelling: Asts
+
+namespace Bb.Policies.Asts
 {
 
 
@@ -36,14 +38,7 @@
         /// </example>
         public PolicyConstant(string value, ConstantType type)
         {
-            this.Kind = PolicyKind.Constant;
-
-            //var o = value.Trim();
-            //if (o.StartsWith("\"") && o.EndsWith("\""))
-            //    o = o.Trim('"');
-            //else if (o.StartsWith("'") && o.EndsWith("'"))
-            //    o = o.Trim('\'');
-
+            this.Kind = PolicyKind.Constant;       
             this.Value = value;
             this.Type = type;
         }
@@ -89,7 +84,8 @@
         /// bool result = constant.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return visitor.VisitConstant(this);
         }
@@ -138,7 +134,6 @@
                     writer.Append(Value);
                     break;
 
-                case ConstantType.Id:
                 default:
                     writer.Append(Value);
                     break;

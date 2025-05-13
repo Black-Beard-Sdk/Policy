@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Black.Beard.Policies\Black.Beard.Policies.csproj" />
-    <ProjectReference Include="..\Black.Beard.Sdk.Policy\Black.Beard.Policies.csproj" />
   </ItemGroup>
 
 </Project>

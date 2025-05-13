@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Ignore Spelling: Asts
+
+using System;
 
 namespace Bb.Policies.Asts
 {
@@ -59,7 +61,8 @@ namespace Bb.Policies.Asts
         /// bool result = operation.Accept(visitor);
         /// </code>
         /// </example>
-        override public T Accept<T>(IPolicyVisitor<T> visitor)
+        override public T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return visitor.VisitBinaryOperation(this);
         }
@@ -152,7 +155,7 @@ namespace Bb.Policies.Asts
             if (Right != null)
                 writer.ToString(Right);
 
-            return position != writer.Count;
+            return result && position != writer.Count;
 
         }
 
@@ -173,7 +176,7 @@ namespace Bb.Policies.Asts
         /// operation.Right = new PolicyConstant("z", ConstantType.Id);
         /// </code>
         /// </example>
-        public Policy Right { get; set; }
+        public Policy? Right { get; set; }
 
     }
 

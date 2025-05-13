@@ -1,4 +1,5 @@
-﻿
+﻿// Ignore Spelling: Asts
+
 namespace Bb.Policies.Asts
 {
 
@@ -51,7 +52,8 @@ namespace Bb.Policies.Asts
         /// bool result = rule.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return visitor.VisitRule(this);
         }
@@ -126,12 +128,11 @@ namespace Bb.Policies.Asts
         /// bool hasCategories = rule.WithCategories("Security", "AccessControl");
         /// </code>
         /// </example>
-        public bool WithCategories(params string[] categories)
+        public void WithCategories(params string[] categories)
         {
             foreach (string category in categories)
                 if (!string.IsNullOrEmpty(category))
-                    return false;
-            return true;
+                    this._categories.Add(category);
         }
 
         /// <summary>
@@ -176,25 +177,7 @@ namespace Bb.Policies.Asts
         /// <returns>
         /// A <see cref="Policy"/> object representing the rule's value expression.
         /// </returns>
-        public Policy Value { get; set; }
-
-        /// <summary>
-        /// Gets or sets the origin path from which this rule was loaded.
-        /// </summary>
-        /// <remarks>
-        /// This property stores the file path or other source identifier from which
-        /// the rule was loaded, which can be useful for debugging and auditing.
-        /// </remarks>
-        /// <example>
-        /// <code lang="C#">
-        /// var rule = Policy.ParsePath(@"C:\policies\access.policy").GetRule("AdminAccess");
-        /// string origin = rule.Origin; // Returns "C:\policies\access.policy"
-        /// </code>
-        /// </example>
-        /// <returns>
-        /// A <see cref="System.String"/> representing the origin path of this rule.
-        /// </returns>
-        public string Origin { get; internal set; }
+        public Policy? Value { get; set; }
 
     }
 

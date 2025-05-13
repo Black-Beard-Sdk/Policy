@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿// Ignore Spelling: Asts
+
+namespace Bb.Policies.Asts
 {
     public class PolicyInclude : PolicyNamed
     {
@@ -6,10 +8,11 @@
         public PolicyInclude(string name) 
             : base(name)
         {
-
+            FullPath = string.Empty;
         }
 
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return default(T);
         }
@@ -33,14 +36,14 @@
 
             this.FileExists = f.Exists;
 
-            return this.Fullpath = f.FullName;
+            return this.FullPath = f.FullName;
 
         }
 
 
         public bool IsLoaded { get; internal set; }
 
-        public string Fullpath { get; private set; }
+        public string FullPath { get; private set; }
 
         public bool FileExists { get; private set; }
 

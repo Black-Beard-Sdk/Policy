@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿// Ignore Spelling: Asts
+
+namespace Bb.Policies.Asts
 {
 
     /// <summary>
@@ -31,7 +33,7 @@
         /// }
         /// </code>
         /// </example>
-        public PolicyExpression()
+        protected PolicyExpression()
         {
 
         }

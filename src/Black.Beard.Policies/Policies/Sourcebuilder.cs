@@ -14,11 +14,11 @@ namespace Bb.Policies
     /// Sourcebuilder manages build contexts and storage for generating code during policy evaluation.
     /// It provides mechanisms for context tracking and hierarchical storage of intermediate values.
     /// </remarks>
-    public class Sourcebuilder : IStoreSource
+    public class SourceBuilder : IStoreSource
     {
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Sourcebuilder"/> class.
+        /// Initializes a new instance of the <see cref="SourceBuilder"/> class.
         /// </summary>
         /// <param name="diagnostics">Container for diagnostic messages. Must not be null.</param>
         /// <param name="withDebug">Whether to include debug information in the generated code.</param>
@@ -29,12 +29,14 @@ namespace Bb.Policies
         /// <example>
         /// <code lang="C#">
         /// var diagnostics = new ScriptDiagnostics();
-        /// var builder = new Sourcebuilder(diagnostics, true);
+        /// var builder = new SourceBuilder(diagnostics, true);
         /// </code>
         /// </example>
-        public Sourcebuilder(ScriptDiagnostics diagnostics, bool withDebug)
+        public SourceBuilder(ScriptDiagnostics diagnostics, bool withDebug)
         {
-            _diagnostics = diagnostics ?? throw new ArgumentNullException(nameof(_diagnostics));
+            ScriptPath = string.Empty;
+            _pathStorages = new Stack<DisposingStorage>();
+            _diagnostics = diagnostics ?? throw new ArgumentNullException(nameof(diagnostics));
             _withDebug = withDebug;
         }
 
@@ -133,6 +135,7 @@ namespace Bb.Policies
         /// </remarks>
         protected class CurrentContext : IDisposable
         {
+
             /// <summary>
             /// Initializes a new instance of the <see cref="CurrentContext"/> class.
             /// </summary>
@@ -148,24 +151,13 @@ namespace Bb.Policies
             }
 
             /// <summary>
-            /// Disposes of the context and restores the previous context.
-            /// </summary>
-            /// <remarks>
-            /// This method executes the cleanup action specified in the constructor,
-            /// which typically pops the context from the stack.
-            /// </remarks>
-            public void Dispose()
-            {
-                action();
-            }
-
-            /// <summary>
             /// The action to execute when this context is disposed.
             /// </summary>
             /// <remarks>
             /// This action typically pops the current build context from the stack.
             /// </remarks>
-            private Action action;
+            private readonly Action action;
+            private bool disposedValue;
 
             /// <summary>
             /// Gets the build context wrapped by this instance.
@@ -174,6 +166,32 @@ namespace Bb.Policies
             /// This property provides access to the current build context.
             /// </remarks>
             public BuildContext Current { get; }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    if (disposing)
+                    {
+                        action();
+                    }
+                    disposedValue = true;
+                }
+            }
+
+            /// <summary>
+            /// Disposes of the context and restores the previous context.
+            /// </summary>
+            /// <remarks>
+            /// This method executes the cleanup action specified in the constructor,
+            /// which typically pops the context from the stack.
+            /// </remarks>
+            public void Dispose()
+            {
+                // Ne changez pas ce code. Placez le code de nettoyage dans la méthode 'Dispose(bool disposing)'
+                Dispose(disposing: true);
+                GC.SuppressFinalize(this);
+            }
         }
 
         /// <summary>
@@ -194,6 +212,7 @@ namespace Bb.Policies
         /// </remarks>
         protected class BuildContext
         {
+
             /// <summary>
             /// Initializes a new instance of the <see cref="BuildContext"/> class.
             /// </summary>
@@ -211,7 +230,7 @@ namespace Bb.Policies
             /// <remarks>
             /// This field stores a reference to the parameter expression used in the generated code.
             /// </remarks>
-            public ParameterExpression Argument;
+            internal ParameterExpression? Argument;
 
             /// <summary>
             /// The parameter expression representing the context parameter.
@@ -219,7 +238,7 @@ namespace Bb.Policies
             /// <remarks>
             /// This field stores a reference to the context parameter expression used in the generated code.
             /// </remarks>
-            public ParameterExpression Context;
+            internal ParameterExpression? Context;
 
             /// <summary>
             /// The root source expression.
@@ -227,7 +246,7 @@ namespace Bb.Policies
             /// <remarks>
             /// This field stores the expression that represents the source object being evaluated.
             /// </remarks>
-            public Expression RootSource;
+            internal Expression? RootSource;
 
             /// <summary>
             /// The root target expression.
@@ -235,7 +254,7 @@ namespace Bb.Policies
             /// <remarks>
             /// This field stores the expression that represents the target of the generated code.
             /// </remarks>
-            public Expression RootTarget;
+            internal Expression? RootTarget;
 
             /// <summary>
             /// The source code being generated.
@@ -243,7 +262,7 @@ namespace Bb.Policies
             /// <remarks>
             /// This field stores the source code object that is being built during compilation.
             /// </remarks>
-            public SourceCode Source;
+            internal SourceCode? Source;
 
             /// <summary>
             /// Gets or sets the kind of code being generated.
@@ -278,7 +297,7 @@ namespace Bb.Policies
             /// This method attempts to retrieve a value from the context's dictionary using the specified key.
             /// </remarks>
             /// <exception cref="System.ArgumentNullException">Thrown when key is null.</exception>
-            public bool TryGetInStorage(string key, out object value)
+            public bool TryGetInStorage(string key, out object? value)
             {
                 return _dic.TryGetValue(key, out value);
             }
@@ -289,7 +308,8 @@ namespace Bb.Policies
             /// <remarks>
             /// This dictionary stores values that need to be accessible within the current build context.
             /// </remarks>
-            private Dictionary<string, object> _dic;
+            private readonly Dictionary<string, object> _dic;
+
         }
 
         /// <summary>
@@ -333,7 +353,7 @@ namespace Bb.Policies
         /// <exception cref="System.ArgumentNullException">Thrown when key is null.</exception>
         /// <example>
         /// <code lang="C#">
-        /// var builder = new Sourcebuilder(diagnostics, true);
+        /// var builder = new SourceBuilder(diagnostics, true);
         /// // Push a new store
         /// using (var store = builder.NewStore())
         /// {
@@ -347,7 +367,7 @@ namespace Bb.Policies
         /// }
         /// </code>
         /// </example>
-        public bool TryGetInStorage(string key, out object value)
+        public bool TryGetInStorage(string key, out object? value)
         {
             var s = _pathStorages.Peek();
             if (s == null)
@@ -371,7 +391,7 @@ namespace Bb.Policies
         /// <exception cref="System.InvalidCastException">Thrown when the value cannot be cast to the specified type.</exception>
         /// <example>
         /// <code lang="C#">
-        /// var builder = new Sourcebuilder(diagnostics, true);
+        /// var builder = new SourceBuilder(diagnostics, true);
         /// // Push a new store
         /// using (var store = builder.NewStore())
         /// {
@@ -392,7 +412,7 @@ namespace Bb.Policies
             if (s == null)
                 throw new InvalidOperationException("No storage found");
 
-            if (s.TryGetInStorage(key, out var v))
+            if (s.TryGetInStorage(key, out var v) && v != null)
             {
                 value = (T)v;
                 return true;
@@ -415,7 +435,7 @@ namespace Bb.Policies
         /// <exception cref="System.ArgumentNullException">Thrown when key is null.</exception>
         /// <example>
         /// <code lang="C#">
-        /// var builder = new Sourcebuilder(diagnostics, true);
+        /// var builder = new SourceBuilder(diagnostics, true);
         /// // Push a new store
         /// using (var store = builder.NewStore())
         /// {
@@ -567,7 +587,7 @@ namespace Bb.Policies
         /// <remarks>
         /// This field stores the diagnostics container used for reporting issues during source generation.
         /// </remarks>
-        private ScriptDiagnostics _diagnostics;
+        private readonly ScriptDiagnostics _diagnostics;
 
         /// <summary>
         /// Stack of storage containers for hierarchical value storage.
@@ -576,7 +596,7 @@ namespace Bb.Policies
         /// This field stores a stack of storage containers, allowing for hierarchical
         /// storage of values where values can be pushed and popped as scope changes.
         /// </remarks>
-        private Stack<DisposingStorage> _pathStorages;
+        private readonly Stack<DisposingStorage> _pathStorages;
 
         /// <summary>
         /// Indicates whether debug information should be included in generated code.

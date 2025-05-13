@@ -1,5 +1,10 @@
-﻿using Bb.Analysis.DiagTraces;
+﻿
+// Ignore Spelling: Asts
+
+using Bb.Analysis.DiagTraces;
 using Bb;
+using Antlr4.Runtime;
+using System.IO;
 
 namespace Bb.Policies.Asts
 {
@@ -18,9 +23,9 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Initializes a new instance of the <see cref="Policy"/> class.
         /// </summary>
-        public Policy()
+        protected Policy()
         {
-            //this._comments = new List<PolicyComment>();
+
         }
 
         /// <summary>
@@ -50,7 +55,7 @@ namespace Bb.Policies.Asts
         /// string result = policyNode.Accept(visitor);
         /// </code>
         /// </example>
-        public abstract T Accept<T>(IPolicyVisitor<T> visitor);
+        public abstract T? Accept<T>(IPolicyVisitor<T> visitor);
 
         /// <summary>
         /// Gets or sets the location of the code source.
@@ -79,14 +84,6 @@ namespace Bb.Policies.Asts
         }
 
         /// <summary>
-        /// Gets the comment's list.
-        /// </summary>
-        /// <value>
-        /// The comments.
-        /// </value>
-        //public IEnumerable<PolicyComment> Comments { get => this._comments; }
-
-        /// <summary>
         /// Evaluates text for intellisense purposes.
         /// </summary>
         /// <param name="text">The text to evaluate. Must not be null.</param>
@@ -104,7 +101,6 @@ namespace Bb.Policies.Asts
         /// </example>
         public static IntellisenseAst EvaluateTextForIntellisense(string text)
         {
-            var _errors = new ScriptDiagnostics();
             var tree = ScriptParser.EvaluateString(text);
             tree.ParseTree();
             return tree;
@@ -129,7 +125,6 @@ namespace Bb.Policies.Asts
         /// </example>
         public static IntellisenseAst EvaluatePathForIntellisense(string text)
         {
-            var _errors = new ScriptDiagnostics();
             var tree = ScriptParser.EvaluatePath(text);
             tree.ParseTree();
             return tree;
@@ -159,20 +154,9 @@ namespace Bb.Policies.Asts
             var container = new PolicyContainer() { Diagnostics = errors };
             var parser = ScriptParser.ParseString(text);
 
-            var visitor = new ScriptBuilderVisitor(parser.Parser, errors, container, null, string.Empty);
-
-            var tree = (PolicyContainer)parser.Visit(visitor);
-
-            while (container.MustLoadIncludes)
-                foreach (var item in container.IncludeToLoads)
-                {
-                    var file = item.ResolveLocation(visitor.ScriptPathDirectory);
-                    if (!item.FileExists)
-                        errors.AddError(item.Location, item.Name, $"failed to load file {file}");
-                    ParsePath(file, errors, container);
-                }
-
+            var tree = ParseDatas(parser, errors, container, string.Empty);
             return tree;
+        
         }
 
         /// <summary>
@@ -225,23 +209,35 @@ namespace Bb.Policies.Asts
         /// </example>
         public static PolicyContainer ParsePath(string path, ScriptDiagnostics errors, PolicyContainer container)
         {
-
             var parser = ScriptParser.ParsePath(path);
-            var visitor = new ScriptBuilderVisitor(parser.Parser, errors, container, null, path);
-            var tree = (PolicyContainer)parser.Visit(visitor);
+            var tree = ParseDatas(parser, errors, container, path);
+            return tree;
+        }
 
-            container.EvaluateInclude(path);
+
+        private static PolicyContainer ParseDatas(ScriptParserBase<Parser.PolicyParser, Parser.PolicyParser.ScriptContext> parser, ScriptDiagnostics errors, PolicyContainer container, string path)
+        {
+
+            var visitor = new ScriptBuilderVisitor(parser.Parser, errors, container, null, path);
+
+            var tree = parser.Visit(visitor) as PolicyContainer;
+            if (tree == null)
+                throw new InvalidOperationException("Failed to parse the policy text.");
+
+            if (!string.IsNullOrEmpty(path))
+                container.EvaluateInclude(path);
 
             while (container.MustLoadIncludes)
-                foreach (var item in container.IncludeToLoads)
+                foreach (var item in container.IncludeToLoads())
                 {
                     var file = item.ResolveLocation(visitor.ScriptPathDirectory);
                     if (!item.FileExists)
-                        errors.AddError(item.Location, item.Name, $"failed to load file {file}");
+                        errors.AddError(item.Location ?? TextLocation.Empty, item.Name, $"failed to load file {file}");
                     ParsePath(file, errors, container);
                 }
 
             return tree;
+
         }
 
         /// <summary>
@@ -252,7 +248,7 @@ namespace Bb.Policies.Asts
         /// </returns>
         public override string ToString()
         {
-            Writer writer = new Writer();
+            var writer = new Writer();
             writer.ToString(this);
             return writer.ToString();
         }
@@ -277,16 +273,6 @@ namespace Bb.Policies.Asts
         /// </example>
         public abstract bool ToString(Writer writer);
 
-        ///// <summary>
-        ///// Adds the specified comments.
-        ///// </summary>
-        ///// <param name="comments">The comments.</param>
-        //internal void AddComments(IEnumerable<PolicyComment> comments)
-        //{
-        //    _comments.AddRange(comments);
-        //}      
-
-        //private readonly List<PolicyComment> _comments;
         public const string Quote = "\"";
 
     }

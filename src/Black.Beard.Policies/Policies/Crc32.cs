@@ -4,6 +4,7 @@ namespace Bb.Policies
 {
     internal static class Crc32
     {
+
         private static readonly uint[] crcTable = new uint[256]
         {
         0u, 1996959894u, 3993919788u, 2567524794u, 124634137u, 1886057615u, 3915621685u, 2657392035u, 249268274u, 2044508324u,
@@ -39,7 +40,7 @@ namespace Bb.Policies
         //     Calculate the CRC (Cyclic Redundancy Check) for a range of bytes See RFC1952
         //     for details. CRCs can be computed in chunks, where you take the CRC of the preceding
         //     block of data and use this as the 'crc32' to compute the next chunk.
-        public static uint CalculateCrc32(this StringBuilder buffer)
+        public static uint CalculateCRC32(this StringBuilder buffer)
         {
             int num = 0;
             int num2 = buffer.Length;
@@ -58,7 +59,7 @@ namespace Bb.Policies
         //     Calculate the CRC (Cyclic Redundancy Check) for a range of bytes See RFC1952
         //     for details. CRCs can be computed in chunks, where you take the CRC of the preceding
         //     block of data and use this as the 'crc32' to compute the next chunk.
-        public static uint CalculateCrc32(this string buffer)
+        public static uint CalculateCRC32(this string buffer)
         {
             int num = 0;
             int num2 = buffer.Length;
@@ -77,7 +78,7 @@ namespace Bb.Policies
         //     Calculate the CRC (Cyclic Redundancy Check) for a range of bytes See RFC1952
         //     for details. CRCs can be computed in chunks, where you take the CRC of the preceding
         //     block of data and use this as the 'crc32' to compute the next chunk.
-        public static uint CalculateCrc32(this byte[] buffer)
+        public static uint CalculateCRC32(this byte[] buffer)
         {
             int num = 0;
             int num2 = buffer.Length;

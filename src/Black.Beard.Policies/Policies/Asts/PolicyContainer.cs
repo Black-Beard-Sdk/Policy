@@ -1,4 +1,6 @@
-﻿using Bb.Analysis.DiagTraces;
+﻿// Ignore Spelling: Asts Fallback
+
+using Bb.Analysis.DiagTraces;
 
 namespace Bb.Policies.Asts
 {
@@ -28,10 +30,12 @@ namespace Bb.Policies.Asts
         /// </example>
         public PolicyContainer()
         {
+            this.Path = string.Empty;
             this._dicVariable = new Dictionary<string, PolicyVariable>();
             this._dicRule = new Dictionary<string, PolicyRule>();
             this._dicInclude = new Dictionary<string, PolicyInclude>();
             this.Kind = PolicyKind.Container;
+            this.Diagnostics = new ScriptDiagnostics();
         }
 
         /// <summary>
@@ -52,7 +56,8 @@ namespace Bb.Policies.Asts
         /// bool result = container.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return visitor.VisitContainer(this);
         }
@@ -245,7 +250,7 @@ namespace Bb.Policies.Asts
         /// }
         /// </code>
         /// </example>
-        public bool ResolveVariable(string name, out string alias)
+        public bool ResolveVariable(string name, out string? alias)
         {
 
             if (string.IsNullOrEmpty(name))
@@ -253,8 +258,7 @@ namespace Bb.Policies.Asts
 
             alias = null;
 
-            if (_dicVariable.TryGetValue(name, out var a))
-                if (a.Value != null)
+            if (_dicVariable.TryGetValue(name, out var a) && a.Value != null)
                     alias = a.Value.Value;
 
             return !string.IsNullOrEmpty(alias);
@@ -289,12 +293,9 @@ namespace Bb.Policies.Asts
 
         internal void EvaluateInclude(string path)
         {
-            foreach (var item in this._dicInclude)
-                if (item.Value.Fullpath == path)
-                {
-                    item.Value.IsLoaded = true;
-                    break;
-                }
+            var items = this._dicInclude.Where(c => c.Value.FullPath == path).ToList();
+            if (items.Any())
+                items[0].Value.IsLoaded = true;
         }
 
         /// <summary>
@@ -345,12 +346,12 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Gets the default rule for this container.
         /// </summary>
-        public PolicyRule DefaultRule { get; private set; }
+        public PolicyRule? DefaultRule { get; private set; }
 
         /// <summary>
         /// Gets the fallback rule for this container.
         /// </summary>
-        public PolicyRule FallbackRule { get; private set; }
+        public PolicyRule? FallbackRule { get; private set; }
 
         /// <summary>
         /// Return true if needs to load include file
@@ -360,7 +361,9 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Return the list of includes to files
         /// </summary>
-        public PolicyInclude[] IncludeToLoads => _dicInclude.Where(c => !c.Value.IsLoaded).Select(c => c.Value).ToArray();
+        public PolicyInclude[] IncludeToLoads() => 
+            _dicInclude?.Where(c => !c.Value.IsLoaded).Select(c => c.Value).ToArray() 
+                ?? Array.Empty<PolicyInclude>();
 
         /// <summary>
         /// Gets the path of the policy file that was parsed to create this container.
@@ -368,9 +371,9 @@ namespace Bb.Policies.Asts
         public string Path { get; internal set; }
 
 
-        private Dictionary<string, PolicyVariable> _dicVariable;
-        private Dictionary<string, PolicyRule> _dicRule;
-        private Dictionary<string, PolicyInclude> _dicInclude;
+        private readonly Dictionary<string, PolicyVariable> _dicVariable;
+        private readonly Dictionary<string, PolicyRule> _dicRule;
+        private readonly Dictionary<string, PolicyInclude> _dicInclude;
 
     }
 

@@ -1,5 +1,8 @@
 ﻿
 
+
+// Ignore Spelling: filepath
+
 #if DEBUG_EXPRESSION
 using Bb.Builds;
 using Bb.Nugets;
@@ -26,7 +29,7 @@ namespace Bb.Expressions
         }
 
 
-        public override TDelegate Compile<TDelegate>(string filepathCode = null)
+        public override TDelegate Compile<TDelegate>(string? filepathCode)
         {
 
             if (string.IsNullOrEmpty(filepathCode))
@@ -123,9 +126,8 @@ namespace Bb.Expressions
             }
         }
 
-#endif
 
-        private class ConstantCollector : System.Linq.Expressions.ExpressionVisitor
+        private sealed class ConstantCollector : System.Linq.Expressions.ExpressionVisitor
         {
 
             public ConstantCollector()
@@ -151,7 +153,6 @@ namespace Bb.Expressions
 
         }
 
-#if DEBUG_EXPRESSION
         private readonly bool _withDebug;
 #endif
 

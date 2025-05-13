@@ -85,9 +85,9 @@ namespace Bb.Policies
         /// <param name="start"></param>
         /// <param name="context"></param>
         /// <param name="message"></param>
-        public static void AddError(this ScriptDiagnostics self, string? sourceCode, TextLocation start, string context, string message)
+        public static void AddError(this ScriptDiagnostics self, string? sourceCode, TextLocation? start, string context, string message)
         {
-            self.AddError(start, context, message);
+            self.AddError(start ?? TextLocation.Empty, context, message);
         }
 
         /// <summary>
@@ -98,9 +98,9 @@ namespace Bb.Policies
         /// <param name="start"></param>
         /// <param name="context"></param>
         /// <param name="message"></param>
-        public static void AddWarning(this ScriptDiagnostics self, string? sourceCode, TextLocation start, string context, string message)
+        public static void AddWarning(this ScriptDiagnostics self, string? sourceCode, TextLocation? start, string context, string message)
         {
-            self.AddWarning(start, context, message);
+            self.AddWarning(start ?? TextLocation.Empty, context, message);
         }
 
         /// <summary>
@@ -111,9 +111,9 @@ namespace Bb.Policies
         /// <param name="start"></param>
         /// <param name="context"></param>
         /// <param name="message"></param>
-        public static void AddInformation(this ScriptDiagnostics self, string? sourceCode, TextLocation start, string context, string message)
+        public static void AddInformation(this ScriptDiagnostics self, string? sourceCode, TextLocation? start, string context, string message)
         {
-            self.AddInformation(start, context, message);
+            self.AddInformation(start ?? TextLocation.Empty, context, message);
         }
 
     }

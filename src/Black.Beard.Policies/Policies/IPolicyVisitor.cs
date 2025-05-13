@@ -5,7 +5,7 @@ namespace Bb.Policies
 
 
 
-    public interface IPolicyVisitor<T>
+    public interface IPolicyVisitor<out T>
     {
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitUnaryOperation(myUnaryOperation);
         /// </code>
         /// </example>
-        T VisitUnaryOperation(PolicyOperationUnary e);
+        T? VisitUnaryOperation(PolicyOperationUnary e);
 
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitBinaryOperation(myBinaryOperation);
         /// </code>
         /// </example>
-        T VisitBinaryOperation(PolicyOperationBinary e);
+        T? VisitBinaryOperation(PolicyOperationBinary e);
 
         /// <summary>
         /// Visits a comment policy.
@@ -58,7 +58,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitComment(myComment);
         /// </code>
         /// </example>
-        T VisitComment(PolicyComment e);
+        T? VisitComment(PolicyComment e);
                 
         /// </summary>
         /// <param name="e">The constant policy to visit. Cannot be null.</param>
@@ -73,7 +73,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitConstant(myConstant);
         /// </code>
         /// </example>
-        T VisitConstant(PolicyConstant e);
+        T? VisitConstant(PolicyConstant e);
         
         /// <summary>
         /// Visits a container policy.
@@ -90,7 +90,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitContainer(myContainer);
         /// </code>
         /// </example>
-        T VisitContainer(PolicyContainer e);
+        T? VisitContainer(PolicyContainer e);
 
         /// <summary>
         /// Visits a rule policy.
@@ -107,7 +107,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitRule(myRule);
         /// </code>
         /// </example>
-        T VisitRule(PolicyRule e);
+        T? VisitRule(PolicyRule e);
 
         /// <summary>
         /// Visits a variable policy.
@@ -124,7 +124,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitVariable(myVariable);
         /// </code>
         /// </example>
-        T VisitVariable(PolicyVariable e);
+        T? VisitVariable(PolicyVariable e);
 
         /// <summary>
         /// Visits a sub-expression policy.
@@ -141,7 +141,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitSubExpression(mySubExpression);
         /// </code>
         /// </example>
-        T VisitSubExpression(PolicySubExpression e);
+        T? VisitSubExpression(PolicySubExpression e);
 
         /// <summary>
         /// Visits an array policy.
@@ -158,7 +158,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitArray(myArray);
         /// </code>
         /// </example>
-        T VisitArray(PolicyArray e);
+        T? VisitArray(PolicyArray e);
 
         /// <summary>
         /// Visits an id policy.
@@ -175,7 +175,7 @@ namespace Bb.Policies
         /// var result = visitor.VisitId(myArray);
         /// </code>
         /// </example>
-        T VisitId(PolicyIdExpression e);
+        T? VisitId(PolicyIdExpression e);
 
     }
 

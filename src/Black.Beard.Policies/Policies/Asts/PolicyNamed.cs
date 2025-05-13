@@ -1,4 +1,6 @@
-﻿namespace Bb.Policies.Asts
+﻿// Ignore Spelling: Asts
+
+namespace Bb.Policies.Asts
 {
     public abstract class PolicyNamed : Policy
     {
@@ -11,7 +13,7 @@
         /// This constructor initializes a new rule with the specified name and an empty category set.
         /// </remarks>
         /// <exception cref="System.ArgumentNullException">Thrown when name is null.</exception>
-        public PolicyNamed(string name) 
+        protected PolicyNamed(string name) 
         {
             this.Name = name;
         }
@@ -34,7 +36,24 @@
         /// </returns>
         public string Name { get; }
 
-        public string Origin { get; internal set; }
+        /// <summary>
+        /// Gets or sets the origin path from which this variable was loaded.
+        /// </summary>
+        /// <remarks>
+        /// This property stores the file path or other source identifier from which
+        /// the variable was loaded, which can be useful for debugging and auditing.
+        /// </remarks>
+        /// <example>
+        /// <code lang="C#">
+        /// var container = Policy.ParsePath(@"C:\policies\config.policy");
+        /// var variable = container.Variables.First();
+        /// string origin = variable.Origin; // Returns "C:\policies\config.policy"
+        /// </code>
+        /// </example>
+        /// <returns>
+        /// A <see cref="System.String"/> representing the origin path of this variable.
+        /// </returns>
+        public string? Origin { get; internal set; }
 
     }
 

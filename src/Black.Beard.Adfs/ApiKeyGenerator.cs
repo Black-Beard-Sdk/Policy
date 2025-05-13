@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿// Ignore Spelling: Adfs Api pwd
+using System.Runtime.Versioning;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Bb.Helpers
@@ -6,6 +8,7 @@ namespace Bb.Helpers
     /// <summary>
     /// Provides methods for generating API keys and security identifiers.
     /// </summary>
+    [SupportedOSPlatform("windows")]
     public static class ApiKeyGenerator
     {
 
@@ -54,13 +57,13 @@ namespace Bb.Helpers
         /// <code lang="C#">
         /// // Generate login and password from user email
         /// string email = "user@example.com";
-        /// var cnx = ApiKeyGenerator.GenerateIdentifiers(email, "mysalt");
-        /// Console.WriteLine($"Generated apikey: {cnx[0]}");
+        /// var cnx = ApiKeyGenerator.GenerateIdentifiers(email, "mySalt");
+        /// Console.WriteLine($"Generated apiKey: {cnx[0]}");
         /// Console.WriteLine($"Generated login: {{cnx[1]}");
         /// Console.WriteLine($"Generated password: {{cnx[2]}");
         /// </code>
         /// </example>
-        public static string[] GenerateIdentifiers(this string apiKey, int loginLength = 25, int pwdLength = 35, string salt = null)
+        public static string[] GenerateIdentifiers(this string apiKey, int loginLength = 25, int pwdLength = 35, string? salt = null)
         {
             var login = ResolveLogin(apiKey, loginLength, salt);
             return [apiKey, login, GeneratePassword(login, pwdLength, apiKey)];
@@ -95,8 +98,6 @@ namespace Bb.Helpers
                     builder.Append(bytes[i].ToString("x2"));
 
                 string secret = builder.ToString();
-                
-                secret = builder.ToString();
                 if (secret.Length > lengthLogin)
                     secret = secret.Substring(0, lengthLogin);
 

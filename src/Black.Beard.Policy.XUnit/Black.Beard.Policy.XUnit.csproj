@@ -32,7 +32,7 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
     <PackageReference Include="Testcontainers.Keycloak" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -45,9 +45,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Black.Beard.Adfs\Black.Beard.Adfs.csproj" />
     <ProjectReference Include="..\Black.Beard.Keycloak\Black.Beard.Keycloak.csproj" />
-    <ProjectReference Include="..\Black.Beard.Policies\Black.Beard.Policies.csproj" />
     <ProjectReference Include="..\Black.Beard.Rest\Black.Beard.Rest.csproj" />
-    <ProjectReference Include="..\Black.Beard.Sdk.Policy\Black.Beard.Policies.csproj" />
+    <ProjectReference Include="..\Black.Beard.Policies\Black.Beard.Policies.csproj" />
   </ItemGroup>
 
 </Project>

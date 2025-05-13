@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿// Ignore Spelling: Asts
+
+using System.Collections;
 
 namespace Bb.Policies.Asts
 {
@@ -69,7 +71,7 @@ namespace Bb.Policies.Asts
         /// bool result = array.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor) where T : default
         {
             return visitor.VisitArray(this);
         }

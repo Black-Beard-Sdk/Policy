@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿// Ignore Spelling: Asts
+
+using System.Text;
 
 namespace Bb.Policies.Asts;
 
@@ -37,46 +39,6 @@ public class Writer
         _index = 0;
     }
 
-    /// <summary>
-    /// Removes whitespace characters from the beginning of the text.
-    /// </summary>
-    /// <remarks>
-    /// This method removes all whitespace characters from the start of the text until a non-whitespace character is found.
-    /// </remarks>
-    /// <exception cref="System.IndexOutOfRangeException">Thrown when the StringBuilder is empty.</exception>
-    /// <example>
-    /// <code lang="C#">
-    /// var writer = new Writer();
-    /// writer.Append("   Hello");
-    /// writer.TrimBegin(); // Writer now contains "Hello"
-    /// </code>
-    /// </example>
-    public void TrimBegin()
-    {
-        while (char.IsWhiteSpace(_sb[0]))
-            _sb.Remove(0, 1);
-    }
-
-    /// <summary>
-    /// Removes whitespace characters from the end of the text.
-    /// </summary>
-    /// <remarks>
-    /// This method removes all whitespace characters from the end of the text until a non-whitespace character is found.
-    /// It safely checks if the StringBuilder has content before attempting to trim.
-    /// </remarks>
-    /// <example>
-    /// <code lang="C#">
-    /// var writer = new Writer();
-    /// writer.Append("Hello   ");
-    /// writer.TrimEnd(); // Writer now contains "Hello"
-    /// </code>
-    /// </example>
-    public void TrimEnd()
-    {
-        if (_sb.Length > 0)
-            while (char.IsWhiteSpace(_sb[_sb.Length - 1]))
-                _sb.Remove(_sb.Length - 1, 1);
-    }
 
     /// <summary>
     /// Removes specified characters from the beginning of the text.
@@ -97,6 +59,49 @@ public class Writer
     {
         while (toFind.Contains(_sb[0]))
             _sb.Remove(0, 1);
+    }
+
+
+    /// <summary>
+    /// Removes whitespace characters from the beginning of the text.
+    /// </summary>
+    /// <remarks>
+    /// This method removes all whitespace characters from the start of the text until a non-whitespace character is found.
+    /// </remarks>
+    /// <exception cref="System.IndexOutOfRangeException">Thrown when the StringBuilder is empty.</exception>
+    /// <example>
+    /// <code lang="C#">
+    /// var writer = new Writer();
+    /// writer.Append("   Hello");
+    /// writer.TrimBegin(); // Writer now contains "Hello"
+    /// </code>
+    /// </example>
+    public void TrimBegin()
+    {
+        while (char.IsWhiteSpace(_sb[0]))
+            _sb.Remove(0, 1);
+    }
+
+
+    /// <summary>
+    /// Removes whitespace characters from the end of the text.
+    /// </summary>
+    /// <remarks>
+    /// This method removes all whitespace characters from the end of the text until a non-whitespace character is found.
+    /// It safely checks if the StringBuilder has content before attempting to trim.
+    /// </remarks>
+    /// <example>
+    /// <code lang="C#">
+    /// var writer = new Writer();
+    /// writer.Append("Hello   ");
+    /// writer.TrimEnd(); // Writer now contains "Hello"
+    /// </code>
+    /// </example>
+    public void TrimEnd()
+    {
+        if (_sb.Length > 0)
+            while (char.IsWhiteSpace(_sb[_sb.Length - 1]))
+                _sb.Remove(_sb.Length - 1, 1);
     }
 
     /// <summary>
@@ -215,9 +220,8 @@ public class Writer
     /// </example>
     public bool EndBy(char text)
     {
-        if (_sb.Length > 1)
-            if (_sb[_sb.Length - 1] != text)
-                return false;
+        if (_sb.Length > 1 && _sb[_sb.Length - 1] != text)
+            return false;
         return true;
 
     }
@@ -525,40 +529,6 @@ public class Writer
 
     private readonly StringBuilder _sb;
     private int _index;
-
-    private class _disposable : IDisposable
-    {
-
-        public _disposable(Writer writer)
-        {
-            this._writer = writer;
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    //_strategy.ApplyIndentLineAfterEnding(_writer);
-                    //_strategy.ApplyReturnLineAfterEnding(_writer);
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        private bool disposedValue;
-        private Writer _writer;
-
-    }
 
 }
 

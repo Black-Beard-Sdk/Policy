@@ -1,5 +1,7 @@
-﻿using System.DirectoryServices;
+﻿// Ignore Spelling: Adfs
+
 using System.DirectoryServices.AccountManagement;
+using System.Runtime.Versioning;
 
 namespace Bb.Adfs
 {
@@ -10,6 +12,7 @@ namespace Bb.Adfs
     /// This class provides a simplified interface for working with Active Directory user accounts
     /// by wrapping a UserPrincipal object and exposing common operations.
     /// </remarks>
+    [SupportedOSPlatform("windows")]
     public class AdfsUser
     {
 

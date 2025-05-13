@@ -1,4 +1,7 @@
-﻿using System.DirectoryServices;
+﻿// Ignore Spelling: Adfs username ldapPath ldap
+
+using System.DirectoryServices;
+using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 
 namespace Bb.Adfs
@@ -10,12 +13,13 @@ namespace Bb.Adfs
     /// This class provides methods to interact with Active Directory using LDAP.
     /// It simplifies common tasks like checking if users exist in the directory.
     /// </remarks>
+    [SupportedOSPlatform("windows")]
     public class ActiveDirectoryHelper
     {
         private readonly string _ldapPath;
         private readonly string _username;
         private readonly string _password;
-        private readonly ILogger _logger;
+        private readonly ILogger? _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ActiveDirectoryHelper"/> class.
@@ -40,7 +44,7 @@ namespace Bb.Adfs
         /// var adHelper = new ActiveDirectoryHelper(ldapPath, username, password, logger);
         /// </code>
         /// </example>
-        public ActiveDirectoryHelper(string ldapPath, string username, string password, ILogger logger = null)
+        public ActiveDirectoryHelper(string ldapPath, string username, string password, ILogger? logger = null)
         {
             _ldapPath = ldapPath ?? throw new ArgumentNullException(nameof(ldapPath));
             _username = username ?? throw new ArgumentNullException(nameof(username));
@@ -119,7 +123,7 @@ namespace Bb.Adfs
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error checking if user exists: {Username}, Error: {ErrorMessage}", 
+                _logger?.LogError(ex, "Error checking if user exists: {Username}, Error: {ErrorMessage}",
                     username, ex.Message);
                 return false;
             }
@@ -160,14 +164,17 @@ namespace Bb.Adfs
         /// }
         /// </code>
         /// </example>
-        public Dictionary<string, object> GetUserProperties(string username, string[] propertiesToLoad = null)
+        public Dictionary<string, object> GetUserProperties(string username, string[]? propertiesToLoad = null)
         {
+
             if (username == null)
                 throw new ArgumentNullException(nameof(username));
             if (string.IsNullOrEmpty(username))
                 throw new ArgumentException("Username cannot be empty", nameof(username));
 
             _logger?.LogDebug("Getting user properties for {Username}", username);
+
+            var properties = new Dictionary<string, object>();
 
             try
             {
@@ -178,14 +185,14 @@ namespace Bb.Adfs
                         searcher.Filter = $"(sAMAccountName={username})";
 
                         // Use provided properties or default ones
-                        string[] propsToLoad = propertiesToLoad ?? new[] 
-                        { 
-                            "cn", 
-                            "givenName", 
-                            "sn", 
-                            "displayName", 
-                            "mail", 
-                            "userPrincipalName", 
+                        string[] propsToLoad = propertiesToLoad ?? new[]
+                        {
+                            "cn",
+                            "givenName",
+                            "sn",
+                            "displayName",
+                            "mail",
+                            "userPrincipalName",
                             "memberOf",
                             "distinguishedName",
                             "whenCreated",
@@ -201,44 +208,41 @@ namespace Bb.Adfs
                         if (result == null)
                         {
                             _logger?.LogWarning("User not found: {Username}", username);
-                            return null;
+                            return properties;
                         }
 
-                        var properties = new Dictionary<string, object>();
-                        foreach (string propertyName in propsToLoad)
+                        foreach (string propertyName in propsToLoad.Where(result.Properties.Contains))
                         {
-                            if (result.Properties.Contains(propertyName))
+                            if (result.Properties[propertyName].Count > 1)
                             {
-                                if (result.Properties[propertyName].Count > 1)
+                                // For multi-valued properties
+                                var values = new List<object>();
+                                foreach (var value in result.Properties[propertyName])
                                 {
-                                    // For multi-valued properties
-                                    var values = new List<object>();
-                                    foreach (var value in result.Properties[propertyName])
-                                    {
-                                        values.Add(value);
-                                    }
-                                    properties[propertyName] = values.ToArray();
+                                    values.Add(value);
                                 }
-                                else if (result.Properties[propertyName].Count == 1)
-                                {
-                                    // For single-valued properties
-                                    properties[propertyName] = result.Properties[propertyName][0];
-                                }
+                                properties[propertyName] = values.ToArray();
+                            }
+                            else if (result.Properties[propertyName].Count == 1)
+                            {
+                                // For single-valued properties
+                                properties[propertyName] = result.Properties[propertyName][0];
                             }
                         }
 
-                        _logger?.LogInformation("Successfully retrieved {PropertyCount} properties for user {Username}", 
+                        _logger?.LogInformation("Successfully retrieved {PropertyCount} properties for user {Username}",
                             properties.Count, username);
-                        return properties;
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error getting user properties for {Username}: {ErrorMessage}", 
+                _logger?.LogError(ex, "Error getting user properties for {Username}: {ErrorMessage}",
                     username, ex.Message);
-                return null;
             }
+
+            return properties;
+
         }
 
         /// <summary>
@@ -285,7 +289,7 @@ namespace Bb.Adfs
                         searcher.Filter = $"(&(objectClass=group)(cn={groupName}))";
                         searcher.PropertiesToLoad.Add("cn");
                         var result = searcher.FindOne();
-                        
+
                         bool exists = result != null;
                         _logger?.LogDebug("Group {GroupName} {Exists}", groupName, exists ? "exists" : "does not exist");
                         return exists;
@@ -294,7 +298,7 @@ namespace Bb.Adfs
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error checking if group exists: {GroupName}, Error: {ErrorMessage}", 
+                _logger?.LogError(ex, "Error checking if group exists: {GroupName}, Error: {ErrorMessage}",
                     groupName, ex.Message);
                 return false;
             }
@@ -361,9 +365,10 @@ namespace Bb.Adfs
                             {
                                 using (var memberEntry = new DirectoryEntry($"LDAP://{member}", _username, _password))
                                 {
-                                    if (memberEntry.Properties["sAMAccountName"].Value != null)
+                                    if (memberEntry.Properties[sAMAccountName].Value != null)
                                     {
-                                        members.Add(memberEntry.Properties["sAMAccountName"].Value.ToString());
+                                        var a = memberEntry.Properties[sAMAccountName].Value?.ToString();
+                                        members.Add(a ?? throw new InvalidDataException($"{sAMAccountName} is not specified"));
                                     }
                                 }
                             }
@@ -376,10 +381,13 @@ namespace Bb.Adfs
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error getting members of group {GroupName}: {ErrorMessage}", 
+                _logger?.LogError(ex, "Error getting members of group {GroupName}: {ErrorMessage}",
                     groupName, ex.Message);
                 return members;
             }
         }
+
+        private const string sAMAccountName = "sAMAccountName";
+
     }
 }

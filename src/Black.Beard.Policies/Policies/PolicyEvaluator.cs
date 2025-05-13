@@ -164,12 +164,12 @@ namespace Bb.Policies
         /// <summary>
         /// Gets the runtime context for the evaluation.
         /// </summary>
-        public Func<RuntimeContext> CreateContext { get; set; }
+        public Func<RuntimeContext>? CreateContext { get; set; }
 
         /// <summary>
         /// Gets or sets the service provider for the evaluator.
         /// </summary>
-        public IServiceProvider ServiceProvider { get; set; }
+        public IServiceProvider? ServiceProvider { get; set; }
 
         private readonly Dictionary<string, Func<RuntimeContext, bool>> _dic;
 

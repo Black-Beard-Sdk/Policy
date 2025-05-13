@@ -1,4 +1,5 @@
-﻿
+﻿// Ignore Spelling: Asts
+
 namespace Bb.Policies.Asts
 {
     /// <summary>
@@ -72,7 +73,8 @@ namespace Bb.Policies.Asts
         /// bool result = operation.Accept(visitor);
         /// </code>
         /// </example>
-        public override T Accept<T>(IPolicyVisitor<T> visitor)
+        public override T? Accept<T>(IPolicyVisitor<T> visitor)
+            where T : default
         {
             return visitor.VisitUnaryOperation(this);
         }
@@ -128,7 +130,7 @@ namespace Bb.Policies.Asts
         /// operation.Left = new PolicyConstant("value", ConstantType.Boolean);
         /// </code>
         /// </example>
-        public Policy Left { get; set; }
+        public Policy? Left { get; set; }
 
         /// <summary>
         /// Gets or sets the operator of this unary operation.
