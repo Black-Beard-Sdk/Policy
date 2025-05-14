@@ -122,7 +122,7 @@ namespace Bb.Policies.Asts
                     else
                         writer.Append("false");
                     break;
-                case ConstantType.String:
+                case ConstantType.Text:
                     writer.Append($"\"{Value}\"");
                     break;
 
@@ -130,7 +130,7 @@ namespace Bb.Policies.Asts
                     writer.Append($"'{Value}'");
                     break;
 
-                case ConstantType.Integer:
+                case ConstantType.IntegerNumeric:
                     writer.Append(Value);
                     break;
 
@@ -157,7 +157,7 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Represents a string constant, enclosed in double quotes.
         /// </summary>
-        String,
+        Text,
 
         /// <summary>
         /// Represents an identifier constant, without quotes.
@@ -177,7 +177,7 @@ namespace Bb.Policies.Asts
         /// <summary>
         /// Represents an positive integer constant
         /// </summary>
-        Integer
+        IntegerNumeric
     
     }
 

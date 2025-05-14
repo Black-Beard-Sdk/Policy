@@ -106,16 +106,16 @@ public static class Extensions
         return builder;
     }
 
-    public static WebApplication MapDefaultEndpoints(this WebApplication app)
+    public static WebApplication MapDefaultEndpoints(this WebApplication application)
     {
-        app.MapHealthChecks("/health");
+        application.MapHealthChecks("/health");
 
-        app.MapHealthChecks(
+        application.MapHealthChecks(
             "/alive",
             new HealthCheckOptions { Predicate = r => r.Tags.Contains("live") }
         );
 
-        return app;
+        return application;
     }
 
 }

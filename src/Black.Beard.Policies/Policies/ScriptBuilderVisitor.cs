@@ -109,11 +109,11 @@ namespace Bb.Policies
             {
                 var dir = new FileInfo(path).Directory;
                 if (dir != null)
-                    ScriptPathDirectory = dir.FullName;
+                    _scriptPathDirectory = dir.FullName;
             }
 
-            if (string.IsNullOrEmpty(ScriptPathDirectory))
-                ScriptPathDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            if (string.IsNullOrEmpty(_scriptPathDirectory))
+                _scriptPathDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
         }
 
@@ -232,7 +232,7 @@ namespace Bb.Policies
                 foreach (var item in id1)
                 {
                     if (sb.Length > 0)
-                        sb.Append(".");
+                        sb.Append('.');
                     sb.Append(item.GetText());
                 }
 
@@ -368,7 +368,7 @@ namespace Bb.Policies
                 var constant = str.Accept(this) as string;
                 if (string.IsNullOrEmpty(constant))
                     throw new NotImplementedException(context.GetText());
-                return new PolicyConstant(constant, ConstantType.String) { Location = context.ToLocation() };
+                return new PolicyConstant(constant, ConstantType.Text) { Location = context.ToLocation() };
             }
 
             var id = context.ID();
@@ -385,7 +385,7 @@ namespace Bb.Policies
 
             var integer = context.integer();
             if (integer != null)
-                return new PolicyConstant(integer.GetText(), ConstantType.Integer) { Location = context.ToLocation() };
+                return new PolicyConstant(integer.GetText(), ConstantType.IntegerNumeric) { Location = context.ToLocation() };
 
             throw new NotImplementedException(context.GetText());
 
@@ -479,7 +479,7 @@ namespace Bb.Policies
                 return new PolicyVariable(_id)
                 {
                     Origin = _scriptPath,
-                    Value = new PolicyConstant(s, ConstantType.String)
+                    Value = new PolicyConstant(s, ConstantType.Text)
                     {
                         Location = str.ToLocation()
                     },
@@ -1150,7 +1150,7 @@ namespace Bb.Policies
         /// This stack maintains a hierarchical structure of build contexts,
         /// allowing for nested processing of expressions and statements.
         /// </remarks>
-        protected Stack<BuildContext> _stack;
+        private readonly Stack<BuildContext> _stack;
 
         /// <summary>
         /// Represents a context for code generation during policy compilation.
@@ -1269,6 +1269,15 @@ namespace Bb.Policies
             Method,
         }
 
+        /// <summary>
+        /// The directory containing the policy script being parsed.
+        /// </summary>
+        /// <remarks>
+        /// This field stores the directory path, which is used for resolving relative imports.
+        /// </remarks>
+        public string ScriptPathDirectory => _scriptPathDirectory;
+
+
         #endregion Context
 
         /// <summary>
@@ -1320,20 +1329,15 @@ namespace Bb.Policies
         private readonly Action<PolicyRule>? _action;
 
         /// <summary>
-        /// The directory containing the policy script being parsed.
-        /// </summary>
-        /// <remarks>
-        /// This field stores the directory path, which is used for resolving relative imports.
-        /// </remarks>
-        public readonly string ScriptPathDirectory;
-
-        /// <summary>
         /// The culture used for parsing culture-specific values.
         /// </summary>
         /// <remarks>
         /// This field stores the culture settings used for parsing numbers, dates, and other culture-specific values.
         /// </remarks>
         private readonly CultureInfo _currentCulture;
+
+
+        private readonly string _scriptPathDirectory;
 
     }
 

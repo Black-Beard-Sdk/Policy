@@ -2,9 +2,6 @@
 using Bb.Analysis.DiagTraces;
 using Bb.Policies.Asts;
 using Bb.Policies.Parser;
-using System;
-using System.Diagnostics;
-using System.IO;
 using System.Text;
 
 namespace Bb.Policies
@@ -130,7 +127,7 @@ namespace Bb.Policies
         /// </returns>
         public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParseString(string source)
         {
-            return ScriptParserBase<PolicyParser, PolicyParser.ScriptContext>.ParseString(creator, _func, source);
+            return Creator.ParseString(_func, source);
         }
 
         /// <summary>
@@ -171,7 +168,7 @@ namespace Bb.Policies
         /// </returns>
         public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParseString(StringBuilder source, string sourceFile = "", TextWriter? output = null, TextWriter? outputError = null)
         {
-            return ScriptParserBase<PolicyParser, PolicyParser.ScriptContext>.ParseString(creator, _func, source, sourceFile, output, outputError);
+            return Creator.ParseString(_func, source, sourceFile, output, outputError);
         }
 
         /// <summary>
@@ -217,7 +214,7 @@ namespace Bb.Policies
         /// </returns>
         public static ScriptParserBase<PolicyParser, PolicyParser.ScriptContext> ParsePath(string source, TextWriter? output = null, TextWriter? outputError = null)
         {
-            return ScriptParserBase<PolicyParser, PolicyParser.ScriptContext>.ParsePath(creator, _func, source, output, outputError);
+            return Creator.ParsePath(_func, source, output, outputError);
         }
 
         /// <summary>
@@ -227,15 +224,14 @@ namespace Bb.Policies
         /// This delegate is used by the parsing methods to create a PolicyParser from a character stream.
         /// It sets up the lexer and token stream, and configures the parser with appropriate options.
         /// </remarks>
-        private static Func<ScriptParserBase<PolicyParser, PolicyParser.ScriptContext>, ICharStream, PolicyParser> creator = (script, stream) =>
+        private static Func<ScriptParserBase<PolicyParser, PolicyParser.ScriptContext>, ICharStream, PolicyParser> Creator = (script, stream) =>
         {
 
             var lexer = new PolicyLexer(stream, script.Output, script.OutputError);
             var token = new CommonTokenStream(lexer);
             var parser = new PolicyParser(token)
             {
-                BuildParseTree = true,
-                //Trace = ScriptParser.Trace, // Ca plante sur un null, pourquoi ?
+                BuildParseTree = true
             };
 
             return parser;

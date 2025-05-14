@@ -4,6 +4,7 @@ using Bb.Analysis.DiagTraces;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Antlr4.Runtime.Atn;
+using System.Globalization;
 
 namespace Bb.Policies.Asts
 {
@@ -52,7 +53,7 @@ namespace Bb.Policies.Asts
                 AddError(e);
 
             else if (_item is ParserRuleContext r && r.exception != null)
-                    AddError(r);
+                AddError(r);
 
             int c = _item.ChildCount;
             var children = new List<IntellisenseAst>(c);
@@ -182,7 +183,7 @@ namespace Bb.Policies.Asts
                     else
                     {
                         var name = _item.GetType().Name;
-                        if (name.EndsWith("Context"))
+                        if (name.EndsWith("Context", true, CultureInfo.InvariantCulture))
                             name = name.Substring(0, name.Length - 7);
                         _name = name;
                     }
@@ -230,8 +231,8 @@ namespace Bb.Policies.Asts
         /// </example>
         public IEnumerable<IntellisenseAst> Select(string name)
         {
-            var nn = name.ToLower();
-            return this.Select(c => c.Name.ToLower() == nn);
+            var nn = name.ToLower(CultureInfo.InvariantCulture);
+            return this.Select(c => string.Equals(c.Name.ToLower(CultureInfo.InvariantCulture), nn, StringComparison.Ordinal));
         }
 
         /// <summary>

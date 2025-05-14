@@ -337,8 +337,7 @@ namespace Black.Beard.Policies.XUnit
         public IPrincipal Validate(string token, out SecurityToken validatedToken)
         {
 
-            if (token == null)
-                throw new ArgumentNullException("token");
+            ArgumentNullException.ThrowIfNull(token);
 
             SecurityKey? signingKey = SymmetricKey;
             if (signingKey == null)

@@ -34,11 +34,10 @@ policy p1 : role2 has [Admin]
             if (!policies.Diagnostics.Success)
                 throw new Exception("Failed to evaluate policies");
 
-            var alias = policies.ResolveVariable("role2", out string value);
+            var Testalias = policies.ResolveVariable("role2", out string? value);
 
-
-
-            Assert.True(alias);
+            Assert.True(Testalias);
+            Assert.True(!string.IsNullOrEmpty(value));
 
         }
 

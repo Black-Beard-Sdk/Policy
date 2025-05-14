@@ -73,10 +73,7 @@ namespace Bb.Policies
         /// </example>
         public void AddPolicyRule(string policyName, Func<RuntimeContext, bool> rule)
         {
-
-            if (!this._dic.ContainsKey(policyName))
-                this._dic.Add(policyName, rule);
-
+            _dic.TryAdd(policyName, rule);
         }
 
         /// <summary>
@@ -130,8 +127,7 @@ namespace Bb.Policies
         public bool Evaluate(string policy, object value, ScriptDiagnostics? diagnostic, out RuntimeContext context)
         {
 
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
+            ArgumentNullException.ThrowIfNull(value);
 
             if (string.IsNullOrEmpty(policy))
                 throw new ArgumentNullException(nameof(policy));

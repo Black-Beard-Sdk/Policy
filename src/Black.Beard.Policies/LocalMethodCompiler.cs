@@ -8,6 +8,9 @@ using Bb.Builds;
 using Bb.Nugets;
 #endif
 
+using System.Resources;
+
+[assembly: NeutralResourcesLanguage("en-US")]
 
 namespace Bb.Expressions
 {

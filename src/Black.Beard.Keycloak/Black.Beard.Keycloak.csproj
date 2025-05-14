@@ -8,13 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Keycloak\Connector.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Keycloak.AuthServices.Sdk" Version="2.6.1" />
     <PackageReference Include="Keycloak.AuthServices.Sdk.Kiota" Version="26.0.5" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Black.Beard.Rest\Black.Beard.Rest.csproj" />
+    <Folder Include="Keycloak\" />
   </ItemGroup>
 
 </Project>

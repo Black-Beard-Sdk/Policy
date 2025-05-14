@@ -2,72 +2,15 @@
 
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
-using Bb.Policies.Parser;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Bb.Policies
 {
 
-    /// <summary>
-    /// Base class for parsers that process script files or strings using ANTLR.
-    /// </summary>
-    /// <typeparam name="TParser">The type of parser to create.</typeparam>
-    /// <typeparam name="T">The type of parser rule context to use.</typeparam>
-    /// <remarks>
-    /// ScriptParserBase provides a foundation for creating parsers that can process script content
-    /// from various sources like strings, files, or StringBuilders. It handles the setup of
-    /// ANTLR parsers and provides access to the resulting parse tree.
-    /// </remarks>
-    public class ScriptParserBase<TParser, T> where TParser : Antlr4.Runtime.Parser where T : ParserRuleContext
+
+    public static class ScriptParserBaseExtension
     {
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ScriptParserBase{TParser, T}"/> class.
-        /// </summary>
-        /// <param name="output">The text writer for outputting parser messages. If null, Console.Out is used.</param>
-        /// <param name="outputError">The text writer for outputting parser error messages. If null, Console.Error is used.</param>
-        /// <param name="content">The content to be parsed as a StringBuilder. Must not be null.</param>
-        /// <param name="creator">Function to create a parser instance from a character stream. Must not be null.</param>
-        /// <param name="getRoot">Function to get the root context from a parser. Must not be null.</param>
-        /// <remarks>
-        /// This constructor initializes a parser with the specified output streams and content,
-        /// and calculates a CRC32 checksum for the content for change detection.
-        /// </remarks>
-        /// <exception cref="System.ArgumentNullException">Thrown when content, creator, or getRoot is null.</exception>
-        /// <example>
-        /// <code lang="C#">
-        /// var content = new StringBuilder("policy IsAdult : Identity.age >= 18");
-        /// var output = new StringWriter();
-        /// var errorOutput = new StringWriter();
-        /// 
-        /// var parser = new ScriptParserBase&lt;PolicyParser, PolicyParser.ScriptContext&gt;(
-        ///     output, 
-        ///     errorOutput, 
-        ///     content,
-        ///     (script, stream) => {
-        ///         var lexer = new PolicyLexer(stream);
-        ///         var tokens = new CommonTokenStream(lexer);
-        ///         return new PolicyParser(tokens);
-        ///     },
-        ///     parser => parser.script()
-        /// );
-        /// </code>
-        /// </example>
-        public ScriptParserBase(TextWriter? output, TextWriter? outputError, StringBuilder content, Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator, Func<TParser, T> getRoot)
-        {
-
-            Output = output ?? Console.Out;
-            OutputError = outputError ?? Console.Error;
-            _includes = new HashSet<string>();
-            Content = content;
-            Crc = content.CalculateCrc32();
-            _creator = creator;
-            _getRoot = getRoot;
-        }
 
         /// <summary>
         /// Parses a string containing script content.
@@ -103,10 +46,13 @@ namespace Bb.Policies
         /// <returns>
         /// A <see cref="ScriptParserBase{TParser, T}"/> instance with the parsed content.
         /// </returns>
-        public static ScriptParserBase<TParser, T> ParseString(
-            Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
+        public static ScriptParserBase<TParser, T> ParseString<TParser, T>
+        (
+            this Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
             Func<TParser, T> funcGetContext,
             string source)
+            where TParser : Antlr4.Runtime.Parser
+            where T : ParserRuleContext
         {
 
             ICharStream stream = CharStreams.fromString(source);
@@ -119,6 +65,7 @@ namespace Bb.Policies
             return parser;
 
         }
+
 
         /// <summary>
         /// Parses a StringBuilder containing script content.
@@ -166,10 +113,17 @@ namespace Bb.Policies
         /// <returns>
         /// A <see cref="ScriptParserBase{TParser, T}"/> instance with the parsed content.
         /// </returns>
-        public static ScriptParserBase<TParser, T> ParseString(
-            Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
-            Func<TParser, T> funcGetContext, 
-            StringBuilder source, string sourceFile = "", TextWriter? output = null, TextWriter? outputError = null)
+        public static ScriptParserBase<TParser, T> ParseString<TParser, T>
+            (
+                this Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
+                Func<TParser, T> funcGetContext,
+                StringBuilder source, 
+                string sourceFile = "", 
+                TextWriter? output = null, 
+                TextWriter? outputError = null
+            )
+            where TParser : Antlr4.Runtime.Parser
+            where T : ParserRuleContext
         {
 
             ICharStream stream = CharStreams.fromString(source.ToString());
@@ -225,10 +179,15 @@ namespace Bb.Policies
         /// <returns>
         /// A <see cref="ScriptParserBase{TParser, T}"/> instance with the parsed content.
         /// </returns>
-        public static ScriptParserBase<TParser, T> ParsePath(
-            Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
-            Func<TParser, T> funcGetContext, 
-            string source, TextWriter? output = null, TextWriter? outputError = null)
+        public static ScriptParserBase<TParser, T> ParsePath<TParser, T>
+            (
+                this Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator,
+                Func<TParser, T> funcGetContext,
+                string source, TextWriter? output = null, 
+                TextWriter? outputError = null
+            )
+            where TParser : Antlr4.Runtime.Parser
+            where T : ParserRuleContext
         {
 
             var payload = source.LoadFromFile();
@@ -242,6 +201,67 @@ namespace Bb.Policies
 
             return parser;
 
+        }
+
+    }
+
+    /// <summary>
+    /// Base class for parsers that process script files or strings using ANTLR.
+    /// </summary>
+    /// <typeparam name="TParser">The type of parser to create.</typeparam>
+    /// <typeparam name="T">The type of parser rule context to use.</typeparam>
+    /// <remarks>
+    /// ScriptParserBase provides a foundation for creating parsers that can process script content
+    /// from various sources like strings, files, or StringBuilders. It handles the setup of
+    /// ANTLR parsers and provides access to the resulting parse tree.
+    /// </remarks>
+    public class ScriptParserBase<TParser, T> 
+        where TParser : Antlr4.Runtime.Parser 
+        where T : ParserRuleContext
+    {
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScriptParserBase{TParser, T}"/> class.
+        /// </summary>
+        /// <param name="output">The text writer for outputting parser messages. If null, Console.Out is used.</param>
+        /// <param name="outputError">The text writer for outputting parser error messages. If null, Console.Error is used.</param>
+        /// <param name="content">The content to be parsed as a StringBuilder. Must not be null.</param>
+        /// <param name="creator">Function to create a parser instance from a character stream. Must not be null.</param>
+        /// <param name="getRoot">Function to get the root context from a parser. Must not be null.</param>
+        /// <remarks>
+        /// This constructor initializes a parser with the specified output streams and content,
+        /// and calculates a CRC32 checksum for the content for change detection.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">Thrown when content, creator, or getRoot is null.</exception>
+        /// <example>
+        /// <code lang="C#">
+        /// var content = new StringBuilder("policy IsAdult : Identity.age >= 18");
+        /// var output = new StringWriter();
+        /// var errorOutput = new StringWriter();
+        /// 
+        /// var parser = new ScriptParserBase&lt;PolicyParser, PolicyParser.ScriptContext&gt;(
+        ///     output, 
+        ///     errorOutput, 
+        ///     content,
+        ///     (script, stream) => {
+        ///         var lexer = new PolicyLexer(stream);
+        ///         var tokens = new CommonTokenStream(lexer);
+        ///         return new PolicyParser(tokens);
+        ///     },
+        ///     parser => parser.script()
+        /// );
+        /// </code>
+        /// </example>
+        public ScriptParserBase(TextWriter? output, TextWriter? outputError, StringBuilder content, Func<ScriptParserBase<TParser, T>, ICharStream, TParser> creator, Func<TParser, T> getRoot)
+        {
+
+            Output = output ?? Console.Out;
+            OutputError = outputError ?? Console.Error;
+            _includes = new HashSet<string>();
+            Content = content;
+            Crc = content.CalculateCrc32();
+            _creator = creator;
+            _getRoot = getRoot;
         }
 
         /// <summary>
@@ -496,7 +516,7 @@ namespace Bb.Policies
         /// <summary>
         /// Visits the parse tree with the specified visitor.
         /// </summary>
-        /// <typeparam name="Result">The return type of the visitor's methods.</typeparam>
+        /// <typeparam name="TResult">The return type of the visitor's methods.</typeparam>
         /// <param name="visitor">The visitor to use for traversing the parse tree. Must not be null.</param>
         /// <returns>The result of the visitor's processing of the parse tree.</returns>
         /// <remarks>
@@ -517,10 +537,10 @@ namespace Bb.Policies
         /// </code>
         /// </example>
         /// <returns>
-        /// An object of type <typeparamref name="Result"/> or null, depending on the visitor's implementation.
+        /// An object of type <typeparamref name="TResult"/> or null, depending on the visitor's implementation.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object? Visit<Result>(IParseTreeVisitor<Result> visitor)
+        public object? Visit<TResult>(IParseTreeVisitor<TResult> visitor)
         {
 
             if (System.Diagnostics.Debugger.IsAttached && !string.IsNullOrEmpty(File))
@@ -532,12 +552,21 @@ namespace Bb.Policies
         }
 
         /// <summary>
+        /// The root parse tree context.
+        /// </summary>
+        /// <remarks>
+        /// This field stores the root of the parse tree created by the parser.
+        /// </remarks>
+        public T? Context => _context;
+
+
+        /// <summary>
         /// The underlying ANTLR parser instance.
         /// </summary>
         /// <remarks>
         /// This field stores the ANTLR parser that was created for parsing the content.
         /// </remarks>
-        protected TParser? _parser;
+        private TParser? _parser;
 
         /// <summary>
         /// Set of file paths included by the parsed script.
@@ -553,7 +582,7 @@ namespace Bb.Policies
         /// <remarks>
         /// This field stores the factory function that creates a parser for a given character stream.
         /// </remarks>
-        protected readonly Func<ScriptParserBase<TParser, T>, ICharStream, TParser> _creator;
+        private readonly Func<ScriptParserBase<TParser, T>, ICharStream, TParser> _creator;
 
         /// <summary>
         /// Function to get the root context from a parser.
@@ -563,13 +592,7 @@ namespace Bb.Policies
         /// </remarks>
         private readonly Func<TParser, T> _getRoot;
 
-        /// <summary>
-        /// The root parse tree context.
-        /// </summary>
-        /// <remarks>
-        /// This field stores the root of the parse tree created by the parser.
-        /// </remarks>
-        protected T? _context;
+        private T? _context;
 
     }
 

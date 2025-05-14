@@ -1,12 +1,13 @@
 # Policy
-Manage the policy rules
+The Black.Beard.Policies library is designed to help developers manage and evaluate authorization policies in .NET applications. It provides a flexible syntax for defining rules based on user claims, roles, and other contextual data. With this library, you can easily create, organize, and enforce complex access control policies, making it suitable for scenarios where fine-grained security and dynamic rule evaluation are required. It also integrates with web applications and supports external identity providers like Keycloak for authentication testing.
+
 
 [![Build status](https://ci.appveyor.com/api/projects/status/n3hxq342l2lywhlr/branch/main?svg=true)](https://ci.appveyor.com/project/gaelgael5/policy/branch/main)
 
 ## Documentation
 For detailed information on how to use the policy syntax, see the [Documentation of the syntax](https://github.com/Black-Beard-Sdk/Policy/blob/main/syntax.md).
 
-## testing with keycloak
+## Testing with keycloak
 For testing you can use keycloak [Documentation to install keycloak](https://github.com/Black-Beard-Sdk/Policy/blob/main/Install_keycloak.md).
 
 ## any samples for Create policy

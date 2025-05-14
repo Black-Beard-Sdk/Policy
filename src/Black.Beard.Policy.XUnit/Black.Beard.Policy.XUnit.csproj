@@ -26,8 +26,8 @@
     <PackageReference Include="Black.Beard.Helpers" Version="2.0.59" />
     <PackageReference Include="Black.Beard.Helpers.ContentLoaders.Files" Version="2.0.59" />
     <PackageReference Include="Keycloak.AuthServices.Authentication" Version="2.6.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.5" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
     <PackageReference Include="Testcontainers.Keycloak" Version="4.3.0" />
@@ -45,7 +45,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Black.Beard.Adfs\Black.Beard.Adfs.csproj" />
     <ProjectReference Include="..\Black.Beard.Keycloak\Black.Beard.Keycloak.csproj" />
-    <ProjectReference Include="..\Black.Beard.Rest\Black.Beard.Rest.csproj" />
     <ProjectReference Include="..\Black.Beard.Policies\Black.Beard.Policies.csproj" />
   </ItemGroup>
 

@@ -1,22 +1,17 @@
 
+
+// Ignore Spelling: Adfs Api
+
 using Bb.Adfs;
 using Microsoft.Extensions.Logging;
+using System.Runtime.Versioning;
 
 namespace Black.Beard.Policy.XUnit.Adfs
 {
 
+    [SupportedOSPlatform("windows")]
     public class UnitTestAdfs
     {
-
-
-        //[Fact]
-        //public void TestGenerateApiKey()
-        //{
-        //    var apiKey = ApiKeyGenerator.GenerateApiKey(100)
-        //                    .GenerateIdentifiers(25, 35, "mysalt");
-
-        //    Assert.NotNull(apiKey);
-        //}
 
         [Fact]
         public void TestCreateApiOnAdfs()
@@ -25,6 +20,7 @@ namespace Black.Beard.Policy.XUnit.Adfs
             string salt = "my_salt";
             string firstname = "firstname";
             string lastname = "lastname";
+            string username = "username";
             string email = "gaelgael5@gmail.com";
             string organisation = "black.beard";
 
@@ -42,10 +38,10 @@ namespace Black.Beard.Policy.XUnit.Adfs
 
                 if (adfs.Connect(adfsServer, adfsDomain, adfsUser, adfsPassword))
                 {
-                    var user = adfs.CreateApiKey(salt, firstname, lastname, email, organisation, "group1");
+                    adfs.CreateApiKey(salt, username, firstname, lastname, email, organisation, "group1");
                 }
                 else
-                    Assert.True(false, "Connection failed");
+                    Assert.Fail("Connection failed");
 
             }
 

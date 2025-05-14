@@ -761,7 +761,7 @@ namespace Bb.Policies
         public bool IsInRole(string key)
         {
 
-            var c = key.ToLower();
+            var c = key.ToLowerInvariant();
 
             if (c == "role")
                 return true;
@@ -794,7 +794,8 @@ namespace Bb.Policies
                 var e = ctx._stack.Pop();
                 e.Watch.Stop();
 
-                ctx._diagnostics.AddInformation("", e.Trace, "Diagnostic", $"Elapsed time in {e.Trace.Get("Function")} seconds(s) {Math.Round(e.Watch.Elapsed.TotalSeconds, 4)}");
+                var t = e.Trace ?? TextLocation.Empty;
+                ctx._diagnostics.AddInformation("", t, "Diagnostic", $"Elapsed time in {t.Get("Function")} seconds(s) {Math.Round(e.Watch.Elapsed.TotalSeconds, 4)}");
 
             }
 
@@ -865,10 +866,11 @@ namespace Bb.Policies
 
             public MethodContext()
             {
+                Trace = TextLocation.Empty;
                 Watch = new Stopwatch();
             }
 
-            public TextLocation? Trace { get; internal set; }
+            public TextLocation Trace { get; internal set; }
 
             public Stopwatch Watch { get; }
 

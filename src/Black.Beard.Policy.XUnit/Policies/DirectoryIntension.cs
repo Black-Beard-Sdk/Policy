@@ -8,7 +8,7 @@
     {
 
 
-        public static FileInfo WriteFile(this DirectoryInfo self, string filename, string content, Encoding encoding = null)
+        public static FileInfo WriteFile(this DirectoryInfo self, string filename, string content, Encoding? encoding = null)
         {
             var file = self.Combine(filename).AsFile();
             file.WriteFile(content, encoding);
@@ -17,7 +17,7 @@
         }
 
 
-        public static FileInfo WriteFile(this FileInfo self,string content, Encoding encoding = null)
+        public static FileInfo WriteFile(this FileInfo self,string content, Encoding? encoding = null)
         {
             File.WriteAllText(self.FullName, content, encoding ?? Encoding.UTF8);
             return self;

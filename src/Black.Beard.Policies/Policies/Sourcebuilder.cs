@@ -111,6 +111,33 @@ namespace Bb.Policies
         }
 
         /// <summary>
+        /// Creates a new build context based on the current context and pushes it onto the context stack.
+        /// </summary>
+        /// <param name="ctx">The context to append</param>
+        /// <remarks>
+        /// This method creates a new context that inherits properties from the current context,
+        /// pushes it onto the stack, and returns a disposable wrapper that will pop the context
+        /// when disposed.
+        /// </remarks>
+        /// <exception cref="System.InvalidOperationException">Thrown when the context stack is empty.</exception>
+        /// <returns>
+        /// A <see cref="CurrentContext"/> object that will restore the previous context when disposed.
+        /// </returns>
+        protected void PushContext(BuildContext ctx)
+        {
+            _stack.Push(ctx);
+        }
+
+        /// <summary>
+        /// Clears all contexts from the context stack.
+        /// </summary>
+        protected void ClearContexts()
+        {
+            _stack.Clear();
+        }
+
+
+        /// <summary>
         /// Gets the current build context from the top of the context stack.
         /// </summary>
         /// <remarks>
@@ -201,7 +228,7 @@ namespace Bb.Policies
         /// This stack maintains a hierarchical structure of build contexts,
         /// allowing for nested processing of expressions and statements.
         /// </remarks>
-        protected Stack<BuildContext> _stack = new Stack<BuildContext>();
+        private readonly Stack<BuildContext> _stack = new();
 
         /// <summary>
         /// Represents a context for code generation during policy compilation.
@@ -567,7 +594,22 @@ namespace Bb.Policies
         /// This field stores a counter that increments with each method generated,
         /// allowing for the creation of unique method names.
         /// </remarks>
-        protected int _indexMethod;
+        protected int IndexMethod => _indexMethod;
+
+        /// <summary>
+        /// Index counter used for generating unique method names.
+        /// </summary>
+        /// <param name="index">index value</param>
+        /// <remarks>
+        /// This field stores a counter that increments with each method generated,
+        /// allowing for the creation of unique method names.
+        /// </remarks>
+        protected void SetIndexMethod(int index)
+        {
+            _indexMethod = index;
+        }
+
+        private int _indexMethod;
 
         /// <summary>
         /// Gets the diagnostics container for reporting errors and warnings.
@@ -598,6 +640,7 @@ namespace Bb.Policies
         /// </remarks>
         private readonly Stack<DisposingStorage> _pathStorages;
 
+
         /// <summary>
         /// Indicates whether debug information should be included in generated code.
         /// </summary>
@@ -605,6 +648,11 @@ namespace Bb.Policies
         /// This field determines whether the source builder should generate additional
         /// code for debugging, such as trace statements and location information.
         /// </remarks>
-        protected readonly bool _withDebug;
+        public bool WithDebug => _withDebug;
+
+
+
+        private readonly bool _withDebug;
+
     }
 }

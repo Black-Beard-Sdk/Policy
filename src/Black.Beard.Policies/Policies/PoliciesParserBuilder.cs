@@ -2,6 +2,7 @@
 using Bb.Expressions;
 using Bb.Policies.Asts;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq.Expressions;
 
 namespace Bb.Policies
@@ -104,11 +105,11 @@ namespace Bb.Policies
             };
 #endif
             PrivatesIndex.Reset();
-            _indexMethod = 0;
+            SetIndexMethod(0);
             var Context = _compiler.AddParameter(typeof(RuntimeContext), "argContext");
 
-            _stack.Clear();
-            _stack.Push(new BuildContext()
+            ClearContexts();
+            PushContext(new BuildContext()
             {
                 Argument = Context,
                 Context = Context,
@@ -164,7 +165,7 @@ namespace Bb.Policies
 
         }
 
-        private static Expression EvaluateBinaryEquality(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
+        private static MethodCallExpression EvaluateBinaryEquality(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
         {
 
             bool isNumeric = left.Type == typeof(object) && right.Type == typeof(int);
@@ -214,7 +215,7 @@ namespace Bb.Policies
 
         }
 
-        private static Expression EvaluateBinaryNumeric(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
+        private static MethodCallExpression EvaluateBinaryNumeric(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
         {
 
             bool isNumeric = left.Type == typeof(object) && right.Type == typeof(int);
@@ -251,7 +252,7 @@ namespace Bb.Policies
 
         }
 
-        private static Expression EvaluateBinaryIn(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
+        private static MethodCallExpression EvaluateBinaryIn(BuildContext ctx, PolicyOperator @operator, Expression left, Expression right, ConstantExpression p)
         {
 
             bool isString = left.Type == typeof(string) && right.Type == typeof(string[]);
@@ -319,7 +320,7 @@ namespace Bb.Policies
 
             switch (e.Type)
             {
-                case ConstantType.String:
+                case ConstantType.Text:
                 case ConstantType.Id:
                 case ConstantType.QuotedId:
                     return e.Value.AsConstant();
@@ -329,8 +330,8 @@ namespace Bb.Policies
                         return Expression.Constant(true);
                     return Expression.Constant(false);
 
-                case ConstantType.Integer:
-                    int i = int.Parse(e.Value);
+                case ConstantType.IntegerNumeric:
+                    int i = int.Parse(e.Value, CultureInfo.InvariantCulture);
                     return Expression.Constant(i);
 
                 default:

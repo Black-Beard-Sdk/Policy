@@ -202,10 +202,8 @@ namespace Bb.Policies.Asts
             else if (item.Name == "fallback")
                 this.FallbackRule = item;
 
-            else if (_dicRule.ContainsKey(item.Name))
+            else if (!_dicRule.TryAdd(item.Name, item))
                 return false;
-            else
-                _dicRule.Add(item.Name, item);
 
             return true;
 
@@ -215,8 +213,7 @@ namespace Bb.Policies.Asts
         public bool Add(PolicyInclude item)
         {
 
-            if (item is null)
-                throw new ArgumentNullException(nameof(item));
+            ArgumentNullException.ThrowIfNull(item);
 
             if (_dicInclude.ContainsKey(item.Name))
                 return false;
@@ -254,7 +251,7 @@ namespace Bb.Policies.Asts
         {
 
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             alias = null;
 
@@ -294,7 +291,7 @@ namespace Bb.Policies.Asts
         internal void EvaluateInclude(string path)
         {
             var items = this._dicInclude.Where(c => c.Value.FullPath == path).ToList();
-            if (items.Any())
+            if (items.Count > 0)
                 items[0].Value.IsLoaded = true;
         }
 

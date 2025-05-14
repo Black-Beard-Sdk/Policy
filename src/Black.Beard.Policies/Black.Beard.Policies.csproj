@@ -9,8 +9,14 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/Black-Beard-Sdk/Policy</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <IncludeSymbols>True</IncludeSymbols>
+    <Title>Policies</Title>
+    <Description>The Black.Beard.Policies library is designed to help developers manage and evaluate authorization policies in .NET applications. It provides a flexible syntax for defining rules based on user claims, roles, and other contextual data. With this library, you can easily create, organize, and enforce complex access control policies, making it suitable for scenarios where fine-grained security and dynamic rule evaluation are required. It also integrates with web applications and supports external identity providers like Keycloak for authentication testing.</Description>
+    <Copyright>Black beard 2025</Copyright>
+    <PackageProjectUrl>https://github.com/Black-Beard-Sdk/Policy</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
     
   </PropertyGroup>
 
@@ -37,12 +43,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
     <PackageReference Include="Black.Beard.Analysis" Version="1.0.140" />
     <PackageReference Include="Black.Beard.CodeDom" Version="1.0.140" />
     <PackageReference Include="Black.Beard.ComponentModel" Version="1.0.196" />
     <PackageReference Include="Black.Beard.Expressions" Version="1.0.196" />
-    <PackageReference Include="System.CodeDom" Version="9.0.4" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
     <PackageReference Include="Black.Beard.Helpers" Version="2.0.59" />
     <PackageReference Include="Black.Beard.Helpers.ContentLoaders.Files" Version="2.0.59" />
