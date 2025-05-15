@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "Keycloak
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Policies", "Black.Beard.Policies\Black.Beard.Policies.csproj", "{8A8DBB65-5975-0058-13CF-E46E5039ECC5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Black.Beard.Adfs", "Black.Beard.Adfs\Black.Beard.Adfs.csproj", "{C9D225B5-4A86-57F8-5D84-658B281462A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{8A8DBB65-5975-0058-13CF-E46E5039ECC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A8DBB65-5975-0058-13CF-E46E5039ECC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A8DBB65-5975-0058-13CF-E46E5039ECC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9D225B5-4A86-57F8-5D84-658B281462A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9D225B5-4A86-57F8-5D84-658B281462A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9D225B5-4A86-57F8-5D84-658B281462A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9D225B5-4A86-57F8-5D84-658B281462A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
