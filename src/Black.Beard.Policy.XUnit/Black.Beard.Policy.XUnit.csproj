@@ -43,7 +43,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Black.Beard.Adfs\Black.Beard.Adfs.csproj" />
     <ProjectReference Include="..\Black.Beard.Keycloak\Black.Beard.Keycloak.csproj" />
     <ProjectReference Include="..\Black.Beard.Policies\Black.Beard.Policies.csproj" />
   </ItemGroup>
